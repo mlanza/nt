@@ -2,11 +2,12 @@
 
 Seq is short for Logseq.  As a general rule, composable command-line tools are preferred to MCP tools because they're avalable to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
 
-Your commonplace book is a near perfect spot for keeping the sort of knowhow an agent needs to thrive.  It provides an excellent store for skills.  Just tag a page `Skills` and an agent can readily list them.
+Your commonplace book is a near perfect spot for keeping the sort of knowhow an agent needs to thrive.  It provides an excellent store for skills.  Any page tagged `Skills` with a `description` property is readily available to an agent.
 
 Use `notes` to:
 
 * `notes pages` - list all pages
+* `notes tags Skills | notes props description` - for a skills menu
 * `notes page Atomic` - list a particular page by name
 * `notes t Programming` - list notes tagged something
 * `notes t Programming | notes page | bat` - pipe names into page to list content for a bunch of pages
