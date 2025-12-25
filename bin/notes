@@ -227,30 +227,25 @@ function nestedJsonToMarkdown(blocks, level = 0) {
   return lines;
 }
 
+function keeping(patterns, hit = true){
+  const miss = !hit;
+  const regexes = (patterns || []).map(pattern => new RegExp(pattern));
+  return regexes.length ? function(text){
+    for(const re of regexes) {
+      if (re.test(text)) {
+        return hit;
+      }
+    }
+    return miss;
+  } : null
+}
+
 function page(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const append = options.append || null;
   const heading = options.heading !== false;
   const nest = options.nest || false;
-
-  // Convert filter strings to RegExp objects
-  const less = (options.less || []).map(pattern => new RegExp(pattern));
-  const only = (options.only || []).map(pattern => new RegExp(pattern));
-  const keep = less.length ? function(text){
-    for(const pattern of less) {
-      if (pattern.test(text)) {
-        return false;
-      }
-    }
-    return true;
-  } : only.length ? function(text) {
-    for(const pattern of only) {
-      if (pattern.test(text)) {
-        return true;
-      }
-    }
-    return false;
-  } : null;
+  const keep = keeping(options.less, false) || keeping(options.only, true);
 
   return async function(named){
     try {
