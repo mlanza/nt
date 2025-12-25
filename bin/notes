@@ -244,7 +244,7 @@ function page(options){
     }
     return true;
   } : only.length ? function(text) {
-    for(const pattern of less) {
+    for(const pattern of only) {
       if (pattern.test(text)) {
         return true;
       }
