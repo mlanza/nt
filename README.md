@@ -1,4 +1,4 @@
-# Seq
+# Logseq `notes`
 
 Seq is short for Logseq.  As a general rule, composable command-line tools are preferred to MCP tools because they're avalable to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
 
@@ -16,6 +16,21 @@ Use `notes` to:
 Most commands accept the primary operand directly or via stdin.
 
 You must have Logseq running in Developer Mode.  This can be flipped on under Settings > Advanced.  After that, enable the local HTTP API. It appears as a button in the upper right.  This effectively treats your local-first install of Logseq as an MCP server.
+
+Add to your `.zshrc`:
+```sh
+ago() {
+  for i in $(seq 0 "$1"); do date -v-"$i"d +%Y-%m-%d; done;
+}
+```
+
+So that you can review journal entries from the last 90 days:
+
+```sh
+$ ago 90 | notes page
+```
+
+## Environment
 
 Ensure you've set these environment variables:
 

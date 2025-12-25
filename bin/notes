@@ -9,8 +9,12 @@ const jnl = /^\d{4}-\d{2}-\d{2}\s(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Fri
 
 const isPiped = !Deno.isatty(Deno.stdin.rid);
 
+function toInt(s) {
+  return typeof s === 'string' && /^-?\d+$/.test(s) ? Number(s) : null
+}
+
 async function getNormalizedName(name){
-  const page = await callLogseq('logseq.Editor.getPage', [name]);
+  const page = await callLogseq('logseq.Editor.getPage', [toInt(name) || name]);
   return page?.originalName;
 }
 
@@ -57,27 +61,9 @@ async function getNames(given){
   const name = alias || normalized || given; // fallback to given if normalized is null
   const journal = name ? await isJournal(name) : null;
   const path = name ? await getFilePath(journal, name) : null;
-  const names = {journal, normalized, name, path};
+  const names = {given, journal, normalized, name, path};
   //console.log({names});
   return names;
-}
-
-// Convert journal date to YYYY-MM-DD format
-function journalDateToYYYYMMDD(journalName) {
-  // Handle Logseq journal format like "Dec 14th, 2025"
-  const match = journalName.match(/^([A-Za-z]+)\s+(\d+)(?:st|nd|rd|th),\s+(\d+)$/)
-  if (match) {
-    const [, month, day, year] = match
-    const monthNum = new Date(`${month} 1, 2000`).getMonth() + 1
-    return `${year}-${monthNum.toString().padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-
-  // Handle YYYY-MM-DD format directly
-  if (/^\d{4}-\d{2}-\d{2}$/.test(journalName)) {
-    return journalName
-  }
-
-  return journalName
 }
 
 async function callLogseq(method, args) {
@@ -521,65 +507,17 @@ function page(options){
       // STAGE 2: Common Data Gathering
       // Gather all data into a common structure
       let data;
-      let fileContent = null;
 
-      // Determine if we should try file-based processing first
-      const shouldTryFile = path && !nest;
+      const result = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
 
-      if (shouldTryFile) {
-        try {
-          fileContent = (await Deno.readTextFile(path)).replace(/\s+$/, '');
-
-          if (format === 'md' && filterPatterns.length > 0) {
-            // Apply filtering to file content for MD format with filters
-            const lines = fileContent.split('\n');
-            const filteredLines = applyLineFilters(lines, filterPatterns);
-
-            if (heading && filteredLines.length > 0) {
-              console.log(`# ${name}`);
-            }
-            if (filteredLines.length > 0) {
-              console.log(filteredLines.join('\n') + (heading ? "\n" : ""));
-            }
-            return;
-          } else if (format === 'md') {
-            // Simple file-based processing for MD format without filters
-            if (heading && fileContent) {
-              console.log(`# ${name}`);
-            }
-            console.log(fileContent + (heading ? "\n" : ""));
-            return;
-          } else {
-            // For JSON format, convert file content to block structure
-            const lines = fileContent.split('\n');
-            data = lines.map((line, index) => ({
-              id: `file-line-${index}`,
-              content: line.replace(/^\s*[-\*\+]?\s*/, ''), // Remove markers for clean content
-              level: 0,
-              marker: line.match(/^\s*([-+*])\s+/)?.[1] || null,
-              priority: null,
-              children: []
-            }));
-          }
-        } catch (fileError) {
-          console.error(`Warning: Could not read page file: ${path} (${fileError.message}), falling back to API`);
-          // Fall through to API processing
-        }
-      }
-
-      // If we don't have data from file processing, use API
-      if (!data) {
-        const result = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
-
-        if (nest) {
-          // Use hierarchical structure from API
-          data = result && Array.isArray(result)
-            ? result.map(block => cleanBlockForOutline(block))
-            : [];
-        } else {
-          // Use flat structure from API
-          data = result || [];
-        }
+      if (nest) {
+        // Use hierarchical structure from API
+        data = result && Array.isArray(result)
+          ? result.map(block => cleanBlockForOutline(block))
+          : [];
+      } else {
+        // Use flat structure from API
+        data = result || [];
       }
 
       // STAGE 3: Unified Filtering
@@ -665,6 +603,13 @@ function search(options){
       console.error('Error:', error.message);
       Deno.exit(1);
     }
+  }
+}
+
+function path(){
+  return async function(named){
+    const {path} = await getNames(named);
+    console.log(path);
   }
 }
 
@@ -994,6 +939,12 @@ program
   .description('Recursively list page prerequisites')
   .arguments(demand("name"))
   .action(pipeable(prereq));
+
+program
+  .command('path')
+  .description('The path to the page file')
+  .arguments(demand("name"))
+  .action(pipeable(path));
 
 program
   .command('props')
