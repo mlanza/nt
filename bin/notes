@@ -160,73 +160,27 @@ function pipeable(g){
   }
 }
 
-// Helper function to clean block structure for outline format
-function cleanBlockForOutline(block) {
-  const cleanBlock = {
-    id: block.id,
-    content: block.content || '',
-    level: block.level || 0,
-    marker: block.marker || null,
-    priority: block.priority || null,
-    children: []
-  };
-
-  // Clean up content by removing markers that will be added back during conversion
-  if (cleanBlock.content && cleanBlock.marker) {
-    // Remove the marker from content since it will be added back during markdown conversion
-    cleanBlock.content = cleanBlock.content.replace(new RegExp(`^\\s*${cleanBlock.marker}\\s+`), '');
-  }
-
-  // Content-agnostic priority extraction: extract priority markers like [#A], [#B], [#C]
-  // without modifying the original content
-  if (cleanBlock.content && !cleanBlock.priority) {
-    const priorityMatch = cleanBlock.content.match(/^\s*\[#([ABC])\]\s*/);
-    if (priorityMatch) {
-      cleanBlock.priority = priorityMatch[1];
-    }
-  }
-
-  // Recursively clean children
-  if (block.children && Array.isArray(block.children)) {
-    cleanBlock.children = block.children.map(child => cleanBlockForOutline(child));
-  }
-
-  return cleanBlock;
-}
-
 // Recursive filtering function for blocks
-function filterBlockByPatterns(block, patterns) {
-  // If no patterns provided, keep everything
-  if (!patterns || patterns.length === 0) {
-    return block;
-  }
-
-  // Check if the block's content matches ANY of the patterns
-  // Test content directly, not marker + content combination
-  const content = block.content || '';
-  const marker = block.marker || '';
+function selectBlock(block, keep) {
+  const {content, properties} = block;
 
   // Test content with and without marker to catch both cases
-  const contentWithMarker = marker ? `${marker} ${content}` : content;
-  const matches = patterns.some(pattern =>
-    pattern.test(content) || pattern.test(contentWithMarker)
-  );
+  const kept = keep(content);
 
-  // If this block matches any pattern, filter it out (return null)
-  if (matches) {
+  if (!kept) {
     return null;
   }
 
   let filteredChildren = [];
   if (block.children && Array.isArray(block.children)) {
     filteredChildren = block.children
-      .map(child => filterBlockByPatterns(child, patterns))
+      .map(child => selectBlock(child, keep))
       .filter(child => child !== null); // Remove null entries (filtered out children)
   }
 
   // If this block doesn't have meaningful content and all children were filtered out, filter this block too
-  const hasContent = block.content && block.content.trim().length > 0;
-  const hasProperties = block.properties && Object.keys(block.properties).length > 0;
+  const hasContent = content || null;
+  const hasProperties = properties && Object.keys(properties).length > 0;
   const hasMeaningfulContent = hasContent || hasProperties;
 
   if (!hasMeaningfulContent && filteredChildren.length === 0) {
@@ -243,23 +197,31 @@ function filterBlockByPatterns(block, patterns) {
 // Helper function to convert nested JSON back to markdown format
 function nestedJsonToMarkdown(blocks, level = 0) {
   const lines = [];
+  const indent = '  '.repeat(level);
+  const hanging = '  '.repeat(level + 1);
 
-  blocks.forEach(block => {
-    if (block.content) {
-      // Preserve Logseq properties at the top level
-      if (level === 0 && block.content.includes('::')) {
-        lines.push(block.content);
+  blocks.forEach(function(block) {
+    const {content, children} = block;
+    if (content) {
+      const [line, ...parts] = content.split("\n");
+      if (line.includes("::")) {
+        lines.push(`${indent}${line}`);
+        for(const line of parts){
+          lines.push(`${indent}${line}`);
+        }
       } else {
-        // Add proper indentation based on level
-        const indent = '  '.repeat(level);
-        const marker = block.marker || '-';
-        lines.push(`${indent}${marker} ${block.content}`);
+        lines.push(`${indent}- ${line}`);
+        for(const line of parts){
+          if (!line.startsWith("collapsed:: ")) {
+            lines.push(`${hanging}${line}`);
+          }
+        }
       }
     }
 
     // Recursively process children
-    if (block.children && block.children.length > 0) {
-      lines.push(...nestedJsonToMarkdown(block.children, level + 1));
+    if (children && children.length > 0) {
+      lines.push(...nestedJsonToMarkdown(children, level + 1));
     }
   });
 
@@ -301,17 +263,14 @@ function parseLogseqBlocks(content) {
 
     const level = Math.floor((spaces + (tabs * 2)) / 2);
 
-    // Extract marker and content
-    const markerMatch = trimmedLine.match(/^([-*+])\s+(.*)$/);
-    const marker = markerMatch ? markerMatch[1] : null;
-    const content = markerMatch ? markerMatch[2] : trimmedLine;
+    const content = trimmedLine; // markerMatch ? markerMatch[2] : trimmedLine;
 
     // Create block object
     const block = {
       id: `block-${i}`,
       content: content,
       level: level,
-      marker: marker,
+      marker: null,
       priority: null,
       children: []
     };
@@ -331,13 +290,6 @@ function parseLogseqBlocks(content) {
   }
 
   return blocks;
-}
-
-// Filter Logseq blocks and remove orphaned children
-function filterLogseqBlocks(blocks, filterPatterns) {
-  return blocks
-    .map(block => filterBlockByPatterns(block, filterPatterns))
-    .filter(block => block !== null);
 }
 
 // Render Logseq blocks back to markdown
@@ -366,105 +318,30 @@ function renderLogseqBlocks(blocks, level = 0) {
   return lines.join('\n');
 }
 
-// Apply line-based filtering similar to the 'strip' tool
-function applyLineFilters(lines, filterPatterns) {
-  const result = [];
-  let stripMode = false;
-  let stripIndent = -1;
-  let potentialMultiline = false;
-  let multilineBuffer = [];
-
-  const getIndentLevel = (line) => {
-    const match = line.match(/^[ \t]*/);
-    return match ? match[0].length : 0;
-  };
-
-  const shouldStrip = (line) => {
-    // Strip leading outline markers for regex matching
-    // Handle various marker patterns: "- ", "\t- ", "  - ", etc.
-    const content = line.replace(/^[ \t]*[-*+][ \t]*/, '');
-    return filterPatterns.some(pattern => pattern.test(content));
-  };
-
-  const enterStripMode = (indent) => {
-    stripMode = true;
-    stripIndent = indent;
-    potentialMultiline = false;
-    multilineBuffer = [];
-  };
-
-  const exitStripMode = () => {
-    stripMode = false;
-    stripIndent = -1;
-  };
-
-  for (const line of lines) {
-    const indent = getIndentLevel(line);
-    const isEmpty = line.trim() === '';
-
-    // Handle multiline detection for TODO/DOING items
-    if (potentialMultiline && !isEmpty) {
-      // This is a continuation line of a multiline item
-      multilineBuffer.push(line);
-
-      // Check if this continuation line should trigger strip mode
-      if (shouldStrip(line)) {
-        enterStripMode(indent);
-      }
-      continue;
-    }
-
-    // Check if we're in strip mode
-    if (stripMode) {
-      if (indent <= stripIndent) {
-        // Exiting strip mode
-        exitStripMode();
-      } else {
-        // Still in nested content, skip
-        continue;
-      }
-    }
-
-    // Check for potential multiline items (TODO/DOING followed by soft return)
-    const isPotentialMultiline = /^[ \t]*- (TODO|DOING)([^:]*)$/.test(line);
-    if (isPotentialMultiline) {
-      // Check if this multiline item should also be stripped
-      if (shouldStrip(line)) {
-        enterStripMode(indent);
-        continue;
-      }
-      potentialMultiline = true;
-      multilineBuffer = [line];
-      continue;
-    }
-
-    // Normal line processing
-    if (shouldStrip(line)) {
-      enterStripMode(indent);
-      continue;
-    }
-
-    // Add line to output
-    result.push(line);
-  }
-
-  // Handle any remaining multiline buffer
-  if (multilineBuffer.length > 0) {
-    result.push(...multilineBuffer);
-  }
-
-  return result;
-}
-
 function page(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const append = options.append || null;
   const heading = options.heading !== false;
   const nest = options.nest || false;
-  const filters = options.less || [];
 
   // Convert filter strings to RegExp objects
-  const filterPatterns = filters.map(pattern => new RegExp(pattern));
+  const less = (options.less || []).map(pattern => new RegExp(pattern));
+  const only = (options.only || []).map(pattern => new RegExp(pattern));
+  const keep = less.length ? function(text){
+    for(const pattern of less) {
+      if (pattern.test(text)) {
+        return false;
+      }
+    }
+    return true;
+  } : only.length ? function(text) {
+    for(const pattern of less) {
+      if (pattern.test(text)) {
+        return true;
+      }
+    }
+    return false;
+  } : null;
 
   return async function(named){
     try {
@@ -486,7 +363,7 @@ function page(options){
 
       // STAGE 1: Exception case - Simple MD format without nest and without filter
       // Bypass all processing and just print the page directly from file
-      if (format === 'md' && !nest && filterPatterns.length === 0) {
+      if (format === 'md' && !nest && keep == null) {
         if (!path) {
           return;
         }
@@ -510,22 +387,14 @@ function page(options){
 
       const result = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
 
-      if (nest) {
-        // Use hierarchical structure from API
-        data = result && Array.isArray(result)
-          ? result.map(block => cleanBlockForOutline(block))
-          : [];
-      } else {
-        // Use flat structure from API
-        data = result || [];
-      }
+      data = result || [];
 
       // STAGE 3: Unified Filtering
       // Apply filters if any are provided (regardless of nest)
-      if (filterPatterns.length > 0) {
+      if (keep) {
         // Always use hierarchical filtering since API returns hierarchical data
         data = data
-          .map(block => filterBlockByPatterns(block, filterPatterns))
+          .map(block => selectBlock(block, keep))
           .filter(block => block !== null);
       }
 
@@ -539,6 +408,7 @@ function page(options){
           console.log(`# ${name}`);
         }
 
+        //console.log({nest, data})
         if (nest) {
           // Convert hierarchical structure to markdown
           const markdownLines = nestedJsonToMarkdown(data);
@@ -909,7 +779,8 @@ program
   .option('--no-heading', 'Omit H1 heading and trailing blank line for MD format')
   .option('-a, --append <content:string>', 'Append content to page')
   .option('--nest', 'Use hierarchical nesting with format output')
-  .option('-l, --less <patterns:string>', 'Without content matching regex patterns', { collect: true })
+  .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
+  .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
   .action(pipeable(page));
 
 program
