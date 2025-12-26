@@ -487,25 +487,6 @@ function path(){
   }
 }
 
-function prereq(){
-  return async function (name){
-    try {
-      if (!name) {
-        console.error('Error: Name argument is required');
-        console.error('Usage: notes prereq <name>');
-        abort("prereq");
-      }
-
-      const results = await collectPrerequisites(name);
-      results.forEach(name => console.log(name));
-      // Return results instead of directly outputting them
-      return results;
-    } catch (error) {
-      abort(error);
-    }
-  }
-}
-
 function tskNamed(id){
   return new Task(async function(reject, resolve){
     try {
@@ -805,7 +786,7 @@ program
   .command('prereq')
   .description('Recursively list page prerequisites')
   .arguments(demand("name"))
-  .action(pipeable(prereq));
+  .action(forkable(constantly(prerequisites)));
 
 program
   .command('path')
