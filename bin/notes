@@ -134,12 +134,17 @@ async function getFilePath(journal, name){
 
 const je = /^(?:\d{8}|\d{4}-\d{2}-\d{2})$/;
 
-async function getJournalPage(datestamp){
-  const arg = datestamp.split(' ')?.[0].replaceAll("-", "");
-  const result = await promise(qry(`[:find (pull ?p [*]) :where [?p :block/journal-day ${arg}]]`));
-  const obj = result?.[0]?.[0] || {};
-  return obj["journal?"] ? obj["original-name"] : null;
+function tskGetJournalPage(datestamp){
+  return new Task(function(reject, resolve){
+    const arg = datestamp.split(' ')?.[0].replaceAll("-", "");
+    qry(`[:find (pull ?p [*]) :where [?p :block/journal-day ${arg}]]`).fork(reject, function(result){
+      const obj = result?.[0]?.[0] || {};
+      resolve(obj["journal?"] ? obj["original-name"] : null);
+    });
+  });
 }
+
+const getJournalPage = comp(promise, tskGetJournalPage);
 
 async function getNames(given){
   if (!given) return null;
