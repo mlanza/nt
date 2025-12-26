@@ -189,15 +189,26 @@ function promise(tsk){
   });
 }
 
+function fmt(options){
+  const format = options.json ? 'json' : (options.format || 'md');
+  return function(results){
+    if (format === "json") {
+      return JSON.stringify(results, null, 2);
+    } else {
+      return results;
+    }
+  }
+}
+
 function forkable(g){
   return async function (options, ...payload){
     const f = g(options);
     if (isPiped){
       await piped(async function(arg){
-        await promise(f(arg, ...payload)).catch(balk).then(println);
+        await promise(f(arg, ...payload).map(fmt(options))).catch(balk).then(println);
       });
     } else {
-      await promise(f(...payload)).catch(balk).then(println);
+      await promise(f(...payload).map(fmt(options))).catch(balk).then(println);
     }
     Deno.exit(0);
   }
@@ -522,7 +533,7 @@ function alias(options){
 }
 
 async function aka(...args){
-  const result = await alias({format: "md", silent: true})(...args);
+  const result = await promise(alias({format: "md"})(...args));
   return result?.[0];
 }
 
@@ -556,25 +567,11 @@ function has(options, prop = null){
     throw new Error('--all and --any options are mutually exclusive');
   }
 
-  const fn = async function(prop, ...vals){
-    return await promise(qryProps(prop, vals, options.any ? 'any' : 'all'));
+  const fn = function(prop, ...vals){
+    return qryProps(prop, vals, options.any ? 'any' : 'all');
   }
 
-  const exec = prop ? fn.bind(null, prop) : fn;
-
-  return async function(...args){
-    const {silent, format = "md"} = options;
-    //console.log({silent, options, args})
-    const result = await exec(...args);
-    if (!silent) {
-      if (format == "md") {
-        result.forEach(name => console.log(name));
-      } else {
-        console.log(JSON.stringify(result, null, 2))
-      }
-    }
-    return result;
-  }
+  return prop ? fn.bind(null, prop) : fn;
 }
 
 const take = (xs, n = Infinity) =>
@@ -808,7 +805,7 @@ program
   .option('--any', 'Require ANY tag to be present')
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
-  .action(pipeable(tags));
+  .action(forkable(tags));
 
 program
   .command('has')
@@ -819,7 +816,7 @@ program
   .option('--any', 'Require ANY tag to be present')
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
-  .action(pipeable(has));
+  .action(forkable(has));
 
 program
   .command('prereq')
@@ -866,7 +863,7 @@ program
   .alias('a')
   .description('Get page name from alias')
   .arguments(demand("alias"))
-  .action(pipeable(alias));
+  .action(forkable(alias));
 
 program
   .command('backlinks')
