@@ -111,7 +111,7 @@ async function exists(path){
   try {
     await Deno.stat(path);
     return path
-  } catch (error) {
+  } catch {
     return null;
   }
 }
