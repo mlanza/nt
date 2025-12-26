@@ -727,7 +727,7 @@ function balk(error){
 
 function println(lines){
   Array.isArray(lines) ? lines.forEach(line => console.log(line)) : console.log(lines);
-  Deno.exit(0);
+  //Deno.exit(0);
 }
 
 function props(options){
