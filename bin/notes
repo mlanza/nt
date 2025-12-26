@@ -112,7 +112,7 @@ const je = /^(?:\d{8}|\d{4}-\d{2}-\d{2})$/;
 
 async function getJournalPage(datestamp){
   const arg = datestamp.split(' ')?.[0].replaceAll("-", "");
-  const result = await qry(`[:find (pull ?p [*]) :where [?p :block/journal-day ${arg}]]`);
+  const result = await promise(qry(`[:find (pull ?p [*]) :where [?p :block/journal-day ${arg}]]`));
   const obj = result?.[0]?.[0] || {};
   return obj["journal?"] ? obj["original-name"] : null;
 }
@@ -527,6 +527,27 @@ async function aka(...args){
   return result?.[0];
 }
 
+function qryProps(prop, vals, mode = "any"){
+  return new Task(function(reject, resolve){
+    if (!['any', 'all'].includes(mode)){
+      reject(new Error(`Mode must be "any" or "all" and was "${mode}".`));
+    }
+    const conditions = vals.map(val => `[(contains? ?prop "${val}")]`).join(' ');
+    const whereClause = mode === 'any' ? `(or ${conditions})` : conditions;
+    return qry(`[:find (pull ?page [:block/original-name])
+                    :where
+                    [?page :block/properties ?props]
+                    [(get ?props :${prop}) ?prop]
+                    ${whereClause}]`).
+      fork(reject, function(results){
+        const names = results.map(function([item]){
+          return item?.["original-name"];
+        }).filter(name => name);
+        resolve(names);
+      });
+  })
+}
+
 function has(options, prop = null){
   // Validate mutually exclusive options
   if (options.all && options.any) {
@@ -541,22 +562,12 @@ function has(options, prop = null){
         throw new Error('At least one prop value is required');
       }
 
-      const conditions = vals.map(val => `[(contains? ?prop "${val}")]`).join(' ');
-      const whereClause = mode === 'any' ? `(or ${conditions})` : conditions;
-      const query = `[:find (pull ?page [:block/original-name])
-                     :where
-                     [?page :block/properties ?props]
-                     [(get ?props :${prop}) ?prop]
-                     ${whereClause}]`;
-
-      const result = await qry(query);
+      const result = await promise(qryProps(prop, vals, mode));
 
       if (format === 'json') {
         return result;
       } else if (format === 'md') {
-        return result?.
-          map(item => item?.[0]?.["original-name"]).
-          filter(name => name);
+        return result;
       } else {
         throw new Error(`Unknown format: ${format}`);
       }
@@ -586,10 +597,6 @@ function has(options, prop = null){
 const take = (xs, n = Infinity) =>
   Array.isArray(xs) ? xs.slice(0, n) : [];
 
-async function qry(query, limit = Infinity){
-  return take(await callLogseq('logseq.DB.datascriptQuery', [query]), limit);
-}
-
 function backlinks(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const limit = options.limit ? parseInt(options.limit) : Infinity;
@@ -599,7 +606,7 @@ function backlinks(options){
         throw new Error('Page name is required');
       }
 
-      const items = await qry(`[:find (pull ?b [:block/content :block/page]) :where [?b :block/path-refs ?p] [?p :block/name "${pageName.toLowerCase()}"]]`, limit);
+      const items = await promise(qry(`[:find (pull ?b [:block/content :block/page]) :where [?b :block/path-refs ?p] [?p :block/name "${pageName.toLowerCase()}"]]`, limit));
 
       if (format === 'json') {
         console.log(JSON.stringify(items, null, 2));
@@ -646,7 +653,7 @@ function query(options){
         throw new Error('No query provided');
       }
 
-      const items = await qry(query, limit);
+      const items = await promise(qry(query, limit));
 
       if (format == "json") {
         console.log(JSON.stringify(items, null, 2));
@@ -671,7 +678,7 @@ function normalizeOptions(options){
   return {format, heading}
 }
 
-function tskQuery(query, limit = Infinity){
+function qry(query, limit = Infinity){
   return new Task(function(reject, resolve){
     callLogseq('logseq.DB.datascriptQuery', [query]).then(function(results){
       return take(results , limit);
@@ -680,7 +687,7 @@ function tskQuery(query, limit = Infinity){
 }
 
 function qryPage(name){
-  return tskQuery(`[:find (pull ?p [*]) :where [?p :block/original-name "${name}"]]`);
+  return qry(`[:find (pull ?p [*]) :where [?p :block/original-name "${name}"]]`);
 }
 
 function tskNames(name){
@@ -761,6 +768,8 @@ function props(options){
 function demand(...whats){
   return /*isPiped ?*/ whats.map(what => `[${what}]`).join(' ') /*: whats.map(what => `<${what}>`).join(' ')*/;
 }
+
+//qryProps("tags", ["Employing Agents"]).fork(balk, println);
 
 const program = new Command()
   .name('notes')
