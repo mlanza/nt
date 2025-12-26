@@ -199,8 +199,6 @@ function qryPrerequisites(name){
   });
 }
 
-//prerequisites("Coding").fork(abort, println);
-
 function prerequisites(name) {
   return new Task(function(reject, resolve){
     collectPrerequisites(name).then(resolve, reject);
