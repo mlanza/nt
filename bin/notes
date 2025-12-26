@@ -161,7 +161,6 @@ async function callLogseq(method, args) {
   return result
 }
 
-
 function qryPrerequisites(name){
   return new Task(function(reject, resolve){
     qry(`[:find (pull ?p [:block/properties :block/original-name]) :where [?p :block/original-name "${name}"]]`).fork(reject, function(results){
@@ -170,7 +169,7 @@ function qryPrerequisites(name){
   });
 }
 
-prerequisites("Coding").fork(abort, println);
+//prerequisites("Coding").fork(abort, println);
 
 function prerequisites(name) {
   return new Task(function(reject, resolve){
@@ -230,13 +229,11 @@ function forkable(g){
     } else {
       await promise(f(...payload).map(fmt(options))).catch(abort).then(println);
     }
-    //Deno.exit(0);
   }
 }
 
 function abort(error){
-  console.log("ABORT");
-  error && console.error('Error:', error.message);
+  error && console.error('Aborted:', error.message);
   Deno.exit(1);
 }
 
