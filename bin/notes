@@ -74,7 +74,22 @@ function juxt(...fns){
 Task.all = all;
 Task.juxt = juxt;
 
-const jnl = /^\d{4}-\d{2}-\d{2}\s(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)$/;
+function promise(tsk){
+  return new Promise(function(resolve, reject){
+    tsk.fork(reject, resolve);
+  });
+}
+
+function fmt(options){
+  const format = options.json ? 'json' : (options.format || 'md');
+  return function(results){
+    if (format === "json") {
+      return JSON.stringify(results, null, 2);
+    } else {
+      return results;
+    }
+  }
+}
 
 function toInt(s) {
   return typeof s === 'string' && /^-?\d+$/.test(s) ? Number(s) : null
@@ -211,23 +226,6 @@ async function collectPrerequisites(startName) {
 
   await dfs(startName);
   return result;
-}
-
-function promise(tsk){
-  return new Promise(function(resolve, reject){
-    tsk.fork(reject, resolve);
-  });
-}
-
-function fmt(options){
-  const format = options.json ? 'json' : (options.format || 'md');
-  return function(results){
-    if (format === "json") {
-      return JSON.stringify(results, null, 2);
-    } else {
-      return results;
-    }
-  }
 }
 
 function pipeable(g){
