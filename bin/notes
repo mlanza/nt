@@ -200,6 +200,7 @@ function forkable(g){
     } else {
       await promise(f(...payload)).catch(balk).then(println);
     }
+    Deno.exit(0);
   }
 }
 
@@ -745,7 +746,6 @@ function balk(error){
 
 function println(lines){
   Array.isArray(lines) ? lines.forEach(line => console.log(line)) : console.log(lines);
-  //Deno.exit(0);
 }
 
 function props(options){
