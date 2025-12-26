@@ -279,15 +279,15 @@ function prerequisites(name){
 }
 
 function pipeable(g){
-  return async function (options, ...payload){
+  return async function (options, ...args){
     const wasPiped = await detectPiped();
     const f = g(options);
     if (wasPiped){
-      await piped(async function(arg){
-        await promise(f(arg, ...payload).map(fmt(options))).catch(abort).then(println);
+      await incoming(async function(arg){
+        await promise(f(arg, ...args).map(fmt(options))).catch(abort).then(println);
       });
     } else {
-      await promise(f(...payload).map(fmt(options))).catch(abort).then(println);
+      await promise(f(...args).map(fmt(options))).catch(abort).then(println);
     }
   }
 }
@@ -296,7 +296,7 @@ const nonBlankLines = {
   transform: (line, c) => line.trim() && c.enqueue(line)
 }
 
-async function piped(f){
+async function incoming(f){
   const streamed = Deno.
     stdin.
     readable.
@@ -310,15 +310,15 @@ async function piped(f){
 }
 
 function oldPipeable(g){
-  return async function (options, ...payload){
+  return async function (options, ...args){
     const f = g(options);
-    const wasPiped = payload.length === 0 && await detectPiped();
+    const wasPiped = args.length === 0 && await detectPiped();
     if (wasPiped){
-      await piped(function(arg){
-        return f(arg, ...payload);
+      await incoming(function(arg){
+        return f(arg, ...args);
       });
     } else {
-      await f(...payload);
+      await f(...args);
     }
   }
 }
@@ -758,7 +758,7 @@ function demand(...whats){
   return /*isPiped ?*/ whats.map(what => `[${what}]`).join(' ') /*: whats.map(what => `<${what}>`).join(' ')*/;
 }
 
-function tskGetAllPages(type = "all"){
+function tskGetAllPages(type){
   return tskLogseq('logseq.Editor.getAllPages').map(function(results){
     return type == 'all' ? results : type == "journal" ? results.filter(item => !!item["journal?"]) : results.filter(item => !item["journal?"]);
   }).map(results => results.map(page => page?.originalName));
@@ -778,7 +778,7 @@ program
   .option('--json', 'Output JSON format')
   .action(pipeable(function(options){
     return function(){
-      return tskGetAllPages(options.type);
+      return tskGetAllPages(options.type || "regular");
     }
   }));
 
