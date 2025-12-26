@@ -103,12 +103,15 @@ function tskNormalizedName(name){
 
 const getNormalizedName = comp(promise, tskNormalizedName);
 
-async function isJournal(name){
-  const page = await callLogseq('logseq.Editor.getPage', [name]);
-  if (!page) return false;
-  const { ['journal?']: journal } = page;
-  return journal;
+function tskIsJournal(name){
+  return tskLogseq('logseq.Editor.getPage', [name]).map(function(page){
+    if (!page) return false;
+    const { ['journal?']: journal } = page;
+    return journal;
+  });
 }
+
+const isJournal = comp(promise, tskIsJournal);
 
 async function exists(path){
   try {
