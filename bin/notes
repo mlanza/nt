@@ -4,6 +4,8 @@ import Task from "https://esm.sh/data.task";
 
 const isPiped = !Deno.isatty(Deno.stdin.rid);
 
+const comp = (...fns) => (arg) => fns.reduceRight((acc, fn) => fn(acc), arg);
+
 const NOTES_ENDPOINT = Deno.env.get('NOTES_ENDPOINT') || '';
 const NOTES_TOKEN = Deno.env.get('NOTES_TOKEN') || '';
 const NOTES_DIR = Deno.env.get('NOTES_DIR') || '';
@@ -611,8 +613,6 @@ function query(options){
     return qry(query, limit);
   }
 }
-
-const comp = (...fns) => (arg) => fns.reduceRight((acc, fn) => fn(acc), arg);
 
 function normalizeOptions(options){
   const format = options.json ? 'json' : (options.format || 'md');
