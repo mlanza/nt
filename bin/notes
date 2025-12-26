@@ -1,13 +1,77 @@
 #!/usr/bin/env deno run --allow-net --allow-env --allow-read
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
+import Task from "https://esm.sh/data.task";
+
+const isPiped = !Deno.isatty(Deno.stdin.rid);
 
 const NOTES_ENDPOINT = Deno.env.get('NOTES_ENDPOINT') || '';
 const NOTES_TOKEN = Deno.env.get('NOTES_TOKEN') || '';
 const NOTES_DIR = Deno.env.get('NOTES_DIR') || '';
 
-const jnl = /^\d{4}-\d{2}-\d{2}\s(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)$/;
+function all (tasks) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return Task.of([]);
+  }
 
-const isPiped = !Deno.isatty(Deno.stdin.rid);
+  return new Task((reject, resolve) => {
+    const results = new Array(tasks.length);
+    let completed = 0;
+    let hasRejected = false;
+    const cleanups = [];
+
+    // Handle individual task completion
+    const handleComplete = (index, result) => {
+      if (hasRejected) return;
+
+      results[index] = result;
+      completed++;
+
+      if (completed === tasks.length) {
+        resolve(results);
+      }
+    };
+
+    // Handle individual task rejection
+    const handleReject = (error) => {
+      if (hasRejected) return;
+
+      hasRejected = true;
+      reject(error);
+
+      // Clean up all remaining tasks
+      cleanups.forEach(cleanup => cleanup && cleanup());
+    };
+
+    // Fork all tasks
+    tasks.forEach((task, index) => {
+      const cleanup = task.fork(
+        (error) => handleReject(error),
+        (result) => handleComplete(index, result)
+      );
+      cleanups.push(cleanup);
+    });
+
+    // Return cleanup function
+    return () => {
+      hasRejected = true;
+      cleanups.forEach(cleanup => cleanup && cleanup());
+    };
+  });
+};
+
+function juxt(...fns){
+  return function(x){
+    return Task.all(fns.reduce(function(memo, f){
+      memo.push(f(x));
+      return memo;
+    }, []));
+  }
+}
+
+Task.all = all;
+Task.juxt = juxt;
+
+const jnl = /^\d{4}-\d{2}-\d{2}\s(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)$/;
 
 function toInt(s) {
   return typeof s === 'string' && /^-?\d+$/.test(s) ? Number(s) : null
@@ -307,25 +371,12 @@ function page(options){
         // Output data as JSON
         console.log(JSON.stringify(data, null, 2));
       } else if (format === 'md') {
-        // Convert to markdown format
         if (heading) {
           console.log(`# ${name}`);
         }
-
-        //console.log({nest, data})
-        if (nest) {
-          // Convert hierarchical structure to markdown
-          const markdownLines = nestedJsonToMarkdown(data);
-          if (markdownLines.length > 0) {
-            console.log(markdownLines.join('\n'));
-          }
-        } else {
-          // Convert flat structure to markdown
-          data.forEach(block => {
-            if (block.content) {
-              console.log(block.content);
-            }
-          });
+        const markdownLines = nestedJsonToMarkdown(data);
+        if (markdownLines.length > 0) {
+          console.log(markdownLines.join('\n'));
         }
         if (heading) {
           console.log();
@@ -593,47 +644,99 @@ function query(options){
   }
 }
 
-function props(options){
+const comp = (...fns) => (arg) => fns.reduceRight((acc, fn) => fn(acc), arg);
+
+function normalizeOptions(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const heading = options.heading !== false;
-  return async function(pageName, propName = null){
-    try {
-      if (!pageName) {
-        throw new Error('Page name is required');
-      }
+  return {format, heading}
+}
 
-      const {name} = await getNames(pageName);
-      if (!name) {
-        throw new Error(`Page not found: ${pageName}`);
-      }
+function tskQuery(query, limit = Infinity){
+  return new Task(function(reject, resolve){
+    callLogseq('logseq.DB.datascriptQuery', [query]).then(function(results){
+      return take(results , limit);
+    }).then(resolve).catch(reject);
+  });
+}
 
-      const result = await qry(`[:find (pull ?p [*]) :where [?p :block/original-name "${name}"]]`);
-      const pageData = result[0]?.[0] || null;
+function qryPage(name){
+  return tskQuery(`[:find (pull ?p [*]) :where [?p :block/original-name "${name}"]]`);
+}
 
-      if (format === 'json') {
-        if (pageData) {
-          console.log(JSON.stringify(result, null, 2));
-        }
-      } else if (format === 'md') {
-        const values = propName ? pageData?.properties?.[propName] || null : Object.entries(pageData["properties-text-values"]).map(function([key, vals]){
-          return `${key}:: ${vals}`;
-        });
-        if (heading && name && values) {
-          console.log(`## ${name}`);
-        }
-        if (values) {
-          typeof values == 'object' ? values.forEach(value => console.log(value)) : console.log(values);
-        }
-        if (heading && name && values) {
-          console.log();
-        }
+function tskNames(name){
+  return name ? new Task(function(reject, resolve){
+    getNames(name).then(function(names){
+      if (names?.name) {
+        resolve(names);
       } else {
-        throw new Error(`Unknown format: ${format}`);
+        reject(new Error(`Page not found: ${name}`));
       }
-    } catch (error) {
-      console.error('Error:', error.message);
-      Deno.exit(1);
+    }).catch(reject);
+  }) : Task.rejected(new Error('Page name is required'));
+}
+
+function normal(name){
+  return tskNames(name).map(({name}) => name);
+}
+
+function fmtProps({format}, propName = null){
+  return function([name, results]){
+    //console.log({results, propName});
+    const pageData = results[0]?.[0] || null;
+
+    if (format === 'json') {
+      if (pageData) {
+        return [name, JSON.stringify(results, null, 2)];
+      }
+    } else if (format === 'md') {
+      return [name, propName ? pageData?.properties?.[propName] || null : Object.entries(pageData["properties-text-values"]).map(function([key, vals]){
+        return `${key}:: ${vals}`;
+      })];
+    } else {
+      throw new Error(`Unknown format: ${format}`);
     }
+  }
+}
+
+function fmtBody({heading, format}){
+  return function([name, content]){
+    //console.log({name, content})
+    if (format === 'json') {
+      return [name, JSON.stringify(content, null, 2)];
+    } else if (format === 'md') {
+      const lines = [];
+      if (heading && name && content) {
+        lines.push(`## ${name}`);
+      }
+      if (content) {
+        typeof content == 'object' ? lines.push(...content) : lines.push(content);
+      }
+      if (heading && name && content) {
+        lines.push("");
+      }
+      return lines;
+    }
+  }
+}
+
+function balk(error){
+  console.error('Error:', error.message);
+  Deno.exit(1);
+}
+
+function println(lines){
+  lines.forEach(line => console.log(line));
+  Deno.exit(0);
+}
+
+function props(options){
+  return function(pageName, propName = null){
+    return normal(pageName).
+      chain(Task.juxt(Task.of, qryPage)).
+      map(fmtProps(options, propName)).
+      map(fmtBody(options)).
+      fork(balk, println);
   }
 }
 
@@ -729,7 +832,7 @@ program
   .option('--desc', "With description")
   .option('--json', 'Output JSON format')
   .option('--no-heading', 'Omit H1 heading and trailing blank line for MD format')
-  .action(pipeable(props));
+  .action(pipeable(comp(props, normalizeOptions)));
 
 program
   .command('search')
