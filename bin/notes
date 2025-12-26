@@ -453,7 +453,7 @@ function page(options){
   }
 }
 
-function srch(term){
+function search(term){
   return new Task(function(reject, resolve){
     tskLogseq('logseq.Editor.search', [term]).
       fork(reject, async function(result){
@@ -811,7 +811,7 @@ program
   .arguments(demand("term"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
-  .action(forkable(constantly(srch)));
+  .action(forkable(constantly(search)));
 
 program
   .command('name')
