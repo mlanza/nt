@@ -2,7 +2,37 @@
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import Task from "https://esm.sh/data.task";
 
-const isPiped = !Deno.isatty(Deno.stdin.rid);
+async function detectPiped() {
+  try {
+    // Method 1: Try Deno 2's isTerminal method
+    const isTerminal = Deno.stdin.isTerminal();
+    if (!isTerminal) {
+      return true; // Definitely piped if not a terminal
+    }
+
+    // Method 2: Additional check - try to poll stdin with timeout
+    // This helps catch edge cases where terminal detection fails
+    const buffer = new Uint8Array(1);
+    const pollResult = await Promise.race([
+      Deno.stdin.read(buffer),
+      new Promise(resolve => setTimeout(() => resolve(null), 100))
+    ]);
+
+    // If we got data immediately, there's likely piped input
+    if (pollResult !== null && typeof pollResult === 'object' && pollResult.nread > 0) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    // Fallback: use basic check
+    try {
+      return !Deno.stdin.isTerminal();
+    } catch {
+      return false;
+    }
+  }
+}
 
 const NOTES_ENDPOINT = Deno.env.get('NOTES_ENDPOINT') || '';
 const NOTES_TOKEN = Deno.env.get('NOTES_TOKEN') || '';
@@ -247,8 +277,9 @@ function prerequisites(name){
 
 function pipeable(g){
   return async function (options, ...payload){
+    const wasPiped = payload.length === 0 && await detectPiped();
     const f = g(options);
-    if (isPiped){
+    if (wasPiped){
       await piped(async function(arg){
         await promise(f(arg, ...payload).map(fmt(options))).catch(abort).then(println);
       });
@@ -289,7 +320,8 @@ async function piped(f){
 function oldPipeable(g){
   return async function (options, ...payload){
     const f = g(options);
-    if (isPiped){
+    const wasPiped = payload.length === 0 && await detectPiped();
+    if (wasPiped){
       await piped(function(arg){
         return f(arg, ...payload);
       });
