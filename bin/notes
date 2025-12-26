@@ -534,10 +534,10 @@ function qryProps(prop, vals, mode = "any"){
     const conditions = vals.map(val => `[(contains? ?prop "${val}")]`).join(' ');
     const whereClause = mode === 'any' ? `(or ${conditions})` : conditions;
     return qry(`[:find (pull ?page [:block/original-name])
-                    :where
-                    [?page :block/properties ?props]
-                    [(get ?props :${prop}) ?prop]
-                    ${whereClause}]`).
+                  :where
+                  [?page :block/properties ?props]
+                  [(get ?props :${prop}) ?prop]
+                  ${whereClause}]`).
       fork(reject, function(results){
         const names = results.map(function([item]){
           return item?.["original-name"];
