@@ -345,7 +345,8 @@ function nestedJsonToMarkdown(blocks, level = 0) {
       const [line, ...parts] = content.split("\n");
       if (line.includes("::")) {
         lines.push(`${indent}${line}`);
-        for(const line of parts){
+        const pts = parts.join("\n").trim().split("\n");
+        for(const line of pts){
           lines.push(`${indent}${line}`);
         }
       } else {
@@ -417,7 +418,10 @@ function page(options){
           if (heading && content) {
             console.log(`# ${name}`);
           }
-          console.log(content + (heading ? "\n" : ""));
+          console.log(content);
+          if (heading) {
+            console.log("");
+          }
         } catch (fileError) {
           console.error(`Warning: Could not read page file: ${path} (${fileError.message})`);
         }
