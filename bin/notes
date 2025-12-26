@@ -178,9 +178,7 @@ function tskLogseq(method, args){
   });
 }
 
-function callLogseq(method, args) {
-  return promise(tskLogseq(method, args));
-}
+const callLogseq = comp(promise, tskLogseq);
 
 function qryPrerequisites(name){
   return new Task(function(reject, resolve){
