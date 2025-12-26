@@ -8,7 +8,10 @@ const NOTES_ENDPOINT = Deno.env.get('NOTES_ENDPOINT') || '';
 const NOTES_TOKEN = Deno.env.get('NOTES_TOKEN') || '';
 const NOTES_DIR = Deno.env.get('NOTES_DIR') || '';
 
-const comp = (...fns) => (arg) => fns.reduceRight((acc, fn) => fn(acc), arg);
+const comp = (...fns) => (...args) =>
+  fns.reduceRight((acc, fn, i) =>
+    i === fns.length - 1 ? fn(...acc) : fn(acc),
+  args)
 
 function println(lines){
   Array.isArray(lines) ? lines.forEach(line => console.log(line)) : console.log(lines);
@@ -170,31 +173,35 @@ async function getNames(given){
 
 function tskLogseq(method, args){
   return new Task(async function(reject, resolve){
-    const payload = { method }
-    if (args) {
-      payload.args = args
+    try {
+      const payload = { method }
+      if (args) {
+        payload.args = args
+      }
+
+      const response = await fetch(NOTES_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${NOTES_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        reject(new Error(`HTTP ${response.status}: ${response.statusText}`));
+      }
+
+      const result = await response.json()
+      if (result && result.error) {
+        reject(new Error(result.error));
+      }
+
+      resolve(result);
+
+    } catch (ex) {
+      reject(ex);
     }
-
-    const response = await fetch(NOTES_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${NOTES_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      reject(new Error(`HTTP ${response.status}: ${response.statusText}`));
-    }
-
-    const result = await response.json()
-
-    if (result && result.error) {
-      reject(new Error(result.error));
-    }
-
-    resolve(result);
   });
 }
 
@@ -838,6 +845,9 @@ program
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
   .action(pipeable(query));
+
+program
+  .command('foo')
 
 if (import.meta.main) {
   if (Deno.args.length === 0) {
