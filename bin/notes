@@ -586,11 +586,11 @@ function has(options, prop = null){
     throw new Error('--all and --any options are mutually exclusive');
   }
 
-  const fn = function(prop, ...vals){
+  const qry = function(prop, ...vals){
     return qryProps(prop, vals, options.any ? 'any' : 'all');
   }
 
-  return prop ? fn.bind(null, prop) : fn;
+  return prop ? qry.bind(null, prop) : qry;
 }
 
 function backlinks(options){
