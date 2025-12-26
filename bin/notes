@@ -531,7 +531,9 @@ function has(options, prop = null){
                      [(get ?props :${prop}) ?prop]
                      ${whereClause}]`;
 
+
       const result = await qry(query);
+                           //console.log({options, prop, vals, query, result})
 
       if (format === 'json') {
         return result;
@@ -553,7 +555,7 @@ function has(options, prop = null){
   return async function(...args){
     const {silent, format = "md"} = options;
     //console.log({silent, options, args})
-    const result = await exec(options, ...args);
+    const result = await exec(...args);
     if (!silent) {
       if (format == "md") {
         result.forEach(name => console.log(name));
