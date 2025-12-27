@@ -19,7 +19,7 @@ Conveniently list it among all skills via:
 $ skills
 ```
 
-And later retrieve it along with all its prerequisites:
+And later retrieve it along with its prerequisites:
 
 ```zsh
 $ about Coding
