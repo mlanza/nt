@@ -13,7 +13,7 @@ prerequisites:: [[Atomic Way]], [[Coding Style]]
 description:: Guidance for writing, refactoring or fixing code
 ```
 
-Skills can conveniently be listed via:
+It will conveniently be listed among all skills via:
 
 ```zsh
 $ skills
