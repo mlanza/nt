@@ -50,9 +50,9 @@ Sample tools calls:
 * `notes tags Programming | notes page` - pipe names into page to list content for a bunch of pages
 * `notes page Atomic | grep -C 3 components` - use `grep` as usual
 * `notes path Atomic | xargs code` - open page in VS Code, nvim, etc.
-* `echo "Atomic\nCosmos" | notes tags`
-* `list Atomic Cosmos | notes page`
-* `list Coding Tasking Decomposing | notes prereq | seen | notes page`
+* `echo "Atomic\nCosmos" | notes tags` - tags on these pages
+* `list Atomic Cosmos | notes page` -- display several pages
+* `list Coding Tasking Decomposing | notes prereq | seen | notes page` - several concepts and their unique prerequisites
 * `day | notes page` - today's journal page
 * `day -1 | notes page` - yesterday's journal page
 * `day $(seq 0 -90) | notes page` - to review 90 days of journal entries
