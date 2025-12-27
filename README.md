@@ -76,7 +76,7 @@ Set these environment variables:
 
 ## OpenCode Custom Tools
 
-There is a custom `skills` and an `about` tool which together facilitate knowledge lookup.  They're available to OpenCode when you start it in the repo.  Symlink them into your global opencode config path to make them universally available.
+There is a custom `skills` and an `about` tool which together facilitate knowledge lookup minus Computer Use.  They're available to OpenCode when you start it in the repo.  Symlink them into your global opencode config path to make them universally available.
 
 ## License
 [MIT](./LICENSE.md)
