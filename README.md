@@ -16,6 +16,7 @@ Sample commands:
 * `skills` - for a skills menu
 * `about Coding` - to lookup the Coding skill
 * `ago 90 | notes page` - to review 90 days of journal entries
+* `ago 90 | notes page | links` - recent links from journal entries
 
 Most commands accept the primary operand directly or via stdin.
 
