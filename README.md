@@ -19,6 +19,12 @@ Conveniently list it among all skills via:
 $ skills
 ```
 
+And later retrieve it along with all its prerequisites:
+
+```zsh
+$ about Coding
+```
+
 Sample tools:
 
 * `notes pages` - list regular pages
@@ -34,7 +40,6 @@ Sample tools:
 * `echo "Atomic\nCosmos" | notes tags`
 * `pages Atomic Cosmos | notes page`
 * `pages Coding Tasking Decomposing | notes prereq | seen | notes page`
-* `about Coding` - to lookup the Coding skill along with any prerequisites
 * `ago 90 | notes page` - to review 90 days of journal entries
 * `ago 90 | notes page | links` - recent links from journal entries
 * `period $(seq -90 -60) | notes page` - a range of journal entries (`zsh`)
