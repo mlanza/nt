@@ -4,10 +4,6 @@ import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.t
 
 import Task from "https://esm.sh/data.task";
 
-function detectPiped() {
-  return !Deno.isatty(Deno.stdin.rid);
-}
-
 const NOTES_ENDPOINT = Deno.env.get('NOTES_ENDPOINT') || '';
 const NOTES_TOKEN = Deno.env.get('NOTES_TOKEN') || '';
 const NOTES_DIR = Deno.env.get('NOTES_DIR') || '';
