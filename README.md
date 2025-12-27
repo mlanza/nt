@@ -56,8 +56,6 @@ These can be issued directly in [OpenCode](https://opencode.ai) — by you or th
 
 All `notes` commands receive the primary operand directly or via stdin.  This is useful for composing compound commands.
 
-You must run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
-
 ## Querying via Datalog
 
 Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries and custom commands you can build.  The innards build on this.  It's one reason to prefer Logseq to Obsidian.
@@ -66,9 +64,11 @@ Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) sp
 $ notes q '[:find (pull ?p [*]) :where [?p :block/original-name "Atomic"]]'
 ```
 
-## Environment
+## Getting Started
 
 Have `pwsh` and `deno` installed.  These runtimes were targeted over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
+
+Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
 Install tools in your path however you like:
 ```zsh
@@ -80,6 +80,8 @@ Set these environment variables:
 * **NOTES_DIR** - the path to your notes repo, e.g. `~/Documents/notes`
 * **NOTES_ENDPOINT** - the HTTP API endpoint, e.g. http://127.0.0.1:12315/api
 * **NOTES_TOKEN** - a token you configured for the HTTP API
+
+Once done, start Logseq, start your shell and issue a few commands.
 
 ## OpenCode Custom Tools
 
