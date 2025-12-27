@@ -1,12 +1,23 @@
 # Seqkit
 
-Pronounced "seekit," it's a toolkit for Logseq.  As a general rule, composable command-line tools are preferred to MCP tools because they're avalable to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
+A toolkit for [Logseq](https://logseq.com) that exposes knowhow to agents.  Prefer command-line tools to MCP tools because they're composeable and available to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
 
-Your commonplace book is a near perfect spot for keeping the sort of knowhow an agent needs to thrive.  It provides an excellent store for skills.  Any page tagged `Skills` with a `description` property describing the skill is ready to go.
+Your local-first commonplace book is a near perfect spot for keeping all the information and instructions an agent needs to thrive.  It is an excellent store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` (another property) that make sense and you're ready to go.  Prerequisites are automatically included when using `about`.
+
+Sample frontmatter in a Logseq page:
+
+```md
+tags:: AI, [[Making apps]], Skills
+alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
+prerequisites:: [[Atomic Way]], [[Coding Style]]
+description:: Guidance for writing, refactoring or fixing code
+```
 
 Sample commands:
 
-* `notes pages` - list all pages
+* `notes pages` - list regular pages
+* `notes pages -t journal` - list journal pages
+* `notes pages -t all` - list both journal and regular pages
 * `notes page Atomic | wikilinks` - to view wikilinks on a page
 * `notes page Atomic | wikilinks | notes page` - list all wikilinked pages
 * `notes page Atomic | links` - to view links on page
@@ -18,7 +29,7 @@ Sample commands:
 * `pages Atomic Cosmos | notes page`
 * `pages Coding Tasking Decomposing | notes prereq | seen | notes page`
 * `skills` - for a skills menu
-* `about Coding` - to lookup the Coding skill
+* `about Coding` - to lookup the Coding skill along with any prerequisites
 * `ago 90 | notes page` - to review 90 days of journal entries
 * `ago 90 | notes page | links` - recent links from journal entries
 * `period $(seq -90 -60) | notes page` - a range of journal entries (`zsh`)
@@ -30,14 +41,14 @@ You must have Logseq running in Developer Mode.  This can be flipped on under Se
 
 ## Environment
 
-Ensure `pwsh` is installed.  It was targeted over `zsh` and `bash` for cross-platform compatibility since I work on both a Mac and Windows.
+Have `pwsh` and `deno` installed.  These runtimes were targeted over `zsh` and `bash` for cross-platform compatibility to accommodate those who work on Mac, Linux or Windows.
 
 Install the scripts in your path however you like:
 ```zsh
 export PATH=~/Documents/seqkit/bin:$PATH
 ```
 
-Ensure you've set these environment variables:
+Set these environment variables:
 
 * **NOTES_DIR** - the path to your notes repo, e.g. `~/Documents/notes`
 * **NOTES_ENDPOINT** - the HTTP API endpoint, e.g. http://127.0.0.1:12315/api
