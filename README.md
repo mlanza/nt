@@ -51,10 +51,10 @@ Sample tools calls:
 * `list Coding Tasking Decomposing | notes prereq | seen | notes page`
 * `day | notes page` - today's journal page
 * `day -1 | notes page` - yesterday's journal page
-* `ago 90 | notes page` - to review 90 days of journal entries
-* `ago 90 | notes page | links` - recent links from journal entries
-* `ago 90 | notes page --only "~tasks"` - to display only TODOs
-* `ago 90 | notes page --less "~tasks"` - to display everything but TODOs
+* `day $(seq 0 -90) | notes page` - to review 90 days of journal entries
+* `day $(seq 0 -30) | notes page | links` - recent links from journal entries
+* `day $(seq 0 -30) | notes page --only "~tasks"` - to display only TODOs
+* `day $(seq 0 -30) | notes page --less "~tasks"` - to display everything but TODOs
 * `period $(seq -90 -60) | notes page` - a range of journal entries (`zsh`)
 * `period -30..0 | notes page` - a range of journal entries (`pwsh`)
 
