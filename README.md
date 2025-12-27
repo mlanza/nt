@@ -85,7 +85,9 @@ Set these environment variables:
 
 Once done, start Logseq, start your shell and issue a few commands.
 
-## Querying via Datalog
+## Going Further
+
+### Querying via Datalog
 
 Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries and custom commands you can build.  The innards build on this.  It's one reason to prefer Logseq to Obsidian.
 
@@ -93,11 +95,11 @@ Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) sp
 $ notes q '[:find (pull ?p [*]) :where [?p :block/original-name "Atomic"]]'
 ```
 
-## How `about` Got That Way
+### How `about` Got That Way
 
 The `about` tool filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes.  I combine [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes lots of loose links — things I want to further examine or just read — only some of which become TODOs. That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
 
-## OpenCode Custom Tools
+### OpenCode Custom Tools
 
 There is a custom `skills` and an `about` tool which together facilitate knowledge lookup minus computer use.  They're available to OpenCode when you start it in the repo.  Symlink them into your global opencode config path to make them universally available.
 
