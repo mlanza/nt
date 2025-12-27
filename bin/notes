@@ -850,7 +850,7 @@ program
 program
   .command('query')
   .alias('q')
-  .description('Execute Datalog query')
+  .description('Run Datalog query')
   .arguments(demand("query"))
   .option('--limit <type:string>', 'Limit to N entries (none = no limit) (default: "none")', 'none')
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
