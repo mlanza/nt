@@ -45,6 +45,7 @@ Sample tools calls:
 * `notes name programming | notes t` - normalize the name and find pages tagged Programming
 * `notes tags Programming | notes page` - pipe names into page to list content for a bunch of pages
 * `notes page Atomic | grep -C 3 components` - use `grep` as usual
+* `notes path Atomic | xargs code` - open page in VS Code, nvim, etc.
 * `echo "Atomic\nCosmos" | notes tags`
 * `list Atomic Cosmos | notes page`
 * `list Coding Tasking Decomposing | notes prereq | seen | notes page`
