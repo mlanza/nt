@@ -51,7 +51,7 @@ All `notes` commands receive the primary operand directly or via stdin.  This is
 
 You must run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
-## Datalog
+## Querying via Datalog
 
 Logseq's superpower is its [DataScript](https://www.npmjs.com/package/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries you can build.  The innards build on this.  It's one reason to prefer Logseq to Obsidian.
 
