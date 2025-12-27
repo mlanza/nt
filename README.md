@@ -1,19 +1,24 @@
-# Logseq `notes`
+# Seqkit
 
-Seq is short for Logseq.  As a general rule, composable command-line tools are preferred to MCP tools because they're avalable to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
+Pronounced "seekit," it's a toolkit for Logseq.  As a general rule, composable command-line tools are preferred to MCP tools because they're avalable to humans and agents alike. It's easier to wrap a command-line tool as an MCP server, than the reverse.
 
 Your commonplace book is a near perfect spot for keeping the sort of knowhow an agent needs to thrive.  It provides an excellent store for skills.  Any page tagged `Skills` with a `description` property is readily available to an agent.
 
 Use `notes` to:
 
 * `notes pages` - list all pages
-* `notes tags Skills | notes props description` - for a skills menu
+* `notes page Atomic | wikilinks` - to view wikilinks on a page
+* `notes page Atomic | links` - to view links on page
 * `notes page Atomic` - list a particular page by name
 * `notes t Programming` - list notes tagged something
 * `notes t Programming | notes page | bat` - pipe names into page to list content for a bunch of pages
 * `echo "Atomic\nCosmos" | notes tags`
+* `skills` - for a skills menu
+* `about Coding` - to learn about the Coding skill
 
 Most commands accept the primary operand directly or via stdin.
+
+For `skills` to work you must tag every skills page "Skills" and add a `description` property describing the skill.
 
 You must have Logseq running in Developer Mode.  This can be flipped on under Settings > Advanced.  After that, enable the local HTTP API. It appears as a button in the upper right.  This effectively treats your local-first install of Logseq as an MCP server.
 
@@ -31,6 +36,8 @@ $ ago 90 | notes page
 ```
 
 ## Environment
+
+Ensure `pwsh` is installed.
 
 Ensure you've set these environment variables:
 
