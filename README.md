@@ -8,6 +8,7 @@ Sample commands:
 
 * `notes pages` - list all pages
 * `notes page Atomic | wikilinks` - to view wikilinks on a page
+* `notes page Atomic | wikilinks | notes page` - list all wikilinked pages
 * `notes page Atomic | links` - to view links on page
 * `notes page Atomic` - list a particular page by name
 * `notes t Programming` - list notes tagged something
