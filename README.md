@@ -45,7 +45,7 @@ You must run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`. 
 
 Have `pwsh` and `deno` installed.  These runtimes were targeted over `zsh` and `bash` for cross-platform compatibility to accommodate those who work on Mac, Linux or Windows.
 
-Install the scripts in your path however you like:
+Install tools in your path however you like:
 ```zsh
 export PATH=~/Documents/seqkit/bin:$PATH
 ```
