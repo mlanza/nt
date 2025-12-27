@@ -32,7 +32,7 @@ And later retrieve it along with its prerequisites:
 $ about Coding
 ```
 
-Sample tools:
+Sample tools calls:
 
 * `notes pages` - list regular pages
 * `notes pages -t journal` - list journal pages
@@ -57,7 +57,7 @@ Sample tools:
 
 These can be issued directly in [OpenCode](https://opencode.ai) — by you or the agent.  Being command line, these can be used by any agentic runtime (Claude, Gemini, etc.) with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
-All `notes` commands receive the primary operand directly or via stdin.  This is useful for composing compound commands.
+All `notes` commands receive the primary operand directly or via stdin.  This is useful for composing compound commands.  The tools were designed to mind the Unix philosophy and support composition.
 
 ## Getting Started
 
