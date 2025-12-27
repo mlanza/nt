@@ -13,6 +13,12 @@ prerequisites:: [[Atomic Way]], [[Coding Style]]
 description:: Guidance for writing, refactoring or fixing code
 ```
 
+Skills can conveniently be listed via:
+
+```zsh
+$ skills
+```
+
 Sample tools:
 
 * `notes pages` - list regular pages
@@ -28,7 +34,6 @@ Sample tools:
 * `echo "Atomic\nCosmos" | notes tags`
 * `pages Atomic Cosmos | notes page`
 * `pages Coding Tasking Decomposing | notes prereq | seen | notes page`
-* `skills` - for a skills menu
 * `about Coding` - to lookup the Coding skill along with any prerequisites
 * `ago 90 | notes page` - to review 90 days of journal entries
 * `ago 90 | notes page | links` - recent links from journal entries
