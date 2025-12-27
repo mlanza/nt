@@ -13,7 +13,7 @@ prerequisites:: [[Atomic Way]], [[Coding Style]]
 description:: Guidance for writing, refactoring or fixing code
 ```
 
-Sample commands:
+Sample tools:
 
 * `notes pages` - list regular pages
 * `notes pages -t journal` - list journal pages
