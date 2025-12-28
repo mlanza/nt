@@ -513,6 +513,23 @@ function path(){
   }
 }
 
+function existsCheck(){
+  return function(name){
+    return tskNames(name).
+      chain(({path}) => {
+        return new Task(function(reject, resolve){
+          exists(path).then(result => {
+            if (result) {
+              resolve(result);
+            } else {
+              resolve([]);
+            }
+          }).catch(reject);
+        });
+      });
+  }
+}
+
 function tskNamed(id){
   return new Task(async function(reject, resolve){
     try {
@@ -809,6 +826,12 @@ program
   .action(pipeable(path));
 
 program
+  .command('exists')
+  .description('Check if page file exists and return path if it does')
+  .arguments(demand("name"))
+  .action(pipeable(existsCheck));
+
+program
   .command('props')
   .description('Get page properties')
   .arguments(demand("name", "property"))
@@ -867,7 +890,6 @@ program
   .command('post')
   .description('Create a page or journal entry')
   .arguments(demand("name"))
-  .option('--dest', 'Display the destination file without (over)writing it')
   .option('--overwrite', 'Overwrite existing file')
   .action(async (options, name) => {
     try {
@@ -880,11 +902,6 @@ program
       }
 
       const {path} = await getNames(name);
-
-      if (options.dest) {
-        console.log(path);
-        return;
-      }
 
       const hasStdin = !Deno.isatty(Deno.stdin.rid);
       if (!hasStdin) {
@@ -899,6 +916,45 @@ program
 
       await Deno.writeTextFile(path, content);
       console.log(`Created: ${path}`);
+
+    } catch (error) {
+      abort(error);
+    }
+  });
+
+program
+  .command('restore')
+  .description('Restore a page file to the last committed version')
+  .arguments(demand("name"))
+  .action(async (options, name) => {
+    try {
+      if (!name) {
+        throw new Error('Name argument is required');
+      }
+
+      const {path} = await getNames(name);
+
+      if (!path) {
+        throw new Error(`Page not found: ${name}`);
+      }
+
+      if (!await exists(path)) {
+        throw new Error(`File does not exist: ${path}`);
+      }
+
+      const process = new Deno.Command("git", {
+        args: ["restore", path],
+        stdout: "inherit",
+        stderr: "inherit"
+      });
+
+      const {code} = await process.output();
+
+      if (code === 0) {
+        console.log(`Restored: ${path}`);
+      } else {
+        throw new Error(`Git restore failed with exit code ${code}`);
+      }
 
     } catch (error) {
       abort(error);
