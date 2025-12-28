@@ -922,45 +922,6 @@ program
     }
   });
 
-program
-  .command('restore')
-  .description('Restore a page file to the last committed version')
-  .arguments(demand("name"))
-  .action(async (options, name) => {
-    try {
-      if (!name) {
-        throw new Error('Name argument is required');
-      }
-
-      const {path} = await getNames(name);
-
-      if (!path) {
-        throw new Error(`Page not found: ${name}`);
-      }
-
-      if (!await exists(path)) {
-        throw new Error(`File does not exist: ${path}`);
-      }
-
-      const process = new Deno.Command("git", {
-        args: ["restore", path],
-        stdout: "inherit",
-        stderr: "inherit"
-      });
-
-      const {code} = await process.output();
-
-      if (code === 0) {
-        console.log(`Restored: ${path}`);
-      } else {
-        throw new Error(`Git restore failed with exit code ${code}`);
-      }
-
-    } catch (error) {
-      abort(error);
-    }
-  });
-
 if (import.meta.main) {
   if (Deno.args.length === 0) {
     program.showHelp();
