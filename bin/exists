@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# Read paths from stdin or arguments
+if [ $# -eq 0 ]; then
+    # Read from stdin
+    while IFS= read -r path; do
+        if [ -e "$path" ]; then
+            echo "$path"
+        fi
+    done
+else
+    # Process arguments
+    for path in "$@"; do
+        if [ -e "$path" ]; then
+            echo "$path"
+        fi
+    done
+fi
