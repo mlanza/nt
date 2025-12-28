@@ -1,18 +1,9 @@
-#!/usr/bin/env bash
+#!/Users/mlanza/.local/bin/pwsh
 
-# Read paths from stdin or arguments
-if [ $# -eq 0 ]; then
-    # Read from stdin
-    while IFS= read -r path; do
-        if [ -e "$path" ]; then
-            echo "$path"
-        fi
-    done
-else
-    # Process arguments
-    for path in "$@"; do
-        if [ -e "$path" ]; then
-            echo "$path"
-        fi
-    done
-fi
+# Process each line from $input
+$input | ForEach-Object {
+    $path = $_.Trim()
+    if ($path -and (Test-Path $path)) {
+        $path
+    }
+}
