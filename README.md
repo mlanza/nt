@@ -52,8 +52,8 @@ Sample tools calls:
 * `notes path Atomic | xargs code` - open page in VS Code, nvim, etc.
 * `echo "My thoughts" | notes post Atomic --overwrite` - overwriting a page
 * `notes path Atomic | xargs git restore` - undoing a mistaken overwrite
-* `echo "Atomic\nCosmos" | notes tags` - tags on these pages
-* `list Atomic "Cosmos" | notes page` -- display several pages
+* `echo "Atomic\nClojure Way" | notes tags` - tags on these pages
+* `list Atomic "Clojure Way" | notes page` -- display several pages
 * `list Coding Tasking Decomposing | notes prereq | seen | notes page` - several concepts and their unique prerequisites
 * `day | notes page` - today's journal page
 * `day -1 | notes page` - yesterday's journal page
