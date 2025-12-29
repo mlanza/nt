@@ -115,14 +115,14 @@ The kit was designed to minimize ceremony, to compose, and to mind the Unix phil
 
 Show what pages have these tags.  Equivalents:
 ```zsh
-list Atomic "Clojure Way" | notes tags
+list Atomic Clojure\ Way | notes tags
 ```
 ```zsh
 notes tags Atomic
-notes tags "Clojure Way"
+notes tags Clojure\ Way
 ```
 ```zsh
-printf "%s\n" Atomic "Clojure Way" | xargs -I {} notes tags {}
+printf "%s\n" Atomic Clojure\ Way | xargs -I {} notes tags {}
 ```
 ```pwsh
 'Atomic', 'Clojure Way' | % { notes tags $_ } # powershell
@@ -130,14 +130,14 @@ printf "%s\n" Atomic "Clojure Way" | xargs -I {} notes tags {}
 
 Show what tags are on these pages.  Equivalents:
 ```zsh
-list Atomic "Clojure Way" | notes props tags
+list Atomic Clojure\ Way | notes props tags
 ```
 ```zsh
 notes props Atomic tags
-notes props "Clojure Way" tags
+notes props Clojure\ Way tags
 ```
 ```zsh
-printf "%s\n" Atomic "Clojure Way" | xargs -I {} notes props {} tags
+printf "%s\n" Atomic Clojure\ Way | xargs -I {} notes props {} tags
 ```
 ```pwsh
 'Atomic', 'Clojure Way' | % { notes props $_ tags } # powershell
