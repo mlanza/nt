@@ -111,7 +111,7 @@ The `about` tool filters out blocks which are themselves either links or TODOs. 
 
 ### Composition-friendly Tooling
 
-The kit was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `notes` commands, for example, can receive the primary operand directly or via stdin.
+The kit was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `notes` commands, for example, can receive the primary operand directly or via stdin.  With embedded spaces being somewhat typical, that's modeled below.
 
 Show what pages have these tags.  Equivalents:
 ```zsh
