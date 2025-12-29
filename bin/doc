@@ -6,8 +6,7 @@ param(
 )
 
 # Parse stdin into structure using struct
-$jsonStructure = $Input | struct
-$structure = $jsonStructure | ConvertFrom-Json
+$structure = $Input | struct | ConvertFrom-Json
 
 # Function to recursively render the structure
 function Render-Node {
