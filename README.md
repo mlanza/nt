@@ -122,7 +122,7 @@ notes tags Atomic
 notes tags Cosmos
 ```
 ```zsh
-printf -"%s\n" Atomic Cosmos | xargs -I {} notes tags {}
+printf "%s\n" Atomic Cosmos | xargs -I {} notes tags {}
 ```
 ```pwsh
 list Atomic Cosmos | % { notes tags $_ } # powershell
