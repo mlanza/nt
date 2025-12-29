@@ -6,7 +6,7 @@ param(
 )
 
 # Parse stdin into structure using struct
-$jsonStructure = $Input | pwsh -File "/Users/mlanza/Documents/seqkit/bin/struct"
+$jsonStructure = $Input | struct
 $structure = $jsonStructure | ConvertFrom-Json
 
 # Function to recursively render the structure
