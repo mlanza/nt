@@ -45,7 +45,6 @@ Sample tools calls:
 * `notes page Atomic | wikilinks | notes page` - list all wikilinked pages
 * `notes page Atomic | links` - to view links on page
 * `notes page Atomic` - list a particular page by name
-* `about "Agent Instructions" | doc --para | cat -s` - to generate AGENTS.md content from page replete with prerequisites.
 * `notes tags Programming` - list notes tagged Programming
 * `notes name programming | notes t` - normalize the name and find pages tagged Programming
 * `notes tags Programming | notes page` - pipe names into page to list content for a bunch of pages
@@ -89,6 +88,16 @@ Set these environment variables:
 Once done, start Logseq, start your shell and issue a few commands.
 
 ## Going Deeper
+
+### Generating AGENT.md
+
+While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup the most crucial instructions outright, that's just slow.  Although the content will be redundant (in Logseq and now in your project), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
+
+The following assumes the target page is replete with prerequisites (your most critical items).  The `docmode` tool slightly flattens Logseq's outline formatting.
+
+```zsh
+about "Agent Instructions" | docmode --para | cat -s
+```
 
 ### Querying via Datalog
 

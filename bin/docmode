@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# loosely similar to displaying a page in Logseq's document mode
+# loosely emulates Logseq's document mode
 
 param(
     [switch]$para
