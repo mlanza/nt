@@ -58,7 +58,7 @@ Sample tools calls:
 * `day | notes page` - today's journal page
 * `day -1 | notes page` - yesterday's journal page
 * `day $(seq 0 -90) | notes page` - to review 90 days of journal entries
-* `day $(seq 0 -30) | notes page | links` - recent links from journal entries
+* `day $(seq 0 -30) | notes page | links` - links from latest journal entries
 * `day $(seq 0 -30) | notes page --only "~tasks"` - to display only TODOs
 * `day $(seq 0 -30) | notes page --less "~tasks"` - to display everything but TODOs
 * `day $(seq 0 -30) | notes page` - a range of journal entries (`zsh`)
