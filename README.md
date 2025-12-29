@@ -50,7 +50,8 @@ Sample tools calls:
 * `notes tags Programming | notes page` - pipe names into page to list content for a bunch of pages
 * `notes page Atomic | grep -C 3 components` - use `grep` as usual
 * `notes path Atomic | xargs code` - open page in VS Code, nvim, etc.
-* `echo "My thoughts" | notes post Atomic --overwrite` - overwriting a page
+* * `echo "My thoughts" | notes post Atomic` - writing a page
+* `echo "My thoughts" | notes post Atomic --overwrite` - overwriting an existing page
 * `notes path Atomic | xargs git restore` - undoing a mistaken overwrite
 * `echo "Atomic\nClojure Way" | notes tags` - tags on these pages
 * `list Atomic "Clojure Way" | notes page` -- display several pages
