@@ -1,6 +1,6 @@
 # Note
 
-**Note** is command line access to [Logseq](https://logseq.com) knowhow.  Command line tools are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike. Plus, it's easier to wrap a command line tool as an MCP server, than the reverse.
+**Note** is command line access to [Logseq](https://logseq.com) knowhow.  Command line tools are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike. Plus, they're easier to wrap as MCP servers, than the reverse.
 
 <p align="center">
   <img src="./images/logo.png" style="width: 250px; max-width: 100%;" />
