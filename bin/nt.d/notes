@@ -903,7 +903,6 @@ program
 
 program
   .command('day')
-  .alias('d')
   .description('List one or more days')
   .action(() => console.log('External command - routed to day script'))
 
