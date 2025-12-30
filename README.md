@@ -65,7 +65,7 @@ Sample tools calls:
 * `nt day $(seq 0 -30) | nt page` - a range of journal entries (`zsh`)
 * `nt day (0..-30) | nt page` - a range of journal entries (`pwsh`)
 
-These can be issued directly in [OpenCode](https://opencode.ai) — by you or the agent.  Being command line, these can be used by any agentic runtime (Claude, Gemini, etc.) with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
 ## Getting Started
 
