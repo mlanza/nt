@@ -6,7 +6,7 @@ if (!sub) {
   Deno.exit(2)
 }
 
-const exe = `${import.meta.dirname}/${sub}`
+let exe = `${import.meta.dirname}/${sub}`
 
 const cmd = new Deno.Command(exe, {
   args: rest,
@@ -21,8 +21,17 @@ try {
   Deno.exit(status.code)
 } catch (err) {
   if (err instanceof Deno.errors.NotFound) {
-    console.error(`Unknown subcommand: ${sub}`)
-    Deno.exit(2)
+    // Delegate to notes as catchall
+    exe = `${import.meta.dirname}/notes`
+    const notesCmd = new Deno.Command(exe, {
+      args: [sub, ...rest],
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit"
+    })
+    const notesChild = notesCmd.spawn()
+    const notesStatus = await notesChild.status
+    Deno.exit(notesStatus.code)
   }
   throw err
 }
