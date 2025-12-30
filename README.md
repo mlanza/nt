@@ -98,6 +98,10 @@ The following assumes the target page `prerequisites` is replete with your most 
 nt about "Agent Instructions" | nt docmode --para | cat -s
 ```
 
+### `about` Design Rationale
+
+The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
+
 ### Querying via Datalog
 
 Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries and custom commands you can build.  The innards build on this.  It's one reason to prefer Logseq to Obsidian.
@@ -105,10 +109,6 @@ Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) sp
 ```zsh
 $ nt q '[:find (pull ?p [*]) :where [?p :block/original-name "Atomic"]]'
 ```
-
-### `about` Design Rationale
-
-The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
 
 ### Ergonomics
 
