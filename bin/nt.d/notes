@@ -406,6 +406,11 @@ function page(options){
       }
 
       const {name, path} = names;
+      const found = await exists(path);
+
+      if (!found) {
+        return;
+      }
 
       // Handle append case early - it bypasses all processing
       if (append) {
@@ -419,9 +424,6 @@ function page(options){
       // STAGE 1: Exception case - Simple MD format without nest and without filter
       // Bypass all processing and just print the page directly from file
       if (format === 'md' && !nest && keep == null) {
-        if (!exists(path)) {
-          return;
-        }
 
         try {
           const content = (await Deno.readTextFile(path)).replace(/\s+$/, '');
