@@ -828,7 +828,6 @@ program
 
 program
   .command('alias')
-  .alias('a')
   .description('Get page name from alias')
   .arguments(demand("alias"))
   .action(pipeable(alias));
@@ -903,8 +902,8 @@ program
 
 program
   .command('day')
-  .description('List one or more days')
-  .action(() => console.log('External command - routed to day script'))
+  .alias('d')
+  .description('List one or more days');
 
 program
   .command('skills')
@@ -912,6 +911,7 @@ program
 
 program
   .command('about')
+  .alias('a')
   .arguments("<name>")
   .description('Retrieves information about a topic');
 
