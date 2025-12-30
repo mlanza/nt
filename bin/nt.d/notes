@@ -903,6 +903,7 @@ program
 program
   .command('day')
   .alias('d')
+  .arguments("[offset...]")
   .description('List one or more days');
 
 program
