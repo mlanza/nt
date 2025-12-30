@@ -1,12 +1,9 @@
 #!/usr/bin/env deno run --allow-run
 const [sub, ...rest] = Deno.args
 
-if (!sub) {
-  console.error("usage: nt <subcommand> [...args]")
-  Deno.exit(2)
-}
+const subcmd = sub || "notes";
 
-let exe = `${import.meta.dirname}/nt.d/${sub}`
+let exe = `${import.meta.dirname}/nt.d/${subcmd}`
 
 const cmd = new Deno.Command(exe, {
   args: rest,
