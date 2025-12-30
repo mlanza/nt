@@ -910,8 +910,8 @@ program
   .description('List items');
 
 program
-  .command('notebook')
-  .description('Manage notebook');
+  .command('root')
+  .description('Expose repo path');
 
 program
   .command('day')
