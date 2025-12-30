@@ -8,7 +8,7 @@ A tool for exposing [Logseq](https://logseq.com) knowhow to agents.  Prefer comm
 
 Your local-first commonplace book 📖 is a near perfect spot for keeping all the information and instructions an agent needs to thrive — one place (💍) to rule them all.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
-That also makes it the ideal store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling `about`.
+That also makes it the ideal store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
 
 Getting frontmatter properties:
 
@@ -27,13 +27,13 @@ description:: Guidance for writing, refactoring or fixing code
 Conveniently list it among all skills via:
 
 ```zsh
-$ skills
+$ nt skills
 ```
 
 And later retrieve it along with its prerequisites:
 
 ```zsh
-$ about Coding
+$ nt about Coding
 ```
 
 Sample tools calls:
@@ -95,7 +95,7 @@ While technically possible to give the agent a minimal `AGENTS.md` and ask it to
 The following assumes the target page `prerequisites` is replete with your most critical items.  The `docmode` tool slightly flattens Logseq's outline formatting.
 
 ```zsh
-about "Agent Instructions" | docmode --para | cat -s
+nt about "Agent Instructions" | nt docmode --para | cat -s
 ```
 
 ### Querying via Datalog
@@ -108,7 +108,7 @@ $ nt q '[:find (pull ?p [*]) :where [?p :block/original-name "Atomic"]]'
 
 ### `about` Design Rationale
 
-The `about` tool filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
+The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
 
 ### Ergonomics
 
