@@ -913,8 +913,8 @@ program
 
 program
   .command('about')
-  .description('Retrieves information about a topic')
-  .action(() => console.log('External command - routed to about script'))
+  .arguments("<name>")
+  .description('Retrieves information about a topic');
 
 program
   .command('seen')
