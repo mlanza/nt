@@ -516,23 +516,8 @@ function path(){
 function tskNamed(id){
   return new Task(async function(reject, resolve){
     try {
-      let result = await callLogseq('logseq.Editor.getPage', [id]);
-
-      // If direct lookup failed and id looks like a number, try to find page by searching all pages
-      if (!result && /^\d+$/.test(id)) {
-        // Get all pages and find the one with matching numeric ID
-        const allPages = await callLogseq('logseq.Editor.getAllPages')
-        const matchingPage = allPages.find(page => page.id.toString() === id)
-        if (matchingPage) {
-          result = matchingPage
-        }
-      }
-      if (result?.originalName) {
-        resolve(result.originalName);
-      } else {
-        resolve(result);
-      }
-
+      const {name} = await getNames(id);
+      resolve(name);
     } catch (error) {
       reject(error);
     }
