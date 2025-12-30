@@ -75,7 +75,7 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 Install tools in your path however you like:
 ```zsh
-export PATH=~/Documents/seqkit/bin:$PATH
+export PATH=~/Documents/nt/bin:$PATH
 ```
 
 Set these environment variables:
