@@ -170,7 +170,7 @@ const getJournalPage = comp(promise, tskGetJournalPage);
 async function getNames(given){
   if (!given) return null;
   const m = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/)
-  const normalized = await getNormalizedName(given) || await getJournalPage(given);
+  const normalized = await getNormalizedName(given) || (m ? await getJournalPage(given) : null);
   const alias = normalized ? await aka(normalized) : null;
   const name = alias || normalized || given; // fallback to given if normalized is null
   const day = m ? parseInt(m[1] + m[2] + m[3]) : await journalDay(name);
