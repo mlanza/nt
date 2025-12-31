@@ -134,7 +134,7 @@ async function exists(path){
 }
 
 function encode(name){
-  return name ? encodeURIComponent(name).replaceAll("%20", " ") : null;
+  return name ? encodeURIComponent(name).replaceAll("%20", " ").replaceAll(/\./g, "%2E") : null;
 }
 
 function formatYYYYMMDD(n) {
@@ -145,7 +145,7 @@ function formatYYYYMMDD(n) {
 
 function getFilePath(day, name){
   const where = day ? "journals" : "pages";
-  const normalized = day ? formatYYYYMMDD(day) : encode(name.replaceAll("/", ".").trim());
+  const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
   return `${LOGSEQ_REPO}/${where}/${normalized}.md`;
 }
 
@@ -163,24 +163,6 @@ function tskGetJournalPage(datestamp){
 
 const getJournalPage = comp(promise, tskGetJournalPage);
 
-function escapeFileName(filePath) {
-  const pathParts = filePath.split('/');
-  const fileName = pathParts[pathParts.length - 1];
-  const lastDotIndex = fileName.lastIndexOf('.');
-
-  if (lastDotIndex <= 0) {
-    return filePath; // No extension or starts with dot
-  }
-
-  const name = fileName.slice(0, lastDotIndex);
-  const ext = fileName.slice(lastDotIndex);
-
-  // Replace dots with %2F (hierarchy separators)
-  const escapedName = name.replace(/\./g, '%2F');
-
-  return pathParts.slice(0, -1).join('/') + '/' + escapedName + ext;
-}
-
 async function getNames(given){
   if (!given) return null;
   const m = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/)
@@ -188,7 +170,7 @@ async function getNames(given){
   const alias = normalized ? await aka(normalized) : null;
   const name = alias || normalized || given; // fallback to given if normalized is null
   const day = m ? parseInt(m[1] + m[2] + m[3]) : await journalDay(name);
-  const path = name ? escapeFileName(getFilePath(day, name)) : null;
+  const path = name ? getFilePath(day, name) : null;
   const names = {given, day, normalized, name, path};
   //console.log({names});
   return names;
