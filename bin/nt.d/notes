@@ -956,6 +956,11 @@ program
   .arguments(PIPED);
 
 program
+  .command('params')
+  .description('Filters to any params on the page')
+  .arguments(PIPED);
+
+program
   .command('document')
   .description('Represent content as documentation')
   .arguments(PIPED);
