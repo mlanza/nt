@@ -952,7 +952,7 @@ program
 
 program
   .command('seen')
-  .description('Filters down to seen items')
+  .description('Filters to seen lines')
   .arguments(PIPED);
 
 program
