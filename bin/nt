@@ -2,7 +2,7 @@
 import "https://deno.land/x/dotenv/load.ts";
 
 const [sub, ...rest] = Deno.args;
-let subcmd = sub || "notes"; // Default to "notes"
+let subcmd = sub || "note"; // Default to "note"
 let finalArgs = rest;
 
 const psPath = `${import.meta.dirname}/nt.d/${subcmd}.ps1`;
@@ -33,7 +33,7 @@ if (psExists) {
   commandArgs = ["run", "--allow-all", jsPath, ...finalArgs];
 } else {
   // Fallback to notes.js if no matching script found
-  const fallbackNotesPath = `${import.meta.dirname}/nt.d/notes.js`;
+  const fallbackNotesPath = `${import.meta.dirname}/nt.d/note.js`;
   command = "deno";
   // Pass the original subcmd as an argument to notes.js for catch-all behavior
   commandArgs = ["run", "--allow-all", fallbackNotesPath, sub, ...rest];
