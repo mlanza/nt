@@ -1,12 +1,11 @@
 #!/usr/bin/env deno run --allow-all
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.ts";
-
 import Task from "https://esm.sh/data.task";
 
-const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT') || '';
-const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN') || '';
-const LOGSEQ_REPO = Deno.env.get('LOGSEQ_REPO') || '';
+const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT') || null;
+const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN') || null;
+const LOGSEQ_REPO = Deno.env.get('LOGSEQ_REPO') || null;
 
 const comp = (...fns) => (...args) =>
   fns.reduceRight((acc, fn, i) =>
@@ -393,7 +392,6 @@ function keeping(patterns, hit = true){
 
 function page(options){
   const format = options.json ? 'json' : (options.format || 'md');
-  const append = options.append || null;
   const heading = options.heading !== false;
   const nest = options.nest || false;
   const keep = keeping(options.less, false) || keeping(options.only, true);
@@ -409,15 +407,6 @@ function page(options){
       const found = await exists(path);
 
       if (!found) {
-        return;
-      }
-
-      // Handle append case early - it bypasses all processing
-      if (append) {
-        if (!name) {
-          throw new Error('--append option requires a page name to be provided');
-        }
-        await callLogseq('logseq.Editor.appendBlockInPage', [name, append]);
         return;
       }
 
@@ -635,6 +624,73 @@ function query(options){
   }
 }
 
+async function post(options, name) {
+  try {
+    if (!name) {
+      throw new Error('Name argument is required');
+    }
+
+    if (!LOGSEQ_REPO) {
+      throw new Error('LOGSEQ_REPO environment variable is not set');
+    }
+
+    const {path} = await getNames(name);
+
+    const hasStdin = !Deno.isatty(Deno.stdin.rid);
+    if (!hasStdin) {
+      throw new Error('Must supply content via stdin.');
+    }
+
+    const action = options.overwrite ? "Overwrote" : "Wrote";
+    if (!options.overwrite && await exists(path)) {
+      throw new Error(`File already exists: ${path}. Use --overwrite to replace it.`);
+    }
+
+    const content = await Deno.readTextFile('/dev/stdin');
+
+    await Deno.writeTextFile(path, content);
+    console.log(`${action}: ${path}`);
+
+  } catch (error) {
+    abort(error);
+  }
+}
+
+async function append(options, named){
+  try {
+    if (!named) {
+      throw new Error('Name argument is required');
+    }
+
+    if (!LOGSEQ_REPO) {
+      throw new Error('LOGSEQ_REPO environment variable is not set');
+    }
+
+    const {name, path} = await getNames(named);
+    const found = await exists(path);
+
+    if (!found) {
+      throw new Error(`Page "${name}" does not exist.`);
+    }
+
+    const hasStdin = !Deno.isatty(Deno.stdin.rid);
+    if (!hasStdin) {
+      throw new Error('Must supply content via stdin.');
+    }
+
+    const content = await Deno.readTextFile('/dev/stdin');
+
+    const lines = content.trim().split("\n");
+    for(const line of lines) {
+      await callLogseq('logseq.Editor.appendBlockInPage', [name, line]);
+    }
+
+    console.log(`Appended ${lines.length} blocks to: ${path}`);
+  } catch (error) {
+    abort(error);
+  }
+}
+
 function normalizeOptions(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const heading = options.heading !== false;
@@ -767,6 +823,19 @@ program
   .action(oldPipeable(page));
 
 program
+  .command('post')
+  .description('Create a page from stdin')
+  .arguments("<name>")
+  .option('--overwrite', 'Overwrite existing file')
+  .action(post);
+
+program
+  .command('append')
+  .description("Append to page from stdin")
+  .arguments("<name>")
+  .action(append);
+
+program
   .command('tags')
   .alias('t')
   .description('List pages with given tags (default: ALL tags)')
@@ -853,43 +922,6 @@ program
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
   .action(pipeable(query));
-
-program
-  .command('post')
-  .description('Create a page or journal entry')
-  .arguments(demand("name"))
-  .option('--overwrite', 'Overwrite existing file')
-  .action(async (options, name) => {
-    try {
-      if (!name) {
-        throw new Error('Name argument is required');
-      }
-
-      if (!LOGSEQ_REPO) {
-        throw new Error('LOGSEQ_REPO environment variable is not set');
-      }
-
-      const {path} = await getNames(name);
-
-      const hasStdin = !Deno.isatty(Deno.stdin.rid);
-      if (!hasStdin) {
-        throw new Error('Must supply content via stdin.');
-      }
-
-      const action = options.overwrite ? "Overwrote" : "Wrote";
-      if (!options.overwrite && await exists(path)) {
-        throw new Error(`File already exists: ${path}. Use --overwrite to replace it.`);
-      }
-
-      const content = await Deno.readTextFile('/dev/stdin');
-
-      await Deno.writeTextFile(path, content);
-      console.log(`${action}: ${path}`);
-
-    } catch (error) {
-      abort(error);
-    }
-  });
 
 // External command stubs for help visibility
 program
