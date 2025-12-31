@@ -176,12 +176,7 @@ function escapeFileName(filePath) {
   const ext = fileName.slice(lastDotIndex);
 
   // Replace dots with %2F (hierarchy separators)
-  // Keep legitimate periods like abbreviations (v.) intact for now
-  let escapedName = name.replace(/\./g, '%2F');
-
-  // Fix common legitimate abbreviations
-  escapedName = escapedName.replace(/v%2F/g, 'v%2E');
-  escapedName = escapedName.replace(/e%2Fg%2E/g, 'e.g.'); // common abbreviation
+  const escapedName = name.replace(/\./g, '%2F');
 
   return pathParts.slice(0, -1).join('/') + '/' + escapedName + ext;
 }
