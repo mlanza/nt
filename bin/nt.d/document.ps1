@@ -11,10 +11,10 @@ $structure = $Input | nt struct | ConvertFrom-Json
 # Function to fix content by trimming each line
 function Fix-Content {
     param($content)
-    
+
     $lines = $content -split "`n"
     $fixedLines = @()
-    
+
     foreach ($line in $lines) {
         if ($line -match '^- ' -or $line -match '^  ') {
             $fixedLines += $line.Substring(2)
@@ -22,7 +22,7 @@ function Fix-Content {
             $fixedLines += $line
         }
     }
-    
+
     return $fixedLines -join "`n"
 }
 
@@ -31,10 +31,7 @@ function Render-Node {
     param($node, $level = 0, $isLastChild = $false)
 
     # Remove one level of indentation/bullet only from level 0 content
-    $content = $node.content
-    if ($level -eq 0) {
-        $content = Fix-Content -content $content
-    }
+    $content = Fix-Content -content $node.content
 
     Write-Output $content
 
