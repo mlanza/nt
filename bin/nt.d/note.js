@@ -960,11 +960,6 @@ program
   .arguments(PIPED);
 
 program
-  .command('document')
-  .description('Represent content as documentation')
-  .arguments(PIPED);
-
-program
   .command('exists')
   .description('Filters paths for existing files')
   .arguments(PIPED);
