@@ -640,30 +640,6 @@ function query(options){
   }
 }
 
-async function post(options, given) {
-  try {
-    const {path} = await identify(given);
-
-    const hasStdin = !Deno.isatty(Deno.stdin.rid);
-    if (!hasStdin) {
-      throw new Error('Must supply content via stdin.');
-    }
-
-    const action = options.overwrite ? "Overwrote" : "Wrote";
-    if (!options.overwrite && await exists(path)) {
-      throw new Error(`File already exists: ${path}. Use --overwrite to replace it.`);
-    }
-
-    const content = await Deno.readTextFile('/dev/stdin');
-
-    await Deno.writeTextFile(path, content);
-    console.log(`${action}: ${path}`);
-
-  } catch (error) {
-    abort(error);
-  }
-}
-
 async function append(options, given){
   try {
     const {name, path} = await identify(given);
@@ -691,7 +667,7 @@ async function append(options, given){
   }
 }
 
-async function write(options, given) {
+async function overwrite(options, given) {
   try {
     const {name, path} = await identify(given);
     const found = await exists(path);
@@ -878,13 +854,6 @@ program
   .action(oldPipeable(page));
 
 program
-  .command('post')
-  .description('Create a page from stdin')
-  .arguments("<name>")
-  .option('--overwrite', 'Overwrite existing file')
-  .action(post);
-
-program
   .command('append')
   .description("Append to page from stdin")
   .arguments("<name>")
@@ -892,11 +861,11 @@ program
   .action(append);
 
 program
-  .command('write')
-  .description("Write page from stdin preserving properties")
+  .command('overwrite')
+  .description("Overwrite page ⚠️ from stdin preserving properties")
   .arguments("<name>")
   .option('--exists', "Only if it exists")
-  .action(write);
+  .action(overwrite);
 
 program
   .command('tags')
