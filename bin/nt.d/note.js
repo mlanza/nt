@@ -834,7 +834,7 @@ program
   .command('append')
   .description("Append to page from stdin")
   .arguments("<name>")
-  .option('--exists', "Ensure it exists, e.g. don't create new page")
+  .option('--exists', "Only if it exists")
   .action(append);
 
 program
