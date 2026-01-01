@@ -670,7 +670,7 @@ async function append(options, given){
     const {name, path} = await getNames(given);
     const found = await exists(path);
 
-    if (!found) {
+    if (!found && options.exists) {
       throw new Error(`Page "${name}" does not exist.`);
     }
 
@@ -683,7 +683,7 @@ async function append(options, given){
 
     const lines = content.trim().split("\n");
     for(const line of lines) {
-      await callLogseq('logseq.Editor.appendBlockInPage', [name, line]);
+      await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
     }
 
     console.log(`Appended ${lines.length} blocks to: ${path}`);
@@ -834,6 +834,7 @@ program
   .command('append')
   .description("Append to page from stdin")
   .arguments("<name>")
+  .option('--exists', "Ensure it exists, e.g. don't create new page")
   .action(append);
 
 program
