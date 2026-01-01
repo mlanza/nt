@@ -167,7 +167,7 @@ function tskGetJournalPage(datestamp){
 
 const getJournalPage = comp(promise, tskGetJournalPage);
 
-async function getNames(given){
+async function identify(given){
   if (!given) {
     throw new Error('Name argument is required');
   }
@@ -182,9 +182,9 @@ async function getNames(given){
   const name = alias || normalized || given; // fallback to given if normalized is null
   const day = m ? parseInt(m[1] + m[2] + m[3]) : await journalDay(name);
   const path = name ? getFilePath(day, name) : null;
-  const names = {given, day, normalized, name, path};
-  //console.log({names});
-  return names;
+  const identifiers = {given, day, normalized, name, path};
+  //console.log({identifiers});
+  return identifiers;
 }
 
 function tskLogseq(method, args){
@@ -237,7 +237,7 @@ function prerequisites(name){
     const result = [];
 
     async function dfs(given) {
-      const {name} = await getNames(given);
+      const {name} = await identify(given);
 
       if (seen.has(name)) return;          // dedupe + short-circuit
 
@@ -407,7 +407,7 @@ function page(options){
 
   return async function(given){
     try {
-      const {name, path, normalized} = await getNames(given);
+      const {name, path, normalized} = await identify(given);
       if (!normalized) {
         throw new Error(`Page not found: ${given}`);
       }
@@ -515,7 +515,7 @@ function path(){
 function tskNamed(id){
   return new Task(async function(reject, resolve){
     try {
-      const {name} = await getNames(id);
+      const {name} = await identify(id);
       resolve(name);
     } catch (error) {
       reject(error);
@@ -634,7 +634,7 @@ function query(options){
 
 async function post(options, given) {
   try {
-    const {path} = await getNames(given);
+    const {path} = await identify(given);
 
     const hasStdin = !Deno.isatty(Deno.stdin.rid);
     if (!hasStdin) {
@@ -658,7 +658,7 @@ async function post(options, given) {
 
 async function append(options, given){
   try {
-    const {name, path} = await getNames(given);
+    const {name, path} = await identify(given);
     const found = await exists(path);
 
     if (!found && options.exists) {
@@ -703,7 +703,7 @@ function qryPage(name){
 
 function tskNames(name){
   return name ? new Task(function(reject, resolve){
-    getNames(name).then(function(names){
+    identify(name).then(function(names){
       if (names?.normalized) {
         resolve(names);
       } else {
