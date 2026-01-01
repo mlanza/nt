@@ -217,7 +217,7 @@ function tskLogseq(method, args){
       }
 
       const result = await response.json()
-      if (result && result.error) {
+      if (result?.error) {
         throw new Error(result.error);
       }
 
