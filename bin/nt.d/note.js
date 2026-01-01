@@ -191,13 +191,11 @@ function tskLogseq(method, args){
   return new Task(async function(reject, resolve){
     try {
       if (!LOGSEQ_ENDPOINT) {
-        reject(new Error('LOGSEQ_ENDPOINT environment variable is not set'));
-        return;
+        throw new Error('LOGSEQ_ENDPOINT environment variable is not set');
       }
 
       if (!LOGSEQ_TOKEN) {
-        reject(new Error('LOGSEQ_TOKEN environment variable is not set'));
-        return;
+        throw new Error('LOGSEQ_TOKEN environment variable is not set');
       }
 
       const payload = { method }
