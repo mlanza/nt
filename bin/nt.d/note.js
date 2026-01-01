@@ -176,11 +176,11 @@ async function identify(given){
     throw new Error('LOGSEQ_REPO environment variable is not set');
   }
 
-  const m = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/)
-  const normalized = await getNormalizedName(given) || (m ? await getJournalPage(given) : null);
+  const journal = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/);
+  const normalized = await getNormalizedName(given) || (journal ? await getJournalPage(given) : null);
   const alias = normalized ? await aka(normalized) : null;
   const name = alias || normalized || given; // fallback to given if normalized is null
-  const day = m ? parseInt(m[1] + m[2] + m[3]) : await journalDay(name);
+  const day = journal ? parseInt(journal[1] + journal[2] + journal[3]) : await journalDay(name);
   const path = name ? getFilePath(day, name) : null;
   const identifiers = {given, day, normalized, name, path};
   //console.log({identifiers});
