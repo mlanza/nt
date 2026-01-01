@@ -683,25 +683,25 @@ async function prepend(options, given){
     }
 
     const content = await Deno.readTextFile('/dev/stdin');
-
-    // Get existing blocks to preserve order
-    const existingBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
-
-    // Clear existing blocks
-    if (existingBlocks && existingBlocks.length > 0) {
-      await deleteAllBlocks(name);
-    }
-
-    // Add new content first (prepended)
     const lines = content.trim().split("\n");
-    for(const line of lines) {
-      await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
-    }
 
-    // Then add original content (preserving original order)
-    if (existingBlocks && existingBlocks.length > 0) {
-      for(const block of existingBlocks) {
-        await addBlockRecursively(name, block);
+    // Get the first block of the page to insert before it
+    const firstBlock = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
+
+    if (firstBlock && firstBlock.length > 0) {
+      // Insert new lines before the first block
+      for (let i = lines.length - 1; i >= 0; i--) {
+        // Insert in reverse order to maintain original order
+        await callLogseq('logseq.Editor.insertBlock', [
+          firstBlock[0].uuid,
+          lines[i].trim(),
+          {before: true}
+        ]);
+      }
+    } else {
+      // Page is empty, just append
+      for(const line of lines) {
+        await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
       }
     }
 
@@ -930,7 +930,7 @@ program
 
 program
   .command('prepend')
-  .description("Prepend to page from stdin (Test-something pages only)")
+  .description("Prepend to page from stdin")
   .arguments("<name>")
   .option('--exists', "Only if it exists")
   .action(prepend);
