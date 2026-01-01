@@ -667,13 +667,17 @@ async function append(options, given){
   }
 }
 
-async function overwrite(options, given) {
+async function write(options, given) {
   try {
     const {name, path} = await identify(given);
     const found = await exists(path);
 
     if (!found && options.exists) {
       throw new Error(`Page "${name}" does not exist.`);
+    }
+
+    if (found && !options.overwrite) {
+      throw new Error(`Page "${name}" already exists. Use --overwrite to replace it.`);
     }
 
     const hasStdin = !Deno.isatty(Deno.stdin.rid);
@@ -689,7 +693,7 @@ async function overwrite(options, given) {
       await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
     }
 
-    console.log(`Overwrote ${lines.length} blocks to: ${path}`);
+    console.log(`Wrote ${lines.length} blocks to: ${path}`);
   } catch (error) {
     abort(error);
   }
@@ -854,18 +858,19 @@ program
   .action(oldPipeable(page));
 
 program
+  .command('write')
+  .description("Write page from stdin preserving properties")
+  .arguments("<name>")
+  .option('--exists', "Only if it exists")
+  .option('--overwrite', "Overwrite if file already exists")
+  .action(write);
+
+program
   .command('append')
   .description("Append to page from stdin")
   .arguments("<name>")
   .option('--exists', "Only if it exists")
   .action(append);
-
-program
-  .command('overwrite')
-  .description("Overwrite page ⚠️ from stdin preserving properties")
-  .arguments("<name>")
-  .option('--exists', "Only if it exists")
-  .action(overwrite);
 
 program
   .command('tags')
