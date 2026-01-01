@@ -36,12 +36,14 @@ for await (const line of linesStream) {
 
 const out = [];
 let cursor = null;
+let lastLineBlank = false;
 
 function handle(line){
   const ctx = getIn(cursor, out);
   const leftward = line.level < ctx.level;
   const rightward = line.level > ctx.level;
-  if (line.block) {
+
+  if (line.block || lastLineBlank) {
     if (leftward){
       cursor.pop();
       cursor.pop();
@@ -58,6 +60,7 @@ function handle(line){
   } else {
     ctx.content += "\n" + line.content;
   }
+  lastLineBlank = line.content.trim().length === 0;
 }
 
 for(const line of list){
