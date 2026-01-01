@@ -168,7 +168,14 @@ function tskGetJournalPage(datestamp){
 const getJournalPage = comp(promise, tskGetJournalPage);
 
 async function getNames(given){
-  if (!given) return null;
+  if (!given) {
+    throw new Error('Name argument is required');
+  }
+
+  if (!LOGSEQ_REPO) {
+    throw new Error('LOGSEQ_REPO environment variable is not set');
+  }
+
   const m = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/)
   const normalized = await getNormalizedName(given) || (m ? await getJournalPage(given) : null);
   const alias = normalized ? await aka(normalized) : null;
@@ -229,8 +236,8 @@ function prerequisites(name){
     const seen = new Set();
     const result = [];
 
-    async function dfs(startName) {
-      const {name} = await getNames(startName);
+    async function dfs(given) {
+      const {name} = await getNames(given);
 
       if (seen.has(name)) return;          // dedupe + short-circuit
 
@@ -625,17 +632,9 @@ function query(options){
   }
 }
 
-async function post(options, name) {
+async function post(options, given) {
   try {
-    if (!name) {
-      throw new Error('Name argument is required');
-    }
-
-    if (!LOGSEQ_REPO) {
-      throw new Error('LOGSEQ_REPO environment variable is not set');
-    }
-
-    const {path} = await getNames(name);
+    const {path} = await getNames(given);
 
     const hasStdin = !Deno.isatty(Deno.stdin.rid);
     if (!hasStdin) {
@@ -659,14 +658,6 @@ async function post(options, name) {
 
 async function append(options, given){
   try {
-    if (!given) {
-      throw new Error('Name argument is required');
-    }
-
-    if (!LOGSEQ_REPO) {
-      throw new Error('LOGSEQ_REPO environment variable is not set');
-    }
-
     const {name, path} = await getNames(given);
     const found = await exists(path);
 
