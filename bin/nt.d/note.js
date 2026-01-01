@@ -230,9 +230,7 @@ function prerequisites(name){
     const result = [];
 
     async function dfs(startName) {
-      const names = await getNames(startName);
-
-      const {name} = names;
+      const {name} = await getNames(startName);
 
       if (seen.has(name)) return;          // dedupe + short-circuit
 
@@ -402,12 +400,11 @@ function page(options){
 
   return async function(named){
     try {
-      const names = await getNames(named);
-      if (!names) {
+      const {name, path, normalized} = await getNames(named);
+      if (!normalized) {
         throw new Error(`Page not found: ${named}`);
       }
 
-      const {name, path} = names;
       const found = await exists(path);
 
       if (!found) {
@@ -716,7 +713,7 @@ function qryPage(name){
 function tskNames(name){
   return name ? new Task(function(reject, resolve){
     getNames(name).then(function(names){
-      if (names?.name) {
+      if (names?.normalized) {
         resolve(names);
       } else {
         reject(new Error(`Page not found: ${name}`));
