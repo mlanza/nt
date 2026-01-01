@@ -667,6 +667,62 @@ async function append(options, given){
   }
 }
 
+async function prepend(options, given){
+  try {
+    const {name, path} = await identify(given);
+
+    const found = await exists(path);
+
+    if (!found && options.exists) {
+      throw new Error(`Page "${name}" does not exist.`);
+    }
+
+    const hasStdin = !Deno.isatty(Deno.stdin.rid);
+    if (!hasStdin) {
+      throw new Error('Must supply content via stdin.');
+    }
+
+    const content = await Deno.readTextFile('/dev/stdin');
+
+    // Get existing blocks to preserve order
+    const existingBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
+
+    // Clear existing blocks
+    if (existingBlocks && existingBlocks.length > 0) {
+      await deleteAllBlocks(name);
+    }
+
+    // Add new content first (prepended)
+    const lines = content.trim().split("\n");
+    for(const line of lines) {
+      await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
+    }
+
+    // Then add original content (preserving original order)
+    if (existingBlocks && existingBlocks.length > 0) {
+      for(const block of existingBlocks) {
+        await addBlockRecursively(name, block);
+      }
+    }
+
+    console.log(`Prepended ${lines.length} blocks to: ${path}`);
+  } catch (error) {
+    abort(error);
+  }
+}
+
+async function addBlockRecursively(pageName, block) {
+  // Add the current block
+  await callLogseq('logseq.Editor.appendBlockInPage', [pageName, block.content]);
+
+  // Recursively add children if they exist
+  if (block.children && block.children.length > 0) {
+    for(const child of block.children) {
+      await addBlockRecursively(pageName, child);
+    }
+  }
+}
+
 async function write(options, given) {
   try {
     const {name, path} = await identify(given);
@@ -871,6 +927,13 @@ program
   .arguments("<name>")
   .option('--exists', "Only if it exists")
   .action(append);
+
+program
+  .command('prepend')
+  .description("Prepend to page from stdin (Test-something pages only)")
+  .arguments("<name>")
+  .option('--exists', "Only if it exists")
+  .action(prepend);
 
 program
   .command('tags')
