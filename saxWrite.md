@@ -189,13 +189,18 @@ nt saxWrite <pageName> [--exists] [--debug]
 **Solution**: Use `blockStack[indent - 1]` for consistent parent resolution
 **Learning**: Maintain explicit stack mapping for reliable hierarchy tracking
 
-### ❌ Logseq API Quirks
+### ✅ Logseq API Quirks Solved
 
 #### 1. Empty Block Creation
 **Issue**: New pages get an empty placeholder block before first content
 **Observation**: Both `append` and `saxWrite` create empty `content: ""` block
-**Impact**: Not a bug in our code, but Logseq's default behavior
-**Workaround**: Accept as Logseq limitation, not fixable in SAX parser
+**Solution**: Post-processing cleanup removes empty block after page creation
+**Implementation**: 
+- Detect new page creation (`!found`)
+- After streaming completes, remove first empty block
+- Only applies to new pages, not existing ones
+**Code**: `cleanupEmptyBlock()` function with error handling
+**Result**: Clean pages without leading empty blocks
 
 #### 2. Block Immutability
 **Issue**: Cannot edit block content in place
