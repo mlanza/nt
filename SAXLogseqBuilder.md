@@ -297,16 +297,31 @@ cursor = {
 
 ### Success Criteria
 
-**Working Definition**: Prepend successfully achieves the requirement that "new content is parented by the page itself (above any existing content)"
+**CRITICAL REQUIREMENT**: Each input cluster maintains its **internal order** exactly as provided. The only difference between append and prepend is the **insertion point**:
 
-**Test Approach**: Run the failing test case that demonstrated the issue:
-```bash
-echo "- TODO Buy Puffs\n- TODO Buy Krave\n  - peanutbutter" | nt prepend TestPg-New-Append
+- **Append**: Insert cluster at bottom of page (after existing content)
+- **Prepend**: Insert cluster at top of page (before existing content)
+
+**INTERNAL ORDER MUST BE PRESERVED**: 
+```
+Input: "- Line A\n- Line B\n- Line C"
+Append Result: Line A, Line B, Line C (at bottom)
+Prepend Result: Line A, Line B, Line C (at top)
+
+NOT: Line C, Line B, Line A (reverse order - WRONG!)
 ```
 
-Expected result: New content appears at very top, pushing any existing content down.
+**Working Definition**: Prepend successfully achieves the requirement that "new content cluster is inserted at top of page as a whole unit, maintaining internal order, pushing any existing content down"
 
-With proper implementation, subsequent prepend operations should build on each other correctly while maintaining the fundamental requirement that all new content appears above existing content.
+**Test Approach**: 
+1. Test cluster 1: `echo "- First cluster\n  - Nested under first\n- Second top-level" | nt prepend TestPg`
+2. Test cluster 2: `echo "- Second cluster\n  - Different nested\n- Another top-level" | nt prepend TestPg`
+
+Expected result: 
+- Second cluster appears FIRST (at top), maintaining internal order: "Second cluster" → "Different nested" → "Another top-level"  
+- First cluster appears SECOND (below), maintaining internal order: "First cluster" → "Nested under first" → "Second top-level"
+
+**FUNDAMENTAL PRINCIPLE**: Each operation processes one coherent cluster. The cluster's internal structure and sequence must remain exactly as provided in input. Only the insertion point (top vs bottom) changes between append and prepend.
 
 ### 4. Validation & Testing
 - **Input Validation**: Pre-validate markdown structure

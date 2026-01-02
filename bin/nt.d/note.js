@@ -657,7 +657,10 @@ async function append(options, given){
     }
 
     // Use SAX Builder for proper hierarchical content handling
-    const builder = new SAXLogseqBuilder(name, callLogseq, !found);
+    const builder = new SAXLogseqBuilder(name, callLogseq, !found, 'append');
+    if (options.debug) {
+      builder.debug = true;
+    }
     await builder.processStream();
     
     console.log(`Appended content to: ${path}`);
@@ -688,30 +691,8 @@ async function prepend(options, given){
       prependToBeginning = true;
     }
 
-    // Use SAX Builder with orientation information
-    const builder = new SAXLogseqBuilder(name, callLogseq, !found);
-    
-    // If we need to prepend, always insert at beginning
-    if (prependToBeginning) {
-      // Override the createBlock method for prepend mode
-      const originalCreateBlock = builder.createBlock.bind(builder);
-      let firstTopLevelBlock = true;
-      
-      builder.createBlock = async function(content, parentUuid) {
-        if (!parentUuid && prependToBeginning) {
-          // For prepend: ALL top-level blocks append to page (goes to beginning)
-          const result = await builder.logseqApi('logseq.Editor.appendBlockInPage', [
-            builder.pageName,
-            content
-          ]);
-          return result.uuid || result;
-        } else {
-          // All other blocks: use normal logic (append case or child blocks)
-          return originalCreateBlock(content, parentUuid);
-        }
-      };
-    }
-    
+    // Use SAX Builder with prepend orientation
+    const builder = new SAXLogseqBuilder(name, callLogseq, !found, 'prepend');
     await builder.processStream();
     console.log(`Prepended content to: ${path}`);
   } catch (error) {
@@ -942,13 +923,15 @@ program
   .description("Prepend to page from stdin")
   .arguments("<name>")
   .option('--exists', "Only if it exists")
+  .option('--debug', "Enable debug output to stderr")
   .action(prepend);
 
 class SAXLogseqBuilder {
-  constructor(pageName, logseqApi, isNewPage = false) {
+  constructor(pageName, logseqApi, isNewPage = false, orientation = 'append') {
     this.pageName = pageName;
     this.logseqApi = logseqApi;
     this.isNewPage = isNewPage;
+    this.orientation = orientation; // 'append' or 'prepend'
     this.cursor = {
       currentIndent: 0,
       parentUuid: null,
@@ -959,13 +942,12 @@ class SAXLogseqBuilder {
   }
 
   async processStream() {
-    const linesStream = Deno.stdin.readable
-      .pipeThrough(new TextDecoderStream())
-      .pipeThrough(new TextLineStream());
-
-    for await (const line of linesStream) {
-      if (this.debug) console.error(`Processing: ${JSON.stringify(line)}`);
-      await this.processLine(line);
+    if (this.orientation === 'prepend') {
+      // For prepend: collect all blocks first, then insert as batch
+      await this.processAsBatch();
+    } else {
+      // For append: process sequentially (original working approach)
+      await this.processSequentially();
     }
 
     // Clean up empty block for new pages
@@ -1067,10 +1049,22 @@ class SAXLogseqBuilder {
 
   async createBlock(content, parentUuid) {
     try {
-      const method = parentUuid ? 'logseq.Editor.insertBlock' : 'logseq.Editor.appendBlockInPage';
-      const args = parentUuid 
-        ? [parentUuid, content, {before: false}]
-        : [this.pageName, content];
+      let method, args;
+      if (parentUuid) {
+        // Child block: always insert as child of parent
+        method = 'logseq.Editor.insertBlock';
+        args = [parentUuid, content, {before: false}];
+      } else {
+        // Top-level block: use orientation to determine placement
+        method = this.orientation === 'prepend' 
+          ? 'logseq.Editor.prependBlockInPage'
+          : 'logseq.Editor.appendBlockInPage';
+        args = [this.pageName, content];
+      }
+      
+      if (this.debug) {
+        console.error(`Using method: ${method}, args: ${JSON.stringify(args)}`);
+      }
       
       const result = await this.logseqApi(method, args);
       return result.uuid || result;
@@ -1083,6 +1077,83 @@ class SAXLogseqBuilder {
   countLeadingSpaces(str) {
     const match = str.match(/^\s*/);
     return match ? Math.floor(match[0].length / 2) : 0; // Assuming 2 spaces per level
+  }
+
+  async processAsBatch() {
+    const linesStream = Deno.stdin.readable
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new TextLineStream());
+
+    // Parse entire input into structured block tree
+    this.rootBlocks = [];
+    const stack = [{ children: this.rootBlocks }];
+
+    for await (const line of linesStream) {
+      if (!line || line.trim() === '') continue;
+      
+      const content = line.replace(/\t/g, '  ');
+      const indent = this.countLeadingSpaces(content);
+      const trimmed = content.trim();
+      
+      // Ensure stack has enough levels
+      while (stack.length <= indent) {
+        stack.push({ children: [] });
+      }
+      
+      const parent = stack[indent];
+      const block = {
+        content: trimmed.startsWith('- ') ? trimmed.slice(2) : trimmed
+      };
+      
+      parent.children.push(block);
+      stack[indent + 1] = block;
+      
+      if (this.debug) {
+        console.error(`Parsed batch: indent=${indent}, content="${block.content}"`);
+      }
+    }
+
+    // Insert entire structure at top
+    if (this.rootBlocks.length > 0) {
+      await this.insertBatchAtTop();
+    }
+  }
+
+  async processSequentially() {
+    const linesStream = Deno.stdin.readable
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new TextLineStream());
+
+    for await (const line of linesStream) {
+      if (this.debug) console.error(`Processing: ${JSON.stringify(line)}`);
+      await this.processLine(line);
+    }
+  }
+
+  async insertBatchAtTop() {
+    try {
+      // Get existing blocks to find insertion point
+      const existingBlocks = await this.logseqApi('logseq.Editor.getPageBlocksTree', [this.pageName]);
+      
+      if (existingBlocks && existingBlocks.length > 0) {
+        // Insert before first existing block
+        await this.logseqApi('logseq.Editor.insertBatchBlock', [
+          existingBlocks[0].uuid,    // Target first block
+          this.rootBlocks,             // New structure
+          { before: true, sibling: true }
+        ]);
+      } else {
+        // Page is empty, just append
+        await this.logseqApi('logseq.Editor.insertBatchBlock', [
+          this.pageName,               // Page target
+          this.rootBlocks,             // New structure
+          { before: false, sibling: false }
+        ]);
+      }
+    } catch (error) {
+      console.error(`Error inserting batch: ${error.message}`);
+      throw error;
+    }
   }
 
   async cleanupEmptyBlock(debug = false) {
