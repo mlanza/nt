@@ -654,14 +654,11 @@ async function append(options, given){
       throw new Error('Must supply content via stdin.');
     }
 
-    const content = await Deno.readTextFile('/dev/stdin');
-
-    const lines = content.trim().split("\n");
-    for(const line of lines) {
-      await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
-    }
-
-    console.log(`Appended ${lines.length} blocks to: ${path}`);
+    // Use SAX Builder for proper hierarchical content handling
+    const builder = new SAXLogseqBuilder(name, callLogseq, !found);
+    await builder.processStream();
+    
+    console.log(`Appended content to: ${path}`);
   } catch (error) {
     abort(error);
   }
@@ -682,30 +679,41 @@ async function prepend(options, given){
       throw new Error('Must supply content via stdin.');
     }
 
-    const content = await Deno.readTextFile('/dev/stdin');
-    const lines = content.trim().split("\n");
-
-    // Get the first block of the page to insert before it
+    // Get orientation - find first existing block for prepend positioning
+    let firstBlockUuid = null;
     const firstBlock = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
-
     if (firstBlock && firstBlock.length > 0) {
-      // Insert new lines before the first block
-      for (let i = lines.length - 1; i >= 0; i--) {
-        // Insert in reverse order to maintain original order
-        await callLogseq('logseq.Editor.insertBlock', [
-          firstBlock[0].uuid,
-          lines[i].trim(),
-          {before: true}
-        ]);
-      }
-    } else {
-      // Page is empty, just append
-      for(const line of lines) {
-        await callLogseq('logseq.Editor.appendBlockInPage', [name, line.trim()]);
-      }
+      firstBlockUuid = firstBlock[0].uuid;
     }
 
-    console.log(`Prepended ${lines.length} blocks to: ${path}`);
+    // Use SAX Builder with orientation information
+    const builder = new SAXLogseqBuilder(name, callLogseq, !found);
+    
+    // If we have a first block, we need to modify SAX Builder to prepend before it
+    if (firstBlockUuid) {
+      // Override the createBlock method for prepend mode
+      const originalCreateBlock = builder.createBlock.bind(builder);
+      let firstTopLevelBlock = true;
+      
+      builder.createBlock = async function(content, parentUuid) {
+        if (!parentUuid && firstTopLevelBlock) {
+          // First top-level block: insert before existing content
+          firstTopLevelBlock = false;
+          const result = await builder.logseqApi('logseq.Editor.insertBlock', [
+            firstBlockUuid,
+            content,
+            {before: true}
+          ]);
+          return result.uuid || result;
+        } else {
+          // All other blocks: use normal logic
+          return originalCreateBlock(content, parentUuid);
+        }
+      };
+    }
+    
+    await builder.processStream();
+    console.log(`Prepended content to: ${path}`);
   } catch (error) {
     abort(error);
   }
@@ -936,9 +944,10 @@ program
   .action(prepend);
 
 class SAXLogseqBuilder {
-  constructor(pageName, logseqApi) {
+  constructor(pageName, logseqApi, isNewPage = false) {
     this.pageName = pageName;
     this.logseqApi = logseqApi;
+    this.isNewPage = isNewPage;
     this.cursor = {
       currentIndent: 0,
       parentUuid: null,
@@ -956,6 +965,11 @@ class SAXLogseqBuilder {
     for await (const line of linesStream) {
       if (this.debug) console.error(`Processing: ${JSON.stringify(line)}`);
       await this.processLine(line);
+    }
+
+    // Clean up empty block for new pages
+    if (this.isNewPage) {
+      await this.cleanupEmptyBlock(this.debug);
     }
   }
 
@@ -1068,6 +1082,47 @@ class SAXLogseqBuilder {
   countLeadingSpaces(str) {
     const match = str.match(/^\s*/);
     return match ? Math.floor(match[0].length / 2) : 0; // Assuming 2 spaces per level
+  }
+
+  async cleanupEmptyBlock(debug = false) {
+    try {
+      if (debug) {
+        console.error('DEBUG: Cleaning up empty block from new page');
+      }
+      
+      // Get all blocks in the page
+      const blocks = await this.logseqApi('logseq.Editor.getPageBlocksTree', [this.pageName]);
+      
+      if (!blocks || blocks.length === 0) {
+        if (debug) {
+          console.error('DEBUG: No blocks found to clean up');
+        }
+        return;
+      }
+
+      // Find the first (empty) block - it should be one with empty content
+      const firstBlock = blocks.find(block => !block.content || block.content.trim() === '');
+      
+      if (firstBlock) {
+        if (debug) {
+          console.error(`DEBUG: Found empty block to remove: ${firstBlock.uuid}`);
+        }
+        
+        // Remove the empty block
+        await this.logseqApi('logseq.Editor.removeBlock', [firstBlock.uuid]);
+        
+        if (debug) {
+          console.error('DEBUG: Successfully removed empty block');
+        }
+      } else {
+        if (debug) {
+          console.error('DEBUG: No empty block found to remove');
+        }
+      }
+    } catch (error) {
+      console.error('Warning: Failed to clean up empty block:', error.message);
+      // Don't abort - this is cleanup, not core functionality
+    }
   }
 }
 
