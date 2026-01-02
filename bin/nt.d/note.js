@@ -698,16 +698,15 @@ async function prepend(options, given){
       let firstTopLevelBlock = true;
       
       builder.createBlock = async function(content, parentUuid) {
-        if (!parentUuid && firstTopLevelBlock) {
-          // First top-level block: append to page (goes to beginning automatically)
-          firstTopLevelBlock = false;
+        if (!parentUuid && prependToBeginning) {
+          // For prepend: ALL top-level blocks append to page (goes to beginning)
           const result = await builder.logseqApi('logseq.Editor.appendBlockInPage', [
             builder.pageName,
             content
           ]);
           return result.uuid || result;
         } else {
-          // All other blocks: use normal logic
+          // All other blocks: use normal logic (append case or child blocks)
           return originalCreateBlock(content, parentUuid);
         }
       };
