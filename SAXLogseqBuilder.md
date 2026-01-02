@@ -295,6 +295,19 @@ cursor = {
 - **Caching**: Cache UUID lookups for repeated operations
 - **Parallel Processing**: Handle independent sections concurrently
 
+### Success Criteria
+
+**Working Definition**: Prepend successfully achieves the requirement that "new content is parented by the page itself (above any existing content)"
+
+**Test Approach**: Run the failing test case that demonstrated the issue:
+```bash
+echo "- TODO Buy Puffs\n- TODO Buy Krave\n  - peanutbutter" | nt prepend TestPg-New-Append
+```
+
+Expected result: New content appears at very top, pushing any existing content down.
+
+With proper implementation, subsequent prepend operations should build on each other correctly while maintaining the fundamental requirement that all new content appears above existing content.
+
 ### 4. Validation & Testing
 - **Input Validation**: Pre-validate markdown structure
 - **Dry Run Mode**: Show hierarchy without API calls
