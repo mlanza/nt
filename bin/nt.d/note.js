@@ -1074,7 +1074,7 @@ class SAXLogseqBuilder {
 async function saxWrite(options, given) {
   try {
     const {name, path} = await identify(given);
-    const found = await exists(path);
+    let found = await exists(path);
 
     if (!found && options.exists) {
       throw new Error(`Page "${name}" does not exist.`);
@@ -1085,15 +1085,71 @@ async function saxWrite(options, given) {
       throw new Error('Must supply content via stdin.');
     }
 
+    // For new pages, handle Logseq's empty block issue
+    let pageWasEmpty = false;
+    if (!found) {
+      pageWasEmpty = true;
+      if (options.debug) {
+        console.error(`DEBUG: Creating new page "${name}", will clean up empty block`);
+      }
+    }
+
     const builder = new SAXLogseqBuilder(name, callLogseq);
     if (options.debug) {
       builder.debug = true;
     }
     
     await builder.processStream();
+
+    // Clean up the leading empty block for new pages
+    if (pageWasEmpty) {
+      await cleanupEmptyBlock(name, callLogseq, options.debug);
+    }
+    
     console.log(`Streamed content to: ${path}`);
   } catch (error) {
     abort(error);
+  }
+}
+
+async function cleanupEmptyBlock(pageName, logseqApi, debug = false) {
+  try {
+    if (debug) {
+      console.error('DEBUG: Cleaning up empty block from new page');
+    }
+    
+    // Get all blocks in the page
+    const blocks = await logseqApi('logseq.Editor.getPageBlocksTree', [pageName]);
+    
+    if (!blocks || blocks.length === 0) {
+      if (debug) {
+        console.error('DEBUG: No blocks found to clean up');
+      }
+      return;
+    }
+
+    // Find the first (empty) block - it should be the one with empty content
+    const firstBlock = blocks.find(block => !block.content || block.content.trim() === '');
+    
+    if (firstBlock) {
+      if (debug) {
+        console.error(`DEBUG: Found empty block to remove: ${firstBlock.uuid}`);
+      }
+      
+      // Remove the empty block
+      await logseqApi('logseq.Editor.removeBlock', [firstBlock.uuid]);
+      
+      if (debug) {
+        console.error('DEBUG: Successfully removed empty block');
+      }
+    } else {
+      if (debug) {
+        console.error('DEBUG: No empty block found to remove');
+      }
+    }
+  } catch (error) {
+    console.error('Warning: Failed to clean up empty block:', error.message);
+    // Don't abort - this is cleanup, not core functionality
   }
 }
 
