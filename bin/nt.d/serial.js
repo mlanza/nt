@@ -23,8 +23,10 @@ class SerialParser {
       currentBlockLevel: -1,
       headerContent: null,
       headerProperties: {},
+      pageProperties: {}, // Properties before any blocks
       collectingProperties: false,
-      pendingProperties: null // Properties to apply to first block
+      pendingProperties: null, // Properties to apply to first block
+      hasStartedBlocks: false // Track if we've started processing blocks
     };
   }
 
@@ -42,9 +44,9 @@ class SerialParser {
       return null; // Don't process this line further
     }
 
-    // Handle properties before any block - treat as regular properties to be attached to first block
-    if (this.state.headerContent === null && trimmed.includes('::') && !trimmed.startsWith('- ')) {
-      return { type: 'property', content: trimmed };
+    // Handle properties before any block - these are page properties
+    if (this.state.headerContent === null && !this.state.hasStartedBlocks && trimmed.includes('::') && !trimmed.startsWith('- ')) {
+      return { type: 'page-property', content: trimmed };
     }
 
     // If we're still in the header section (properties after title)
@@ -65,6 +67,9 @@ class SerialParser {
 
     // ONLY lines starting with "- " create new blocks
     if (trimmed.startsWith('- ')) {
+      // Mark that we've started processing blocks
+      this.state.hasStartedBlocks = true;
+      
       // Calculate indentation level properly - handle both tabs and spaces
       const leadingWhitespace = line.substring(0, line.length - trimmed.length);
       const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
@@ -138,6 +143,7 @@ class SerialParser {
 
   formatProperties(properties) {
     const arrayKeys = ['tags', 'alias', 'prerequisites'];
+    const booleanKeys = ['collapsed'];
     const formatted = {};
 
     for (const key of Object.keys(properties)) {
@@ -146,6 +152,9 @@ class SerialParser {
           .split(',')
           .map(item => item.trim().replace(/[\[\]]/g, ''))
           .filter(item => item.length > 0);
+      } else if (booleanKeys.includes(key)) {
+        // Convert string 'true'/'false' to boolean
+        formatted[key] = properties[key] === 'true' || properties[key] === true;
       } else {
         formatted[key] = properties[key];
       }
@@ -294,6 +303,12 @@ class SerialParser {
       return;
     }
 
+    if (type === 'page-property') {
+      const { properties } = this.extractProperties(content);
+      Object.assign(this.state.pageProperties, properties);
+      return;
+    }
+
     if (type === 'block') {
       this.handleBlock(parsedLine);
     } else if (type === 'property') {
@@ -322,6 +337,15 @@ class SerialParser {
       if (headerBlock) {
         this.state.rootBlocks.push(headerBlock);
       }
+    }
+
+    // If we have page properties, add them as an empty block with just properties
+    if (Object.keys(this.state.pageProperties).length > 0) {
+      const pagePropertyBlock = {
+        content: "",
+        properties: this.formatProperties(this.state.pageProperties)
+      };
+      this.state.rootBlocks.unshift(pagePropertyBlock);
     }
 
     return this.state.rootBlocks;
