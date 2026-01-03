@@ -775,15 +775,13 @@ program
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
   .action(oldPipeable(page));
 
-
-
-
-
-
-
-
-
-
+program
+  .command('post')
+  .description('Write stdin content to page')
+  .arguments("<name>")
+  .option('--prepend', 'Prepend content instead of appending')
+  .option('--overwrite', 'Purges any existing page content (not properties)')
+  .option('--debug', 'Enable debug output');
 
 program
   .command('tags')
@@ -919,17 +917,6 @@ program
   .command('wikilinks')
   .description('Extracts wikilinks')
   .arguments(PIPED);
-
-program
-  .command('post')
-  .description('Post content to a page')
-  .arguments("<page_name>")
-  .option('--prepend', 'Prepend content instead of appending')
-  .option('--debug', 'Enable debug output')
-  .option('--overwrite', 'Overwrite existing page content')
-  .action(() => {
-    console.log('Post command placeholder - use external nt post script');
-  });
 
 program
   .command('wikify')
