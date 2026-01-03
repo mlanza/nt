@@ -7,6 +7,7 @@ let finalArgs = rest;
 
 const psPath = `${import.meta.dirname}/nt.d/${subcmd}.ps1`;
 const jsPath = `${import.meta.dirname}/nt.d/${subcmd}.js`;
+const shPath = `${import.meta.dirname}/nt.d/${subcmd}.sh`;
 
 let command;
 let commandArgs;
@@ -25,12 +26,23 @@ if (!psExists) { // Only check for JS if no PS script found
   } catch (e) { if (!(e instanceof Deno.errors.NotFound)) throw e; }
 }
 
+let shExists = false;
+if (!psExists && !jsExists) { // Only check for SH if no PS or JS script found
+  try {
+    await Deno.stat(shPath);
+    shExists = true;
+  } catch (e) { if (!(e instanceof Deno.errors.NotFound)) throw e; }
+}
+
 if (psExists) {
   command = "pwsh";
   commandArgs = ["-NoProfile", "-File", psPath, ...finalArgs];
 } else if (jsExists) {
   command = "deno";
   commandArgs = ["run", "--allow-all", jsPath, ...finalArgs];
+} else if (shExists) {
+  command = "bash";
+  commandArgs = [shPath, ...finalArgs];
 } else {
   // Fallback to notes.js if no matching script found
   const fallbackNotesPath = `${import.meta.dirname}/nt.d/note.js`;

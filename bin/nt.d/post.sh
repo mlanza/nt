@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Create - Insert structured content into a new Logseq page using insertBatchBlock
-# Usage: nt p <source_page> | ./serial.js | create <target_page>
+# Post - Insert structured content into a new Logseq page using insertBatchBlock
+# Usage: nt p <source_page> | nt serial | nt post <target_page>
 
 # Environment variables
 LOGSEQ_ENDPOINT="${LOGSEQ_ENDPOINT:-}"
@@ -49,7 +49,7 @@ else
         -H "Authorization: Bearer $LOGSEQ_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"method\":\"logseq.Editor.createPage\",\"args\":[\"$PAGE_NAME\",{\"journal\":false}]}")
-    
+
     if echo "$CREATE_RESPONSE" | jq -e '.uuid' >/dev/null 2>&1; then
         PAGE_UUID=$(echo "$CREATE_RESPONSE" | jq '.uuid' -r)
         echo "Created page with UUID: $PAGE_UUID" >&2
@@ -69,11 +69,11 @@ if echo "$PAGE_CHECK" | jq -e '.uuid' >/dev/null 2>&1; then
         -H "Authorization: Bearer $LOGSEQ_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"method\":\"logseq.Editor.getPageBlocksTree\",\"args\":[\"$PAGE_NAME\"]}")
-    
+
     if echo "$PAGE_BLOCKS" | jq -e '. | type == "array" and length > 0' >/dev/null 2>&1; then
         LAST_BLOCK_UUID=$(echo "$PAGE_BLOCKS" | jq '.[-1].uuid' -r)
         echo "Appending after block: $LAST_BLOCK_UUID" >&2
-        
+
         # Append after last block using sibling:true
         INSERT_RESPONSE=$(curl -s -X POST "$LOGSEQ_ENDPOINT" \
             -H "Authorization: Bearer $LOGSEQ_TOKEN" \
