@@ -3,7 +3,7 @@
 **Note** is command line access to your [Logseq](https://logseq.com) content.  Command line tools are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike — and they're easier to wrap as MCP servers, than the reverse.
 
 <p align="center">
-  <img src="./images/logo.png" style="width: 250px; max-width: 100%;" />
+  <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
 Your local-first commonplace book 📖 is a near perfect spot for keeping all the information and instructions an agent needs to thrive — one place (💍) to rule them all.  How better to teach an agent your craft than by sharing your second 🧠 with it.
