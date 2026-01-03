@@ -48,7 +48,7 @@ else
     CREATE_RESPONSE=$(curl -s -X POST "$LOGSEQ_ENDPOINT" \
         -H "Authorization: Bearer $LOGSEQ_TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{\"method\":\"logseq.Editor.createPage\",\"args\":[\"$PAGE_NAME\",{\"journal\":false}]}")
+        -d "{\"method\":\"logseq.Editor.createPage\",\"args\":[\"$PAGE_NAME\",{}]}")
 
     if echo "$CREATE_RESPONSE" | jq -e '.uuid' >/dev/null 2>&1; then
         PAGE_UUID=$(echo "$CREATE_RESPONSE" | jq '.uuid' -r)
