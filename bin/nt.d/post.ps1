@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
-# Post2 - Insert structured content into a new Logseq page using insertBatchBlock
-# Usage: nt p <source_page> | nt serial | nt post2 <target_page>
+# Post - Insert structured content into a Logseq page using insertBatchBlock
+# Usage: nt p <source_page> | nt serial | nt post [--prepend] <target_page>
 
 # Environment variables
 $LOGSEQ_ENDPOINT = $env:LOGSEQ_ENDPOINT ?? ""
@@ -13,13 +13,19 @@ if ([string]::IsNullOrEmpty($LOGSEQ_ENDPOINT) -or [string]::IsNullOrEmpty($LOGSE
     exit 1
 }
 
-# Check arguments
-if ($args.Count -ne 1) {
-    Write-Error "Usage: $($MyInvocation.MyCommand.Name) <page_name>"
+# Parse arguments
+$PREPEND_MODE = $false
+$PAGE_NAME = ""
+
+if ($args.Count -eq 1) {
+    $PAGE_NAME = $args[0]
+} elseif ($args.Count -eq 2 -and $args[0] -eq "--prepend") {
+    $PREPEND_MODE = $true
+    $PAGE_NAME = $args[1]
+} else {
+    Write-Error "Usage: $($MyInvocation.MyCommand.Name) [--prepend] <page_name>"
     exit 1
 }
-
-$PAGE_NAME = $args[0]
 
 # Read JSON payload from stdin
 $PAYLOAD = [Console]::In.ReadToEnd()
@@ -41,7 +47,60 @@ $PAGE_CHECK = curl -s -X POST "$LOGSEQ_ENDPOINT" `
 # Check if page exists and extract UUID
 if ($PAGE_CHECK.uuid) {
     $PAGE_UUID = $PAGE_CHECK.uuid
-    Write-Host "Page exists, appending content..." -ForegroundColor Yellow
+    
+    if ($PREPEND_MODE) {
+        Write-Host "Page exists, prepending content..." -ForegroundColor Yellow
+        
+        # Prepend using page UUID with {sibling: false, before: true}
+        $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+            -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+            -H "Content-Type: application/json" `
+            -d "{
+                ""method"":""logseq.Editor.insertBatchBlock"",
+                ""args"":[
+                    ""$PAGE_UUID"",
+                    $PAYLOAD,
+                    {""sibling"":false,""before"":true}
+                ]
+            }" | ConvertFrom-Json
+    } else {
+        Write-Host "Page exists, appending content..." -ForegroundColor Yellow
+        $PAGE_BLOCKS = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+            -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+            -H "Content-Type: application/json" `
+            -d "{""method"":""logseq.Editor.getPageBlocksTree"",""args"":[""$PAGE_NAME""]}" | ConvertFrom-Json
+
+        if ($PAGE_BLOCKS -is [array] -and $PAGE_BLOCKS.Count -gt 0) {
+            $LAST_BLOCK_UUID = $PAGE_BLOCKS[-1].uuid
+            Write-Host "Appending after block: $LAST_BLOCK_UUID" -ForegroundColor Yellow
+
+            # Append after last block using sibling:true
+            $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+                -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+                -H "Content-Type: application/json" `
+                -d "{
+                    ""method"":""logseq.Editor.insertBatchBlock"",
+                    ""args"":[
+                        ""$LAST_BLOCK_UUID"",
+                        $PAYLOAD,
+                        {""sibling"":true}
+                    ]
+                }" | ConvertFrom-Json
+        } else {
+            Write-Host "Page is empty, inserting at top..." -ForegroundColor Yellow
+            $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+                -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+                -H "Content-Type: application/json" `
+                -d "{
+                    ""method"":""logseq.Editor.insertBatchBlock"",
+                    ""args"":[
+                        ""$PAGE_UUID"",
+                        $PAYLOAD,
+                        {""sibling"":false}
+                    ]
+                }" | ConvertFrom-Json
+        }
+    }
 } else {
     Write-Host "Page doesn't exist, creating new page..." -ForegroundColor Yellow
     
@@ -54,39 +113,8 @@ if ($PAGE_CHECK.uuid) {
     if ($CREATE_RESPONSE.uuid) {
         $PAGE_UUID = $CREATE_RESPONSE.uuid
         Write-Host "Created page with UUID: $PAGE_UUID" -ForegroundColor Green
-    } else {
-        Write-Error "Error creating page. Response:"
-        $CREATE_RESPONSE | ConvertTo-Json -Depth 10 | Write-Error
-        exit 1
-    }
-}
-
-# For existing pages, get last block to append after it
-if ($PAGE_CHECK.uuid) {
-    Write-Host "Finding last block for append..." -ForegroundColor Yellow
-    $PAGE_BLOCKS = curl -s -X POST "$LOGSEQ_ENDPOINT" `
-        -H "Authorization: Bearer $LOGSEQ_TOKEN" `
-        -H "Content-Type: application/json" `
-        -d "{""method"":""logseq.Editor.getPageBlocksTree"",""args"":[""$PAGE_NAME""]}" | ConvertFrom-Json
-
-    if ($PAGE_BLOCKS -is [array] -and $PAGE_BLOCKS.Count -gt 0) {
-        $LAST_BLOCK_UUID = $PAGE_BLOCKS[-1].uuid
-        Write-Host "Appending after block: $LAST_BLOCK_UUID" -ForegroundColor Yellow
-
-        # Append after last block using sibling:true
-        $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
-            -H "Authorization: Bearer $LOGSEQ_TOKEN" `
-            -H "Content-Type: application/json" `
-            -d "{
-                ""method"":""logseq.Editor.insertBatchBlock"",
-                ""args"":[
-                    ""$LAST_BLOCK_UUID"",
-                    $PAYLOAD,
-                    {""sibling"":true}
-                ]
-            }" | ConvertFrom-Json
-    } else {
-        Write-Host "Page is empty, inserting at top..." -ForegroundColor Yellow
+        
+        # Insert into new page using page UUID
         $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
             -H "Authorization: Bearer $LOGSEQ_TOKEN" `
             -H "Content-Type: application/json" `
@@ -98,30 +126,23 @@ if ($PAGE_CHECK.uuid) {
                     {""sibling"":false}
                 ]
             }" | ConvertFrom-Json
+    } else {
+        Write-Error "Error creating page. Response:"
+        $CREATE_RESPONSE | ConvertTo-Json -Depth 10 | Write-Error
+        exit 1
     }
-} else {
-    # Insert into new page using page UUID
-    $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
-        -H "Authorization: Bearer $LOGSEQ_TOKEN" `
-        -H "Content-Type: application/json" `
-        -d "{
-            ""method"":""logseq.Editor.insertBatchBlock"",
-            ""args"":[
-                ""$PAGE_UUID"",
-                $PAYLOAD,
-                {""sibling"":false}
-            ]
-        }" | ConvertFrom-Json
 }
 
 # Check if insertion was successful
 # Note: insertBatchBlock returns 'null' on success when creating new content
 if ($null -eq $INSERT_RESPONSE) {
     $BLOCK_COUNT = ($PAYLOAD | ConvertFrom-Json).Count
-    Write-Host "✅ SUCCESS: Appended $BLOCK_COUNT blocks to page '$PAGE_NAME'" -ForegroundColor Green
+    $ACTION = if ($PREPEND_MODE) { "Prepended" } else { "Appended" }
+    Write-Host "✅ SUCCESS: $ACTION $BLOCK_COUNT blocks to page '$PAGE_NAME'" -ForegroundColor Green
 } elseif ($INSERT_RESPONSE -is [array]) {
     $BLOCK_COUNT = $INSERT_RESPONSE.Count
-    Write-Host "✅ SUCCESS: Added $BLOCK_COUNT blocks to page '$PAGE_NAME'" -ForegroundColor Green
+    $ACTION = if ($PREPEND_MODE) { "Prepended" } else { "Added" }
+    Write-Host "✅ SUCCESS: $ACTION $BLOCK_COUNT blocks to page '$PAGE_NAME'" -ForegroundColor Green
 } else {
     Write-Error "Error creating page. Response:"
     $INSERT_RESPONSE | ConvertTo-Json -Depth 10 | Write-Error
