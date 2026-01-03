@@ -749,6 +749,133 @@ function props(options){
   }
 }
 
+function addPageProperties(pageName, options){
+  return new Task(async function(reject, resolve){
+    try {
+      if (!options.add || options.add.length === 0) {
+        reject(new Error('At least one --add option is required'));
+        return;
+      }
+
+      const {name} = await identify(pageName);
+      if (!name) {
+        reject(new Error(`Page not found: ${pageName}`));
+        return;
+      }
+
+      // Get page blocks tree to find first block (where page properties live)
+      const blocksTree = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
+      if (!blocksTree || blocksTree.length === 0) {
+        reject(new Error(`No blocks found for page: ${name}`));
+        return;
+      }
+
+      const firstBlock = blocksTree[0];
+      if (!firstBlock || !firstBlock.uuid) {
+        reject(new Error(`Could not get first block UUID for: ${name}`));
+        return;
+      }
+
+      // Read existing properties from first block
+      const existingProps = firstBlock.properties || {};
+      
+      // Parse new properties and group them by key (normalize to lowercase)
+      const newPropMap = new Map();
+      
+      for (const propString of options.add) {
+        const parts = propString.split('=');
+        if (parts.length !== 2) {
+          reject(new Error(`Invalid property format: ${propString}. Expected "key=value"`));
+          return;
+        }
+        
+        const [key, value] = parts;
+        if (!key.trim() || !value.trim()) {
+          reject(new Error(`Invalid property format: ${propString}. Key and value cannot be empty`));
+          return;
+        }
+
+        const trimmedKey = key.trim().toLowerCase(); // Normalize to lowercase
+        const trimmedValue = value.trim();
+        
+        // Add to array or create new array
+        if (!newPropMap.has(trimmedKey)) {
+          newPropMap.set(trimmedKey, [trimmedValue]);
+        } else {
+          newPropMap.get(trimmedKey).push(trimmedValue);
+        }
+      }
+
+      // Merge existing and new properties
+      const mergedProps = {};
+      
+      // Start with existing properties (convert to arrays if needed)
+      for (const [key, value] of Object.entries(existingProps)) {
+        if (key !== 'id' && key !== 'uuid') {
+          mergedProps[key.toLowerCase()] = Array.isArray(value) ? value : [value];
+        }
+      }
+      
+      // Add new properties (augment, don't overwrite)
+      for (const [key, newValues] of newPropMap) {
+        if (mergedProps[key]) {
+          // Merge with existing values, avoiding duplicates
+          const existingValues = mergedProps[key];
+          const allValues = [...existingValues];
+          
+          for (const newValue of newValues) {
+            if (!allValues.includes(newValue)) {
+              allValues.push(newValue);
+            }
+          }
+          mergedProps[key] = allValues;
+        } else {
+          // New property
+          mergedProps[key] = newValues;
+        }
+      }
+
+      // Set merged properties on FIRST block
+      try {
+        await callLogseq('logseq.Editor.exitEditingMode');
+        
+        // Update each property
+        for (const [key, values] of Object.entries(mergedProps)) {
+          await callLogseq('logseq.Editor.upsertBlockProperty', [
+            firstBlock.uuid,
+            key,
+            values.join(', ')
+          ]);
+          
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Try to force save
+        try {
+          await callLogseq('logseq.Editor.saveFocusedCodeEditorContent');
+        } catch (saveError) {
+          // Method may not be available, that's ok
+        }
+        
+      } catch (exitError) {
+        // Fall back to basic approach
+        for (const [key, values] of Object.entries(mergedProps)) {
+          await callLogseq('logseq.Editor.upsertBlockProperty', [
+            firstBlock.uuid,
+            key,
+            values.join(', ')
+          ]);
+        }
+      }
+
+      resolve(name);
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 //TODO handle `notes props Assisting` with or without piping
 function demand(...whats){
   return /*isPiped ?*/ whats.map(what => `[${what}]`).join(' ') /*: whats.map(what => `<${what}>`).join(' ')*/;
@@ -894,6 +1021,18 @@ program
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
   .action(pipeable(query));
+
+program
+  .command('property')
+  .alias('prop')
+  .description('Add properties to pages')
+  .arguments("[name]")
+  .option('--add <property:string>', 'Add property in format "key=value"', { collect: true })
+  .action(pipeable(function(options){
+    return function(pageName){
+      return addPageProperties(pageName, options);
+    }
+  }));
 
 // External command stubs for help visibility
 program
