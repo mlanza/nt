@@ -221,7 +221,7 @@ class SerialParser {
     
     // Append content with newline if there's already content
     if (this.state.currentBlock.content) {
-      this.state.currentBlock.content += '\\n' + content;
+      this.state.currentBlock.content += '\n' + content;
     } else {
       this.state.currentBlock.content = content;
     }
