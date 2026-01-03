@@ -51,18 +51,54 @@ if ($PAGE_CHECK.uuid) {
     if ($PREPEND_MODE) {
         Write-Host "Page exists, prepending content..." -ForegroundColor Yellow
         
-        # Prepend using page UUID with {sibling: false, before: true}
-        $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+        # Get all page blocks to check for properties
+        $PAGE_BLOCKS = curl -s -X POST "$LOGSEQ_ENDPOINT" `
             -H "Authorization: Bearer $LOGSEQ_TOKEN" `
             -H "Content-Type: application/json" `
-            -d "{
-                ""method"":""logseq.Editor.insertBatchBlock"",
-                ""args"":[
-                    ""$PAGE_UUID"",
-                    $PAYLOAD,
-                    {""sibling"":false,""before"":true}
-                ]
-            }" | ConvertFrom-Json
+            -d "{""method"":""logseq.Editor.getPageBlocksTree"",""args"":[""$PAGE_NAME""]}" | ConvertFrom-Json
+        
+        # Find the last block with properties
+        $LAST_PROPERTIES_BLOCK = $null
+        if ($PAGE_BLOCKS) {
+            foreach ($block in $PAGE_BLOCKS) {
+                if ($block.properties -and $block.properties.PSObject.Properties.Count -gt 0) {
+                    $LAST_PROPERTIES_BLOCK = $block
+                }
+            }
+        }
+        
+        if ($LAST_PROPERTIES_BLOCK) {
+            Write-Host "Found properties, inserting after them..." -ForegroundColor Yellow
+            Write-Host "Properties content: $($LAST_PROPERTIES_BLOCK.content)" -ForegroundColor Cyan
+            
+            # Insert after the properties block using sibling:true
+            $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+                -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+                -H "Content-Type: application/json" `
+                -d "{
+                    ""method"":""logseq.Editor.insertBatchBlock"",
+                    ""args"":[
+                        ""$($LAST_PROPERTIES_BLOCK.uuid)"",
+                        $PAYLOAD,
+                        {""sibling"":true}
+                    ]
+                }" | ConvertFrom-Json
+        } else {
+            Write-Host "No properties found, prepending to top..." -ForegroundColor Yellow
+            
+            # Prepend using page UUID with {sibling: false, before: true}
+            $INSERT_RESPONSE = curl -s -X POST "$LOGSEQ_ENDPOINT" `
+                -H "Authorization: Bearer $LOGSEQ_TOKEN" `
+                -H "Content-Type: application/json" `
+                -d "{
+                    ""method"":""logseq.Editor.insertBatchBlock"",
+                    ""args"":[
+                        ""$PAGE_UUID"",
+                        $PAYLOAD,
+                        {""sibling"":false,""before"":true}
+                    ]
+                }" | ConvertFrom-Json
+        }
     } else {
         Write-Host "Page exists, appending content..." -ForegroundColor Yellow
         $PAGE_BLOCKS = curl -s -X POST "$LOGSEQ_ENDPOINT" `
