@@ -2,6 +2,21 @@
 import "https://deno.land/x/dotenv/load.ts";
 
 const [sub, ...rest] = Deno.args;
+
+// Handle help flags before subcommand delegation
+if (rest.includes('--help') || rest.includes('-h')) {
+  const subcmdName = sub || "note";
+  
+  // For help, we need to call the note.js with the subcommand name as first argument
+  const helpCmd = new Deno.Command("deno", {
+    args: ["run", "--allow-all", `${import.meta.dirname}/nt.d/note.js`, subcmdName, "--help"],
+    stdout: "inherit",
+    stderr: "inherit"
+  });
+  const helpStatus = await helpCmd.spawn().status;
+  Deno.exit(helpStatus.code);
+}
+
 let subcmd = sub || "note"; // Default to "note"
 let finalArgs = rest;
 
