@@ -394,6 +394,22 @@ const shorthand = {
   "~links": '^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+"[^"\\r\\n]*")?\\s*\\))\\s*$'
 }
 
+async function loadAgentIgnorePatterns() {
+  const configPath = Deno.env.get('NOTE_CONFIG_PATH') || `${Deno.env.get('HOME')}/.nt/.agentignore`;
+
+  try {
+    await Deno.stat(configPath);
+    const content = await Deno.readTextFile(configPath);
+    return content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('#'))
+      .filter(line => line.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 function keeping(patterns, hit = true){
   const miss = !hit;
   const regexes = (patterns || []).map(what => shorthand[what] || what).map(pattern => new RegExp(pattern));
@@ -411,9 +427,12 @@ function page(options){
   const format = options.json ? 'json' : (options.format || 'md');
   const headingLevel = options.heading === 0 ? 0 : Math.max(1, Math.min(5, parseInt(options.heading) || 1));
   const nest = options.nest || false;
-  const keep = keeping(options.less, false) || keeping(options.only, true);
 
   return async function(given){
+    const agentIgnores = options.agent ? await loadAgentIgnorePatterns() : null;
+    const keep = keeping(agentIgnores || options.less, false) || keeping(options.only, true);
+
+    // Load agent patterns and merge with existing patterns if --agent flag is used
     try {
       const {name, path, normalized} = await identify(given);
       if (!normalized) {
@@ -774,6 +793,7 @@ program
   .option('--nest', 'Use hierarchical nesting with format output')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
+  .option('--agent', 'Apply agent ignore patterns from .agentignore file')
   .action(oldPipeable(page));
 
 program
