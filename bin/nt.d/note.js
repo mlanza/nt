@@ -749,6 +749,34 @@ function props(options){
   }
 }
 
+function property(options){
+  const headingLevel = options.heading === 0 ? 0 : Math.max(1, Math.min(5, parseInt(options.heading) || 1));
+  const format = options.json ? 'json' : options.format || "md";
+  return function(pageName){
+    const task = addPageProperties(pageName, options);
+    return task.map(function(name){
+      const propLines = options.add.map(prop => {
+        const [key, value] = prop.split('=');
+        return `${key}:: ${value}`;
+      });
+      
+      if (format === 'json') {
+        return JSON.stringify({success: true, page: name, added: options.add});
+      } else {
+        const lines = [];
+        if (headingLevel > 0) {
+          lines.push(`${'#'.repeat(headingLevel)} ${name}`);
+        }
+        lines.push(...propLines);
+        if (headingLevel > 0) {
+          lines.push("");
+        }
+        return lines;
+      }
+    });
+  }
+}
+
 function addPageProperties(pageName, options){
   return new Task(async function(reject, resolve){
     try {
@@ -1028,11 +1056,10 @@ program
   .description('Add properties to pages')
   .arguments("[name]")
   .option('--add <property:string>', 'Add property in format "key=value"', { collect: true })
-  .action(pipeable(function(options){
-    return function(pageName){
-      return addPageProperties(pageName, options);
-    }
-  }));
+  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
+  .option('--json', 'Output JSON format')
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', '1')
+  .action(pipeable(property));
 
 // External command stubs for help visibility
 program
