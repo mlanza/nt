@@ -429,8 +429,10 @@ function page(options){
   const nest = options.nest || false;
 
   return async function(given){
-    const agentIgnores = options.agent ? await loadAgentIgnorePatterns() : null;
-    const keep = keeping(agentIgnores || options.less, false) || keeping(options.only, true);
+    const patterns = options.agent || options.human ? await loadAgentIgnorePatterns() : null;
+    const agentLess = options.agent ? patterns : null;
+    const humanOnly = options.human ? patterns : null;
+    const keep = keeping(agentLess || options.less, false) || keeping(humanOnly || options.only, true);
 
     // Load agent patterns and merge with existing patterns if --agent flag is used
     try {
@@ -793,7 +795,8 @@ program
   .option('--nest', 'Use hierarchical nesting with format output')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
-  .option('--agent', 'Apply agent ignore patterns from .agentignore file')
+  .option('--agent', 'Hide what an agent must not see per .agentignore file')
+  .option('--human', 'Show what only a human must see per .agentignore file')
   .action(oldPipeable(page));
 
 program
