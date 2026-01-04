@@ -36,7 +36,7 @@ function println(lines){
 }
 
 function abort(error){
-  error && console.error('Aborted:', error?.message || error);
+  error && console.error('Aborted:', error); //error?.message || error);
   Deno.exit(1);
 }
 
@@ -424,6 +424,9 @@ function page(options){
   const nest = options.nest || false;
 
   return async function(given){
+    if (!given) {
+      throw new Error("Must specify page name");
+    }
 
     const {shorthand, agentignore} = await loadConfig(NOTE_CONFIG);
     const patterns = options.agent || options.human ? agentignore : null;
