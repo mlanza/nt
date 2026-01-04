@@ -13,7 +13,8 @@ const comp = (...fns) => (...args) =>
   args)
 
 function println(lines){
-  Array.isArray(lines) ? lines.forEach(line => console.log(line)) : lines && console.log(lines);
+  const lns = Array.isArray(lines) ? lines : lines == null ? [] : [lines];
+  lns.forEach(line => console.log(line))
 }
 
 function abort(error){
