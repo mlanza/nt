@@ -6,7 +6,7 @@
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
-Your local-first commonplace book 📖 is a near perfect spot for keeping all the information and instructions an agent needs to thrive — one place (💍) to rule them all.  How better to teach an agent your craft than by sharing your second 🧠 with it.
+Your local-first commonplace book 📖 provides the memory scaffolding every agent needs, a near perfect spot for keeping the information and instructions it needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
 That also makes it the ideal store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
 
