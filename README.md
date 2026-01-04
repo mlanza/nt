@@ -83,6 +83,21 @@ Set these environment variables:
 * **LOGSEQ_REPO** - the path to your Logseq notes repo, e.g. `~/Documents/notes`
 * **LOGSEQ_ENDPOINT** - the HTTP API endpoint, e.g. http://127.0.0.1:12315/api
 * **LOGSEQ_TOKEN** - a token you configured for the HTTP API
+* **NOTE_CONFIG** - path to config file (default is `~/.config/nt/config.toml`)
+
+A few entries worth setting up:
+
+```toml
+agentignore = [
+  "~tasks",
+  "~links",
+]
+
+[shorthand]
+"~props" = "^[^\\s:]+::"
+"~tasks" = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
+"~links" = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
+```
 
 Once done, start Logseq, start your shell and issue a few commands.
 
