@@ -5,13 +5,17 @@ import { parse } from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 
 async function loadConfig(path) {
-  const text = await Deno.readTextFile(path);
-  const cfg = parse(text);
+  try {
+    const text = await Deno.readTextFile(path);
+    const cfg = parse(text);
 
-  const shorthand = cfg.shorthand ?? {};
-  const agentignore = cfg.agentignore ?? [];
+    const shorthand = cfg.shorthand ?? {};
+    const agentignore = cfg.agentignore ?? [];
 
-  return { shorthand, agentignore };
+    return { shorthand, agentignore };
+  } catch {
+    return {};
+  }
 };
 
 const NOTE_CONFIG = Deno.env.get("NOTE_CONFIG") ?? `${Deno.env.get("HOME")}/.config/nt/config.toml`;
