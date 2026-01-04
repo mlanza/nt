@@ -100,7 +100,7 @@ function fmt(options){
   const format = options.json ? 'json' : (options.format || 'md');
   return function(results){
     if (format === "json") {
-      return JSON.stringify(results, null, 2);
+      return results ? JSON.stringify(results, null, 2) : null;
     } else {
       return results;
     }
@@ -421,92 +421,58 @@ function keeping(patterns, shorthand, hit = true){
   } : null
 }
 
-function page(options){
+function tskGetPage(given, options){
   const format = options.json ? 'json' : (options.format || 'md');
-  const headingLevel = options.heading === 0 ? 0 : Math.max(1, Math.min(5, parseInt(options.heading) || 1));
   const nest = options.nest || false;
 
-  return async function(given){
-    if (!given) {
-      throw new Error("Must specify page name");
-    }
-
-    const {shorthand, agentignore} = await loadConfig(NOTE_CONFIG);
-    const patterns = options.agent || options.human ? agentignore : null;
-    const agentLess = options.agent ? patterns : null;
-    const humanOnly = options.human ? patterns : null;
-    const keep = keeping(agentLess || options.less, shorthand, false) || keeping(humanOnly || options.only, shorthand, true);
-
-    // Load agent patterns and merge with existing patterns if --agent flag is used
+  return given ? new Task(async function(reject, resolve){
     try {
+      const {shorthand, agentignore} = await loadConfig(NOTE_CONFIG);
+      const patterns = options.agent || options.human ? agentignore : null;
+      const agentLess = options.agent ? patterns : null;
+      const humanOnly = options.human ? patterns : null;
+      const keep = keeping(agentLess || options.less, shorthand, false) || keeping(humanOnly || options.only, shorthand, true);
+
       const {name, path} = await identify(given);
       if (!name) {
-        throw new Error(`Page not found: ${given}`);
+        reject(new Error(`Page not found: ${given}`));
+        return;
       }
 
       const found = await exists(path);
       if (!found) {
+        reject(new Error(`Page not found: ${given}`));
         return;
       }
 
-      // STAGE 1: Exception case - Simple MD format without nest and without filter
-      // Bypass all processing and just print the page directly from file
       if (format === 'md' && !nest && keep == null) {
-
-        try {
-          const content = (await Deno.readTextFile(path)).replace(/\s+$/, '');
-
-          if (headingLevel > 0 && content) {
-            console.log(`${'#'.repeat(headingLevel)} ${name}`);
-          }
-          console.log(content);
-          if (headingLevel > 0) {
-            console.log("");
-          }
-        } catch (fileError) {
-          console.error(`Warning: Could not read page file: ${path} (${fileError.message})`);
-        }
+        const content = (await Deno.readTextFile(path)).replace(/\s+$/, '');
+        resolve(content);
         return;
       }
 
-      // STAGE 2: Common Data Gathering
-      // Gather all data into a common structure
-      let data;
-
-      const result = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
-
-      data = result || [];
-
-      // STAGE 3: Unified Filtering
-      // Apply filters if any are provided (regardless of nest)
-      if (keep) {
-        // Always use hierarchical filtering since API returns hierarchical data
-        data = data
+      const result = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
+      const data = keep ? result
           .map(block => selectBlock(block, keep))
-          .filter(block => block !== null);
-      }
+          .filter(block => block !== null) : result;
 
-      // STAGE 4: Unified Format Output
-      if (format === 'json') {
-        // Output data as JSON
-        console.log(JSON.stringify(data, null, 2));
-      } else if (format === 'md') {
-        if (headingLevel > 0) {
-          console.log(`${'#'.repeat(headingLevel)} ${name}`);
-        }
-        const markdownLines = nestedJsonToMarkdown(data);
-        if (markdownLines.length > 0) {
-          console.log(markdownLines.join('\n'));
-        }
-        if (headingLevel > 0) {
-          console.log();
-        }
-      } else {
-        throw new Error(`Unknown format: ${format}`);
-      }
-    } catch (error) {
-      abort(error);
+      const lines = format === "md" ? nestedJsonToMarkdown(data).join("\n") : data;
+
+      resolve(lines);
+
+    } catch (ex) {
+      reject(ex);
     }
+  }) : Task.rejected(new Error("Must specify page name"));
+}
+
+function page(options){
+  const format = options.json ? 'json' : (options.format || 'md');
+  const headingLevel = options.heading === 0 ? 0 : Math.max(1, Math.min(5, parseInt(options.heading) || 1));
+  return function(given){
+    return given ? tskNamed(given).
+      chain(Task.juxt(Task.of, name => tskGetPage(name, options))).
+      map(fmtBody({format, heading: headingLevel})) : Task.of(null);
   }
 }
 
@@ -739,8 +705,7 @@ function prop(options){
   const headingLevel = options.heading === 0 ? 0 : Math.max(1, Math.min(5, parseInt(options.heading) || 1));
   const format = options.json ? 'json' : options.format || "md";
   return function(pageName){
-    const task = addPageProperties(pageName, options);
-    return task.map(function(name){
+    return addPageProperties(pageName, options).map(function(name){
       const propLines = options.add.map(prop => {
         const [key, value] = prop.split('=');
         return `${key}:: ${value}`;
@@ -938,7 +903,7 @@ program
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
   .option('--agent', 'Hide what an agent must not see per .agentignore file')
   .option('--human', 'Show what only a human must see per .agentignore file')
-  .action(oldPipeable(page));
+  .action(pipeable(page));
 
 program
   .command('post')
