@@ -428,13 +428,13 @@ function tskGetPage(given, options){
         return;
       }
 
-      const found = await exists(path);
-      if (!found) {
-        reject(new Error(`Page not found: ${given}`));
-        return;
-      }
-
       if (format === 'md' && !nest && keep == null) {
+        const found = await exists(path);
+        if (!found) {
+          reject(new Error(`Page not found: ${given}`));
+          return;
+        }
+
         const content = (await Deno.readTextFile(path)).replace(/\s+$/, '');
         resolve(content);
         return;
