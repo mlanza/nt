@@ -13,7 +13,7 @@ const comp = (...fns) => (...args) =>
   args)
 
 function println(lines){
-  Array.isArray(lines) ? lines.forEach(line => console.log(line)) : console.log(lines);
+  Array.isArray(lines) ? lines.forEach(line => console.log(line)) : lines && console.log(lines);
 }
 
 function abort(error){
@@ -544,8 +544,8 @@ function path(){
 function tskNamed(id){
   return new Task(async function(reject, resolve){
     try {
-      const {name} = await identify(id);
-      resolve(name);
+      const {normalized} = await identify(id);
+      resolve(normalized);
     } catch (error) {
       reject(error);
     }
