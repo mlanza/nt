@@ -1,12 +1,12 @@
 # Note
 
-**Note** is a tool to access and update your [Logseq](https://logseq.com) content.  CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike — and they're easier to wrap as MCP servers, than the reverse.
+**Note** is a tool for managing text content of all kinds — Skills, Commands, Prompts, Rules, Knowledge — in [Logseq](https://logseq.com).  CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike — and they're easier to wrap as MCP servers, than the reverse.
 
 <p align="center">
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
-Your local-first commonplace book 📖 provides the memory scaffolding every agent needs, a near perfect spot for keeping the information and instructions it needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
+Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
 That also makes it the ideal store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
 
