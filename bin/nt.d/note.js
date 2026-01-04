@@ -172,8 +172,6 @@ function getFilePath(day, name){
   return `${LOGSEQ_REPO}/${where}/${normalized}.md`;
 }
 
-const je = /^(?:\d{8}|\d{4}-\d{2}-\d{2})$/;
-
 function tskGetJournalPage(datestamp){
   return new Task(function(reject, resolve){
     const arg = datestamp.split(' ')?.[0].replaceAll("-", "");
