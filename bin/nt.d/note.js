@@ -1,8 +1,20 @@
 #!/usr/bin/env deno run --allow-all
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.ts";
+import { parse } from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 
+async function loadConfig(path) {
+  const text = await Deno.readTextFile(path);
+  const cfg = parse(text);
+
+  const shorthand = cfg.shorthand ?? {};
+  const agentignore = cfg.agentignore ?? [];
+
+  return { shorthand, agentignore };
+};
+
+const NOTE_CONFIG = Deno.env.get("NOTE_CONFIG") ?? `${Deno.env.get("HOME")}/.config/nt/config.toml`;
 const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT') || null;
 const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN') || null;
 const LOGSEQ_REPO = Deno.env.get('LOGSEQ_REPO') || null;
@@ -389,29 +401,7 @@ function nestedJsonToMarkdown(blocks, level = 0) {
   return lines;
 }
 
-const shorthand = {
-  "~props": "^[^\\s:]+::",
-  "~tasks": "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)",
-  "~links": '^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+"[^"\\r\\n]*")?\\s*\\))\\s*$'
-}
-
-async function loadAgentIgnorePatterns() {
-  const configPath = Deno.env.get('NOTE_CONFIG_PATH') || `${Deno.env.get('HOME')}/.nt/.agentignore`;
-
-  try {
-    await Deno.stat(configPath);
-    const content = await Deno.readTextFile(configPath);
-    return content
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && !line.startsWith('#'))
-      .filter(line => line.length > 0);
-  } catch {
-    return [];
-  }
-}
-
-function keeping(patterns, hit = true){
+function keeping(patterns, shorthand, hit = true){
   const miss = !hit;
   const regexes = (patterns || []).map(what => shorthand[what] || what).map(pattern => new RegExp(pattern));
   return regexes.length ? function(text){
@@ -430,10 +420,12 @@ function page(options){
   const nest = options.nest || false;
 
   return async function(given){
-    const patterns = options.agent || options.human ? await loadAgentIgnorePatterns() : null;
+    const {shorthand, agentignore} = await loadConfig(NOTE_CONFIG);
+    console.log({shorthand, agentignore});
+    const patterns = options.agent || options.human ? agentignore : null;
     const agentLess = options.agent ? patterns : null;
     const humanOnly = options.human ? patterns : null;
-    const keep = keeping(agentLess || options.less, false) || keeping(humanOnly || options.only, true);
+    const keep = keeping(agentLess || options.less, shorthand, false) || keeping(humanOnly || options.only, shorthand, true);
 
     // Load agent patterns and merge with existing patterns if --agent flag is used
     try {
