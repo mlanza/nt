@@ -4,22 +4,6 @@ import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.t
 import { parse } from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 
-async function loadConfig(path) {
-  try {
-    const text = await Deno.readTextFile(path);
-    const cfg = parse(text);
-
-    const shorthand = cfg.shorthand ?? {};
-    const agentignore = cfg.agentignore ?? [];
-
-    return { shorthand, agentignore };
-  } catch {
-    const shorthand = {};
-    const agentignore = [];
-    return { shorthand, agentignore };
-  }
-};
-
 const NOTE_CONFIG = Deno.env.get("NOTE_CONFIG") ?? `${Deno.env.get("HOME")}/.config/nt/config.toml`;
 const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT') || null;
 const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN') || null;
@@ -131,6 +115,26 @@ function toInt(s) {
   }
 }
 
+function tskConfig(path){
+  return new Task(async function(reject, resolve){
+    try {
+      const text = await Deno.readTextFile(path);
+      const cfg = parse(text);
+
+      const shorthand = cfg.shorthand ?? {};
+      const agentignore = cfg.agentignore ?? [];
+
+      resolve({ shorthand, agentignore });
+    } catch {
+      const shorthand = {};
+      const agentignore = [];
+      resolve({ shorthand, agentignore });
+    }
+  });
+}
+
+const loadConfig = comp(promise, tskConfig);
+
 function tskNormalizedName(name){
   return tskLogseq('logseq.Editor.getPage', [toInt(name) || name]).map(page => page?.originalName);
 }
@@ -164,7 +168,6 @@ function formatYYYYMMDD(n) {
   const s = String(n).padStart(8, '0')
   return s.slice(0, 4) + '_' + s.slice(4, 6) + '_' + s.slice(6, 8)
 }
-
 
 function getFilePath(day, name){
   const where = day ? "journals" : "pages";
@@ -535,7 +538,7 @@ function search(term){
 
 function path(){
   return function(name){
-    return tskNames(name).
+    return tskIdentify(name).
       map(({path}) => path);
   }
 }
@@ -686,7 +689,7 @@ function qryPage(name){
   return qry(`[:find (pull ?p [*]) :where [?p :block/original-name "${name}"]]`);
 }
 
-function tskNames(name){
+function tskIdentify(name){
   return name ? new Task(function(reject, resolve){
     identify(name).then(function(names){
       if (names?.name) {
@@ -699,7 +702,7 @@ function tskNames(name){
 }
 
 function normal(name){
-  return tskNames(name).map(({name}) => name);
+  return tskIdentify(name).map(({name}) => name);
 }
 
 function fmtProps({format}, propName = null){
