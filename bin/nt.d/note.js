@@ -544,18 +544,7 @@ function path(){
 }
 
 function tskNamed(id){
-  return new Task(async function(reject, resolve){
-    try {
-      if (id) {
-        const {name} = await identify(id);
-        resolve(name);
-      } else {
-        resolve(null);
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
+  return tskIdentify(id).map(({name}) => name);
 }
 
 function constantly(f){
