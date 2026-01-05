@@ -646,7 +646,7 @@ function fmtProps({format}, propName = null){
 
     if (format === 'json') {
       if (pageData) {
-        return [name, JSON.stringify(results, null, 2)];
+        return [name, results];
       }
     } else if (format === 'md') {
       return [name, propName ? pageData?.properties?.[propName] || null : Object.entries(pageData["properties-text-values"]).map(function([key, vals]){
@@ -661,7 +661,7 @@ function fmtProps({format}, propName = null){
 function fmtBody({heading, format}){
   return function([name, content]){
     if (format === 'json') {
-      return [name, JSON.stringify(content, null, 2)];
+      return [name, content];
     } else if (format === 'md') {
       const lines = [];
       if (heading && name && content) {
@@ -701,7 +701,7 @@ function prop(options){
       });
 
       if (format === 'json') {
-        return JSON.stringify({success: true, page: name, added: options.add});
+        return {success: true, page: name, added: options.add};
       } else {
         const lines = [];
         if (headingLevel > 0) {
