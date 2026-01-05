@@ -633,13 +633,7 @@ function qryPage(name){
 
 function tskIdentify(name){
   return name ? new Task(function(reject, resolve){
-    identify(name).then(function(names){
-      if (names?.name) {
-        resolve(names);
-      } else {
-        reject(new Error(`Page not found: ${name}`));
-      }
-    }).catch(reject);
+    identify(name).then(resolve).catch(reject);
   }) : Task.rejected(new Error('Page name is required'));
 }
 
