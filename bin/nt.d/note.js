@@ -693,22 +693,14 @@ function prop(options){
   return function(pageName){
     return addPageProperties(pageName, options).map(function(name){
       if (format === 'json') {
-        return {page: name, added: options.add};
+        return [name, options.add];
       } else {
-        const lines = [];
-        if (headingLevel > 0) {
-          lines.push(`${'#'.repeat(headingLevel)} ${name}`);
-        }
-        lines.push(...options.add.map(prop => {
+        return [name, options.add.map(prop => {
           const [key, value] = prop.split('=');
           return `${key}:: ${value}`;
-        }));
-        if (headingLevel > 0) {
-          lines.push("");
-        }
-        return lines;
+        })];
       }
-    });
+    }).map(fmtBody({format, heading: headingLevel}));
   }
 }
 
