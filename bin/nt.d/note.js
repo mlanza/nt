@@ -698,7 +698,7 @@ function prop(options){
       });
 
       if (format === 'json') {
-        return {success: true, page: name, added: options.add};
+        return {page: name, added: options.add};
       } else {
         const lines = [];
         if (headingLevel > 0) {
