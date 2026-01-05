@@ -692,11 +692,6 @@ function prop(options){
   const format = options.json ? 'json' : options.format || "md";
   return function(pageName){
     return addPageProperties(pageName, options).map(function(name){
-      const propLines = options.add.map(prop => {
-        const [key, value] = prop.split('=');
-        return `${key}:: ${value}`;
-      });
-
       if (format === 'json') {
         return {page: name, added: options.add};
       } else {
@@ -704,7 +699,10 @@ function prop(options){
         if (headingLevel > 0) {
           lines.push(`${'#'.repeat(headingLevel)} ${name}`);
         }
-        lines.push(...propLines);
+        lines.push(...options.add.map(prop => {
+          const [key, value] = prop.split('=');
+          return `${key}:: ${value}`;
+        }));
         if (headingLevel > 0) {
           lines.push("");
         }
