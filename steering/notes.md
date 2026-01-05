@@ -1,4 +1,4 @@
-# `notes` CLI Tool Specification
+# `nt` CLI Tool Specification
 
 ## Logseq HTTP API Reference
 
@@ -22,7 +22,7 @@ Journal pages can be identified by these PageEntity properties:
 
 ## Overview
 
-`notes` is a Logseq HTTP API CLI tool that provides command-line access to Logseq functionality. It follows Unix philosophy principles with silent success, explicit error handling, and composable commands.
+`nt` is a Logseq HTTP API CLI tool that provides command-line access to Logseq functionality. It follows Unix philosophy principles with silent success, explicit error handling, and composable commands.
 
 ## Design Philosophy
 
@@ -52,7 +52,7 @@ Journal pages can be identified by these PageEntity properties:
 
 **Syntax**:
 ```bash
-notes pages [-f|--format <format>] [--json]
+nt pages [-f|--format <format>] [--json]
 ```
 
 **Options**:
@@ -67,9 +67,9 @@ notes pages [-f|--format <format>] [--json]
 
 **Examples**:
 ```bash
-notes pages                    # List pages as names
-notes pages --json            # List pages as JSON
-notes pages -f json            # Same as above
+nt pages                    # List pages as names
+nt pages --json            # List pages as JSON
+nt pages -f json            # Same as above
 ```
 
 ### journals - List All Journal Pages
@@ -78,7 +78,7 @@ notes pages -f json            # Same as above
 
 **Syntax**:
 ```bash
-notes journals [--limit <count>]
+nt journals [--limit <count>]
 ```
 
 **Options**:
@@ -93,9 +93,9 @@ notes journals [--limit <count>]
 
 **Examples**:
 ```bash
-notes journals                 # List last 7 journals (default)
-notes journals --limit 3       # List last 3 journals
-notes journals --limit none     # List all journals with no limit
+nt journals                 # List last 7 journals (default)
+nt journals --limit 3       # List last 3 journals
+nt journals --limit none     # List all journals with no limit
 ```
 
 ### page - Get Page Content
@@ -104,7 +104,7 @@ notes journals --limit none     # List all journals with no limit
 
 **Syntax**:
 ```bash
-notes page [name] [-f|--format <format>] [--json] [--no-heading] [--less <patterns...>] [-a|--append <content>]
+nt page [name] [-f|--format <format>] [--json] [--no-heading] [--less <patterns...>] [-a|--append <content>]
 ```
 
 **Arguments**:
@@ -142,12 +142,12 @@ notes page [name] [-f|--format <format>] [--json] [--no-heading] [--less <patter
 
 **Examples**:
 ```bash
-notes page MyPage                     # Show page content with heading
-notes page MyPage --no-heading        # Show content without heading
-notes page MyPage --json              # Show as JSON block tree
-notes page MyPage --nest --json       # Show as hierarchical JSON outline
-echo -e "Page1\nPage2" | notes page   # Process multiple pages from stdin
-notes page MyPage -a "New content"    # Append content (silent)
+nt page MyPage                     # Show page content with heading
+nt page MyPage --no-heading        # Show content without heading
+nt page MyPage --json              # Show as JSON block tree
+nt page MyPage --nest --json       # Show as hierarchical JSON outline
+echo -e "Page1\nPage2" | nt page   # Process multiple pages from stdin
+nt page MyPage -a "New content"    # Append content (silent)
 ```
 
 **Less Option (--less)**
@@ -168,14 +168,14 @@ The `--less` option filters OUT (excludes/strip) matching content from output, s
 
 **Filter out TODO/DOING items** (parity with `no-todos`):
 ```bash
-notes page Atomic --less '^(TODO|DOING)'
+nt page Atomic --less '^(TODO|DOING)'
 ```
 - Matches: `- TODO`, `- DOING` at start of content
 - Equivalent to: `./no-todos < MyPage.md`
 
 **Filter out URL-only items** (parity with `no-links`):
 ```bash
-notes page MyPage --nest --less '^https?://[^)]+$' --less '^\[.*\]\(https?://[^)]+\)$'
+nt page MyPage --nest --less '^https?://[^)]+$' --less '^\[.*\]\(https?://[^)]+\)$'
 ```
 - First pattern: Plain URLs that occupy entire line (`https://example.com`)
 - Second pattern: Markdown links that occupy entire line (`[text](https://example.com)`)
@@ -183,26 +183,26 @@ notes page MyPage --nest --less '^https?://[^)]+$' --less '^\[.*\]\(https?://[^)
 
 **Multiple patterns**:
 ```bash
-notes page MyPage --nest --less '^(TODO|DOING)' '^\[\#[ABC]\]' 'DEADLINE:' 'SCHEDULED:'
+nt page MyPage --nest --less '^(TODO|DOING)' '^\[\#[ABC]\]' 'DEADLINE:' 'SCHEDULED:'
 ```
 - Filters out TODO/DOING items, priority markers, and scheduling items
 
 **Priority filtering**:
 ```bash
-notes page MyPage --nest --less '\[#A\]'      # Remove priority A items
-notes page MyPage --nest --less '\[#A\]' --less '\[#B\]' --less '\[#C\]'  # Remove all priority items
+nt page MyPage --nest --less '\[#A\]'      # Remove priority A items
+nt page MyPage --nest --less '\[#A\]' --less '\[#B\]' --less '\[#C\]'  # Remove all priority items
 ```
 
 **Deadline and scheduling filtering**:
 ```bash
-notes page MyPage --nest --less 'DEADLINE:'    # Remove items with deadlines
-notes page MyPage --nest --less 'SCHEDULED:'   # Remove scheduled items
+nt page MyPage --nest --less 'DEADLINE:'    # Remove items with deadlines
+nt page MyPage --nest --less 'SCHEDULED:'   # Remove scheduled items
 ```
 
 **Complex filtering combinations**:
 ```bash
 # Remove all task-related items (equivalent to comprehensive task filtering)
-notes page MyPage --nest --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)' --less '^\[\#[ABC]\]' --less 'DEADLINE:' --less 'SCHEDULED:' --less 'collapsed:: true'
+nt page MyPage --nest --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)' --less '^\[\#[ABC]\]' --less 'DEADLINE:' --less 'SCHEDULED:' --less 'collapsed:: true'
 ```
 
 **Pattern Reference**:
@@ -219,12 +219,12 @@ The `--filter` option provides the same filtering functionality as dedicated too
 
 ```bash
 # Traditional approach
-notes page MyPage --format=md | ./no-todos
-notes page MyPage --format=md | ./no-links
+nt page MyPage --format=md | ./no-todos
+nt page MyPage --format=md | ./no-links
 
 # New integrated approach
-notes page MyPage --nest --less '^(TODO|DOING)'
-notes page MyPage --nest --less '^https?://[^)]+$' '^\[.*\]\(https?://[^)]+\)$'
+nt page MyPage --nest --less '^(TODO|DOING)'
+nt page MyPage --nest --less '^https?://[^)]+$' '^\[.*\]\(https?://[^)]+\)$'
 ```
 
 ### journal - Get Journal Content
@@ -233,7 +233,7 @@ notes page MyPage --nest --less '^https?://[^)]+$' '^\[.*\]\(https?://[^)]+\)$'
 
 **Syntax**:
 ```bash
-notes journal [date] [-f|--format <format>] [--json] [--no-heading] [-a|--append <content>]
+nt journal [date] [-f|--format <format>] [--json] [--no-heading] [-a|--append <content>]
 ```
 
 **Arguments**:
@@ -242,7 +242,7 @@ notes journal [date] [-f|--format <format>] [--json] [--no-heading] [-a|--append
   - **Integer offset**: `0` (today), `1` (tomorrow), `-1` (yesterday)
   - **Explicit offset**: "-3", "+5"
   - **Logseq format**: "Dec 14th, 2025"
-  - **Note**: Date/offset should come BEFORE options like `-a` for consistency, but both orders are supported. Negative offsets work directly: `notes journal -1`
+  - **Note**: Date/offset should come BEFORE options like `-a` for consistency, but both orders are supported. Negative offsets work directly: `nt journal -1`
 
 **Options**:
 - `-f, --format <type>`: Output format, "md" or "json" (default: "md")
@@ -265,20 +265,20 @@ notes journal [date] [-f|--format <format>] [--json] [--no-heading] [-a|--append
 
 **Examples**:
 ```bash
-notes journal                        # Show today's journal (default behavior)
-notes journal 2025-12-03              # Show journal for specific date
-notes journal 0                      # Show today's journal (explicit)
-notes journal -1                     # Show yesterday's journal
-notes journal 1                      # Show tomorrow's journal
-notes journal --no-heading 2025-12-03 # Show without H1 heading
-notes journal --json 0               # Show today's journal as JSON
-notes journal -a "New entry"         # Append to today's journal (silent, default)
-notes journal 0 -a "New entry"       # Append to today's journal (preferred order)
-notes journal 2025-12-14 -a "New entry" # Append to specific date (preferred order)
-notes journal -5 -a "New entry"      # Append to 5 days ago (preferred order)
-notes journal 1 -a "New entry"       # Append to tomorrow's journal (preferred order)
-notes journal -a "New entry" 2025-12-14 # Append to specific date (legacy order supported)
-echo -e "2025-12-03\n2025-12-02" | notes journal  # Process multiple dates from stdin
+nt day | nt p                        # Show today's journal (default behavior)
+nt p 2025-12-03              # Show journal for specific date
+nt day 0 | nt p                      # Show today's journal (explicit)
+nt day -1 | nt p                    # Show yesterday's journal
+nt day 1 | nt p                      # Show tomorrow's journal
+nt p --heading=0 2025-12-03 # Show without H1 heading
+nt day 0 | nt p --json               # Show today's journal as JSON
+echo "- New entry" | nt journal -a          # Append to today's journal (silent, default)
+nt journal 0 -a "New entry"       # Append to today's journal (preferred order)
+nt journal 2025-12-14 -a "New entry" # Append to specific date (preferred order)
+nt journal -5 -a "New entry"      # Append to 5 days ago (preferred order)
+nt journal 1 -a "New entry"       # Append to tomorrow's journal (preferred order)
+nt journal -a "New entry" 2025-12-14 # Append to specific date (legacy order supported)
+echo -e "2025-12-03\n2025-12-02" | nt journal  # Process multiple dates from stdin
 ```
 
 ### search - Search Pages
@@ -287,7 +287,7 @@ echo -e "2025-12-03\n2025-12-02" | notes journal  # Process multiple dates from 
 
 **Syntax**:
 ```bash
-notes search <term> [-f|--format <format>] [--json]
+nt search <term> [-f|--format <format>] [--json]
 ```
 
 **Arguments**:
@@ -307,8 +307,8 @@ notes search <term> [-f|--format <format>] [--json]
 
 **Examples**:
 ```bash
-notes search "term"              # Find pages containing term
-notes search "term" --json       # Raw search results as JSON
+nt search "term"              # Find pages containing term
+nt search "term" --json       # Raw search results as JSON
 ```
 
 ### props - Get Page Properties (Advanced)
@@ -317,7 +317,7 @@ notes search "term" --json       # Raw search results as JSON
 
 **Syntax**:
 ```bash
-notes props <name> [property] [-f|--format <format>] [--json] [--no-heading]
+nt props <name> [property] [-f|--format <format>] [--json] [--no-heading]
 ```
 
 **Arguments**:
@@ -354,27 +354,27 @@ notes props <name> [property] [-f|--format <format>] [--json] [--no-heading]
 **Examples**:
 ```bash
 # Basic usage - show all properties with heading
-notes props MyPage
+nt props MyPage
 
 # JSON format - full data as JSON
-notes props MyPage --json
-notes props MyPage -f json
+nt props MyPage --json
+nt props MyPage -f json
 
 # Single property - just the values
-notes props MyPage tags
-notes props MyPage tags --json
+nt props MyPage tags
+nt props MyPage tags --json
 
 # Options
-notes props MyPage --no-heading
-notes props MyPage --format md
-notes props MyPage --format json
+nt props MyPage --no-heading
+nt props MyPage --format md
+nt props MyPage --format json
 
 # Pipeable - process multiple pages
-echo MyPage | notes props
-echo -e 'Page1\nPage2\nPage3' | notes props
+echo MyPage | nt props
+echo -e 'Page1\nPage2\nPage3' | nt props
 
 # Error handling
-notes props NonExistentPage    # Shows error message
+nt props NonExistentPage    # Shows error message
 ```
 
 **Advanced Features**:
@@ -391,7 +391,7 @@ notes props NonExistentPage    # Shows error message
 
 **Syntax**:
 ```bash
-notes name <id> [-f|--format <format>] [--json]
+nt name <id> [-f|--format <format>] [--json]
 ```
 
 **Arguments**:
@@ -411,9 +411,9 @@ notes name <id> [-f|--format <format>] [--json]
 
 **Examples**:
 ```bash
-notes name 12345                # Get name for page ID 12345
-notes name "page-id-string"     # Get name for string ID
-notes name 12345 --json         # Full page data as JSON
+nt name 12345                # Get name for page ID 12345
+nt name "page-id-string"     # Get name for string ID
+nt name 12345 --json         # Full page data as JSON
 ```
 
 ### prereq - Collect Prerequisites Recursively
@@ -422,7 +422,7 @@ notes name 12345 --json         # Full page data as JSON
 
 **Syntax**:
 ```bash
-notes prereq <topic> [--debug]
+nt prereq <topic> [--debug]
 ```
 
 **Arguments**:
@@ -450,8 +450,8 @@ prerequisites:: [[Page1]], [[Page2]], Page3
 
 **Examples**:
 ```bash
-notes prereq MyTopic            # Collect all prerequisites
-notes prereq MyTopic --debug    # With debug output
+nt prereq MyTopic            # Collect all prerequisites
+nt prereq MyTopic --debug    # With debug output
 ```
 
 ### alias - Find Pages by Alias
@@ -460,7 +460,7 @@ notes prereq MyTopic --debug    # With debug output
 
 **Syntax**:
 ```bash
-notes alias <alias-name> [-f|--format <format>] [--json]
+nt alias <alias-name> [-f|--format <format>] [--json]
 ```
 
 **Arguments**:
@@ -489,10 +489,10 @@ alias:: my-alias-name
 
 **Examples**:
 ```bash
-notes alias "my-alias"           # Find pages with alias "my-alias"
-notes alias "my-alias" --json    # Full page data as JSON
-echo "my-alias" | notes alias    # Read alias from stdin
-echo -e "alias1\nalias2" | notes alias  # Search multiple aliases
+nt alias "my-alias"           # Find pages with alias "my-alias"
+nt alias "my-alias" --json    # Full page data as JSON
+echo "my-alias" | nt alias    # Read alias from stdin
+echo -e "alias1\nalias2" | nt alias  # Search multiple aliases
 ```
 
 ### query - Execute Datalog Queries
@@ -501,7 +501,7 @@ echo -e "alias1\nalias2" | notes alias  # Search multiple aliases
 
 **Syntax**:
 ```bash
-notes query <datalog-query> [--json]
+nt query <datalog-query> [--json]
 ```
 
 **Arguments**:
@@ -521,8 +521,8 @@ notes query <datalog-query> [--json]
 
 **Examples**:
 ```bash
-notes query '[:find (pull ?b [*]) :where [?b :block/marker _]]' --json
-echo '[:find ?p :where [?p :block/name]]' | notes query --json
+nt query '[:find (pull ?b [*]) :where [?b :block/marker _]]' --json
+echo '[:find ?p :where [?p :block/name]]' | nt query --json
 ```
 
 ### tagged - Find Pages by Tag (Using Datalog Queries)
@@ -531,7 +531,7 @@ echo '[:find ?p :where [?p :block/name]]' | notes query --json
 
 **Syntax**:
 ```bash
-notes tagged <tag> [-f|--format <format>] [--json]
+nt tagged <tag> [-f|--format <format>] [--json]
 ```
 
 **Arguments**:
@@ -552,9 +552,9 @@ notes tagged <tag> [-f|--format <format>] [--json]
 
 **Examples**:
 ```bash
-notes tagged Skills                # Find pages with Skills tag
-notes tagged "AI" --json         # Raw JSON output of AI-tagged pages
-echo -e "Skills\nAI" | notes tagged  # Search multiple tags
+nt tagged Skills                # Find pages with Skills tag
+nt tagged "AI" --json         # Raw JSON output of AI-tagged pages
+echo -e "Skills\nAI" | nt tagged  # Search multiple tags
 ```
 
 ## Tested Datalog Query Examples
@@ -563,27 +563,27 @@ echo -e "Skills\nAI" | notes tagged  # Search multiple tags
 
 **Find blocks with any task marker:**
 ```bash
-notes query '[:find (pull ?b [*]) :where [?b :block/marker _]]' --json
+nt query '[:find (pull ?b [*]) :where [?b :block/marker _]]' --json
 ```
 
 **Find DOING tasks specifically:**
 ```bash
-notes query '[:find (pull ?b [*]) :where [?b :block/marker ?m] [(= ?m "DOING")]]' --json
+nt query '[:find (pull ?b [*]) :where [?b :block/marker ?m] [(= ?m "DOING")]]' --json
 ```
 
 **Find blocks with priority:**
 ```bash
-notes query '[:find (pull ?b [*]) :where [?b :block/priority ?p]]' --json
+nt query '[:find (pull ?b [*]) :where [?b :block/priority ?p]]' --json
 ```
 
 **Find blocks with deadline:**
 ```bash
-notes query '[:find (pull ?b [*]) :where [?b :block/deadline ?d]]' --json
+nt query '[:find (pull ?b [*]) :where [?b :block/deadline ?d]]' --json
 ```
 
 **Get all page names:**
 ```bash
-notes query '[:find ?p :where [?p :block/name]]' --json
+nt query '[:find ?p :where [?p :block/name]]' --json
 ```
 
 ### Query Syntax Notes
@@ -626,7 +626,7 @@ notes query '[:find ?p :where [?p :block/name]]' --json
 
 ### Required Environment Variables
 - `LOGSEQ_TOKEN`: Authentication token for Logseq API
-- `LOGSEQ_REPO`: Base directory for Logseq notes (used by `page` command MD format)
+- `LOGSEQ_REPO`: Base directory for Logseq nt (used by `page` command MD format)
 
 ### API Configuration
 - Endpoint: `http://127.0.0.1:12315/api`
@@ -697,36 +697,36 @@ Warning: <descriptive message>
 ### Pipeline Integration
 ```bash
 # Find pages and process them
-notes search "topic" | notes page --no-heading
+nt search "topic" | nt page --no-heading
 
 # Get prerequisites and check properties
-notes prereq "ComplexTopic" | xargs -I {} notes props {}
+nt prereq "ComplexTopic" | xargs -I {} nt props {}
 
 # Advanced properties processing with batch support
-notes pages | notes props
-echo "Page1\nPage2" | notes props --format json
+nt pages | nt props
+echo "Page1\nPage2" | nt props --format json
 
 # Export all pages
-notes pages | notes page --no-heading > all-pages.md
+nt pages | nt page --no-heading > all-pages.md
 
 # Find pages by alias and process them
-notes alias "my-alias" | xargs -I {} notes page --no-heading
+nt alias "my-alias" | xargs -I {} nt page --no-heading
 ```
 
 ### Automation
 ```bash
 # JSON processing
-notes pages --json | jq '.[] | select(.originalName | startswith("Project"))'
+nt pages --json | jq '.[] | select(.originalName | startswith("Project"))'
 
 # Batch operations with advanced props command
-for page in $(notes pages); do
+for page in $(nt pages); do
     echo "Processing: $page"
-    notes props "$page"              # Advanced properties with full control
-    notes props "$page" --json       # For automation
+    nt props "$page"              # Advanced properties with full control
+    nt props "$page" --json       # For automation
 done
 
 # Advanced properties analysis
-notes pages | xargs -I {} sh -c 'echo "=== {} ==="; notes props "{}" tags'
+nt pages | xargs -I {} sh -c 'echo "=== {} ==="; nt props "{}" tags'
 ```
 
 ## Version Information
