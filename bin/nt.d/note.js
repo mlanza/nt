@@ -1512,7 +1512,7 @@ program
 
 program
   .command('wipe')
-  .description('Wipe all content from a page while keeping the properties')
+  .description('Wipe content, but not properties, from a page')
   .arguments(demand("name"))
   .option('--debug', 'Enable debug output')
   .action(async function(options, pageName){
