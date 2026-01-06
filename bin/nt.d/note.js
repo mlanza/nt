@@ -1361,9 +1361,8 @@ program
   .option('--overwrite', 'Purge any existing page content (not properties)')
   .action(async function(options, pageName){
     const prependMode = options.prepend || false;
-    const debugMode = options.debug || false;
     const overwriteMode = options.overwrite || false;
-    const logger = getLogger(debugMode);
+    const logger = getLogger(options.debug || false);
 
     // Check environment variables
     if (!LOGSEQ_ENDPOINT || !LOGSEQ_TOKEN) {
