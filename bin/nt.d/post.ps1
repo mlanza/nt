@@ -41,10 +41,10 @@ if (-not $pageName) {
 # Call nt prop first if any prop arguments provided
 if ($propArgs.Count -gt 0) {
     $propAddArgs = $propArgs | ForEach-Object { "--add", $_ }
-    & nt prop $pageName @propAddArgs
+    & nt note prop $pageName @propAddArgs
 }
 
-# If stdin was provided, process it through serial then modify
+# If stdin was provided, process it through serial then update
 if ($hasStdin) {
-    $inputs | & nt serial | & nt update $otherArgs $pageName
+    $inputs | & nt note serial | & nt note update $otherArgs $pageName
 }
