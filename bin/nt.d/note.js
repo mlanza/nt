@@ -1677,7 +1677,7 @@ program
   .description('Append stdin content to page')
   .arguments(PIPED)
   .action(async function(){
-    const input = await Deno.readTextFile('/dev/stdin');
+    const input = await new Response(Deno.stdin.readable).text();
 
     if (!input.trim()) {
       console.error("Error: No input provided via stdin");
