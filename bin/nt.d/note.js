@@ -5,14 +5,54 @@ import { parse } from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 
 const NOTE_CONFIG = Deno.env.get("NOTE_CONFIG") ?? `${Deno.env.get("HOME")}/.config/nt/config.toml`;
-const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT') || null;
-const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN') || null;
-const LOGSEQ_REPO = Deno.env.get('LOGSEQ_REPO') || null;
+
+function tskConfig(path){
+  function expandLogseq(logseq){
+    const token = Deno.env.get('LOGSEQ_TOKEN') || null;
+    if (!token) {
+      throw new Error("LOGSEQ_TOKEN environment var must be set.");
+    }
+    const repo = logseq?.repo?.replace("~", Deno.env.get('HOME'));
+    if (!repo) {
+      throw new Error("Logseq repo must be set.");
+    }
+    const endpoint = "http://127.0.0.1:12315/api";
+    return {endpoint, token, ...logseq, repo};
+  }
+  return new Task(async function(reject, resolve){
+    try {
+      const existing = await exists(path);
+      if (!existing) {
+        throw new Error("Note config not established.");
+      }
+      const text = await Deno.readTextFile(existing);
+      const cfg = parse(text);
+
+      const logseq = expandLogseq(cfg.logseq ?? {});
+      const shorthand = cfg.shorthand ?? {};
+      const agentignore = cfg.agentignore ?? [];
+
+      resolve({ logseq, shorthand, agentignore });
+    } catch (error) {
+      reject(new Error(`Problem reading config at ${path}: ${error.message}`));
+    }
+  });
+}
 
 const comp = (...fns) => (...args) =>
   fns.reduceRight((acc, fn, i) =>
     i === fns.length - 1 ? fn(...acc) : fn(acc),
-  args)
+  args);
+
+function promise(tsk){
+  return new Promise(function(resolve, reject){
+    tsk.fork(reject, resolve);
+  });
+}
+
+const loadConfig = comp(promise, tskConfig);
+
+const config = await loadConfig(NOTE_CONFIG);
 
 function println(lines){
   const lns = Array.isArray(lines) ? lines : lines == null ? [] : [lines];
@@ -90,12 +130,6 @@ function juxt(...fns){
 Task.all = all;
 Task.juxt = juxt;
 
-function promise(tsk){
-  return new Promise(function(resolve, reject){
-    tsk.fork(reject, resolve);
-  });
-}
-
 function fmt(options){
   const format = options.json ? 'json' : (options.format || 'md');
   return function(results){
@@ -134,29 +168,6 @@ async function readStdin() {
   return payload.trim();
 }
 
-function tskConfig(path){
-  return new Task(async function(reject, resolve){
-    try {
-      const existing = await exists(path);
-      if (existing) {
-        const text = await Deno.readTextFile(existing);
-        const cfg = parse(text);
-
-        const shorthand = cfg.shorthand ?? {};
-        const agentignore = cfg.agentignore ?? [];
-
-        resolve({ shorthand, agentignore });
-      } else {
-        resolve({ shorthand: {}, agentignore: [] });
-      }
-    } catch {
-      reject(new Error(`Cannot read config at ${path}.`));
-    }
-  });
-}
-
-const loadConfig = comp(promise, tskConfig);
-
 function tskNormalizedName(name){
   return tskLogseq('logseq.Editor.getPage', [toInt(name) || name]).map(page => page?.originalName);
 }
@@ -194,7 +205,7 @@ function formatYYYYMMDD(n) {
 function getFilePath(day, name){
   const where = day ? "journals" : "pages";
   const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
-  return `${LOGSEQ_REPO}/${where}/${normalized}.md`;
+  return `${config.logseq.repo}/${where}/${normalized}.md`;
 }
 
 function tskGetJournalPage(datestamp){
@@ -212,10 +223,6 @@ const getJournalPage = comp(promise, tskGetJournalPage);
 function tskIdentify(given){
   return given ? new Task(async function(reject, resolve){
     try {
-      if (!LOGSEQ_REPO) {
-        throw new Error('LOGSEQ_REPO environment variable is not set');
-      }
-
       const journal = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/);
       const normalized = await getNormalizedName(given) || (journal ? await getJournalPage(given) : null);
       const alias = normalized ? await aka(normalized) : null;
@@ -237,23 +244,15 @@ const identify = comp(promise, tskIdentify);
 function tskLogseq(method, args){
   return new Task(async function(reject, resolve){
     try {
-      if (!LOGSEQ_ENDPOINT) {
-        throw new Error('LOGSEQ_ENDPOINT environment variable is not set');
-      }
-
-      if (!LOGSEQ_TOKEN) {
-        throw new Error('LOGSEQ_TOKEN environment variable is not set');
-      }
-
       const payload = { method }
       if (args) {
         payload.args = args
       }
 
-      const response = await fetch(LOGSEQ_ENDPOINT, {
+      const response = await fetch(config.logseq.endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOGSEQ_TOKEN}`,
+          'Authorization': `Bearer ${config.logseq.token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -321,10 +320,6 @@ function tskWipe(pageName, options) {
     logger.log(`Wiping content from page '${pageName}'...`);
 
     try {
-      // Check environment variables
-      if (!LOGSEQ_ENDPOINT || !LOGSEQ_TOKEN) {
-        throw new Error("LOGSEQ_ENDPOINT and LOGSEQ_TOKEN environment variables must be set");
-      }
 
       if (!pageName) {
         throw new Error("Page name must be specified");
@@ -548,11 +543,10 @@ function tskGetPage(given, options){
 
   return given ? new Task(async function(reject, resolve){
     try {
-      const {shorthand, agentignore} = await loadConfig(NOTE_CONFIG);
-      const patterns = options.agent || options.human ? agentignore : null;
+      const patterns = options.agent || options.human ? config.agentignore : null;
       const agentLess = options.agent ? patterns : null;
       const humanOnly = options.human ? patterns : null;
-      const keep = keeping(agentLess || options.less, shorthand, false) || keeping(humanOnly || options.only, shorthand, true);
+      const keep = keeping(agentLess || options.less, config.shorthand, false) || keeping(humanOnly || options.only, config.shorthand, true);
 
       const {name, path} = await identify(given);
       if (!name) {
@@ -1339,8 +1333,8 @@ program
   .option('--nest', 'Use hierarchical nesting with format output')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
-  .option('--agent', 'Hide what an agent must not see per .agentignore file')
-  .option('--human', 'Show what only a human must see per .agentignore file')
+  .option('--agent', 'Hide what an agent must not see per agentignore config')
+  .option('--human', 'Show what only a human must see per agentignore config')
   .action(pipeable(page));
 
 program
@@ -1363,11 +1357,6 @@ program
     const prependMode = options.prepend || false;
     const overwriteMode = options.overwrite || false;
     const logger = getLogger(options.debug || false);
-
-    // Check environment variables
-    if (!LOGSEQ_ENDPOINT || !LOGSEQ_TOKEN) {
-      abort("Error: LOGSEQ_ENDPOINT and LOGSEQ_TOKEN environment variables must be set");
-    }
 
     if (!pageName) {
       abort("Usage: modify [--prepend] [--debug] [--overwrite] <page_name>");
