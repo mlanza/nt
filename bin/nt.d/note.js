@@ -1540,7 +1540,7 @@ program
       if (result.deletedCount === result.totalCount) {
         console.log(`✅ Wiped ${result.deletedCount} content blocks from page '${pageName}' (preserved ${result.propertiesCount} property blocks)`);
       } else {
-        abort(`Error: Only deleted ${result.deletedCount} out of ${result.totalCount} blocks`);
+        throw new Error(`Only deleted ${result.deletedCount} out of ${result.totalCount} blocks`);
       }
 
     } catch (error) {
