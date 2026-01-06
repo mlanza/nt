@@ -591,6 +591,13 @@ function page(options){
   }
 }
 
+function ident(){
+  return function(given){
+    return given ? tskIdentify(given).
+      map(obj => console.log(JSON.stringify(obj, null, 2))) : Task.of(null);
+  }
+}
+
 function search(term){
   return new Task(function(reject, resolve){
     tskLogseq('logseq.Editor.search', [term]).
@@ -1607,6 +1614,13 @@ program
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
   .action(pipeable(constantly(tskNamed)));
+
+program
+  .command('ident')
+  .hidden()
+  .description('Get page identity details')
+  .arguments(demand("id|name"))
+  .action(pipeable(ident));
 
 program
   .command('alias')
