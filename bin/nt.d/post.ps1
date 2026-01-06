@@ -46,5 +46,5 @@ if ($propArgs.Count -gt 0) {
 
 # If stdin was provided, process it through serial then modify
 if ($hasStdin) {
-    $inputs | & "$PSScriptRoot/../nt" serial | & "$PSScriptRoot/update.js" $otherArgs $pageName
+    $inputs | & nt serial | & nt update $otherArgs $pageName
 }
