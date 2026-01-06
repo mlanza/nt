@@ -162,7 +162,7 @@ async function readStdin() {
       payload += decoder.decode(chunk);
     }
   } catch (error) {
-    abort(`Error reading stdin: ${error.message}`);
+    abort(new Error("Problem reading stdin", {cause: error}));
   }
 
   return payload.trim();
@@ -1532,7 +1532,7 @@ program
       }
 
     } catch (error) {
-      abort(`Error: ${error.message}`);
+      abort(error);
     }
   });
 
