@@ -41,7 +41,7 @@ if (-not $pageName) {
 # Call nt prop first if any prop arguments provided
 if ($propArgs.Count -gt 0) {
     $propAddArgs = $propArgs | ForEach-Object { "--add", $_ }
-    & "$PSScriptRoot/../nt" prop $pageName @propAddArgs
+    & nt prop $pageName @propAddArgs
 }
 
 # If stdin was provided, process it through serial then modify
