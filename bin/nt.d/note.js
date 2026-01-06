@@ -1713,36 +1713,27 @@ program
   .description('Convert markdown headers to wiki format')
   .arguments(PIPED);
 
-const repoCommand = new Command()
-  .description("Display config Logseq repo")
-  .action(function(){
-    console.log(config.logseq.repo);
-  });
-
-const agentignoreCommand = new Command()
-  .description("Display config agentignore")
-  .action(function () {
-    config.agentignore.forEach(ignored => console.log(ignored));
-  });
-
-const shorthandCommand = new Command()
-  .description("Display config shorthand")
-  .action(function () {
-    Object.entries(config.shorthand).forEach(([key, value]) => console.log(key, " => ", value));
-  });
-
 program
   .command(
     "config",
     new Command()
       .description("Configuration checks")
-      .command("repo", repoCommand)
-      .command("shorthand", shorthandCommand)
-      .command("agentignore", agentignoreCommand)
-      .action(function () {
-        this.showHelp();
-      }),
-  );
+      .action(() => this.showHelp())
+      .command("repo", new Command()
+        .description("Display config Logseq repo")
+        .action(function(){
+          console.log(config.logseq.repo);
+        }))
+      .command("shorthand", new Command()
+        .description("Display config shorthand")
+        .action(function () {
+          Object.entries(config.shorthand).forEach(([key, value]) => console.log(key, " => ", value));
+        }))
+      .command("agentignore", new Command()
+        .description("Display config agentignore")
+        .action(function () {
+          config.agentignore.forEach(ignored => console.log(ignored));
+        })));
 
 if (import.meta.main) {
   if (Deno.args.length === 0) {
