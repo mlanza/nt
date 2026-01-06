@@ -79,7 +79,7 @@ async function readStdin() {
 
 async function main() {
   const { args, options } = await new Command()
-    .name("modify")
+    .name("update")
     .description("Insert structured content into a Logseq page using insertBatchBlock")
     .arguments("<page_name>")
     .option("--prepend", "Prepend content instead of appending")
