@@ -1728,12 +1728,12 @@ program
         }))
       .command("shorthand", new Command()
         .description("Display config shorthand")
-        .action(function () {
+        .action(function(){
           Object.entries(config.shorthand).forEach(([key, value]) => console.log(key, " => ", value));
         }))
       .command("agentignore", new Command()
         .description("Display config agentignore")
-        .action(function () {
+        .action(function(){
           config.agentignore.forEach(ignored => console.log(ignored));
         })));
 
