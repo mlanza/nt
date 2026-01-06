@@ -1718,7 +1718,9 @@ program
     "config",
     new Command()
       .description("Configuration checks")
-      .action(() => this.showHelp())
+      .action(function(){
+         this.showHelp()
+      })
       .command("repo", new Command()
         .description("Display config Logseq repo")
         .action(function(){
