@@ -549,8 +549,9 @@ function tskGetPage(given, options){
       const keep = keeping(agentLess || options.less, config.shorthand, false) || keeping(humanOnly || options.only, config.shorthand, true);
 
       const {name, path} = await identify(given);
+
       if (!name) {
-        reject(new Error(`Page not found: ${given}`));
+        resolve(null);
         return;
       }
 
@@ -578,7 +579,7 @@ function tskGetPage(given, options){
     } catch (ex) {
       reject(ex);
     }
-  }) : Task.rejected(new Error("Must specify page name"));
+  }) : Task.of(null);
 }
 
 function page(options){
