@@ -41,7 +41,7 @@ Journal pages can be identified by these PageEntity properties:
 
 ### Integration Patterns
 - Uses `callLogseq()` function for all Logseq API interactions
-- Environment variables for configuration: `LOGSEQ_TOKEN`, `LOGSEQ_REPO`
+- Environment variables for configuration: `LOGSEQ_TOKEN`
 - Standard HTTP endpoint: `http://127.0.0.1:12315/api`
 
 ## Commands
@@ -626,7 +626,7 @@ nt query '[:find ?p :where [?p :block/name]]' --json
 
 ### Required Environment Variables
 - `LOGSEQ_TOKEN`: Authentication token for Logseq API
-- `LOGSEQ_REPO`: Base directory for Logseq nt (used by `page` command MD format)
+- `NOTE_REPO`: Base directory for Logseq nt (used by `page` command MD format)
 
 ### API Configuration
 - Endpoint: `http://127.0.0.1:12315/api`
