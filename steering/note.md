@@ -45,36 +45,6 @@ Journal pages can be identified by these PageEntity properties:
 
 ## Commands
 
-### pages - List All Pages
-
-**Purpose**: Retrieve all pages from Logseq
-
-**Syntax**:
-```bash
-nt pages [-f|--format <format>] [--json]
-```
-
-**Options**:
-- `-f, --format <type>`: Output format, either "md" or "json" (default: "md")
-- `--json`: Shortcut for `--format json`
-
-**Behavior**:
-- Calls `logseq.Editor.getAllPages` API method
-- MD format: Outputs one page name per line using `page.originalName`
-- JSON format: Outputs full API response as pretty-printed JSON
-- Silent on empty page lists (just produces no output)
-
-**Examples**:
-```bash
-nt pages                        # List regular pages as names
-nt pages -t regular             # List regular pages as names
-nt pages --json                 # List pages as JSON
-nt pages -f json                # Same as above
-nt pages -t all                 # List all journals and regular pages
-nt pages -t journal             # List all journals
-nt pages -t journal --limit 3   # List last 3 journals
-```
-
 ### page - Get Page Content
 
 **Purpose**: Retrieve content from one or more pages
