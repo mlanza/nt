@@ -66,35 +66,11 @@ nt pages [-f|--format <format>] [--json]
 
 **Examples**:
 ```bash
-nt pages                    # List pages as names
-nt pages --json            # List pages as JSON
-nt pages -f json            # Same as above
-```
-
-### journals - List All Journal Pages
-
-**Purpose**: Retrieve all journal pages from Logseq
-
-**Syntax**:
-```bash
-nt journals [--limit <count>]
-```
-
-**Options**:
-- `--limit <count>`: Limit to last N journals (none = no limit) (default: 7)
-
-**Behavior**:
-- Calls `logseq.Editor.getAllPages` API method
-- Filters pages where `page["journal?"] === true` or `page.type === "journal"`
-- Sorts by `page.journalDay` descending (newest first)
-- Outputs journal dates in YYYY-MM-DD format with day names, one per line
-- Applies limit if specified and not 0
-
-**Examples**:
-```bash
-nt journals                 # List last 7 journals (default)
-nt journals --limit 3       # List last 3 journals
-nt journals --limit none     # List all journals with no limit
+nt pages                        # List pages as names
+nt pages --json                 # List pages as JSON
+nt pages -f json                # Same as above
+nt pages -t journal             # List all journals
+nt pages -t journal --limit 3   # List last 3 journals
 ```
 
 ### page - Get Page Content
