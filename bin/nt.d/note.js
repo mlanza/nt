@@ -42,8 +42,8 @@ function tskConfig(path){
       const agentignore = cfg.agentignore ?? [];
 
       resolve({ logseq, shorthand, agentignore });
-    } catch (error) {
-      reject(new Error(`Problem reading config at ${path}.`, {cause: error}));
+    } catch (cause) {
+      reject(new Error(`Problem reading config at ${path}.`, {cause}));
     }
   });
 }
@@ -171,7 +171,7 @@ async function readStdin() {
       payload += decoder.decode(chunk);
     }
   } catch (error) {
-    abort(new Error("Problem reading stdin", {cause: error}));
+    abort(error);
   }
 
   return payload.trim();
@@ -624,8 +624,8 @@ function search(term){
               try {
                 const pageResult = await callLogseq('logseq.Editor.getPage', [id]);
                 return pageResult?.originalName;
-              } catch (ex) {
-                reject(new Error(`Warning: Could not get page ${id}: ${ex.message}`));
+              } catch (cause) {
+                reject(new Error(`Could not get page ${id}.`, {cause}));
               }
             }));
 
@@ -704,7 +704,7 @@ function qryBacklinks(name, limit = Infinity){
   return new Task(async function(reject, resolve){
     try {
       if (!name) {
-        reject(new Error('Page name is required'));
+        throw new Error('Page name is required');
       }
 
       const items = await promise(qry(`[:find (pull ?b [:block/content :block/page]) :where [?b :block/path-refs ?p] [?p :block/name "${name.toLowerCase()}"]]`, limit));
@@ -725,9 +725,8 @@ function qryBacklinks(name, limit = Infinity){
           if (pageResult && pageResult.originalName) {
             pageNames.add(pageResult.originalName);
           }
-        } catch (pageError) {
-          // Continue with other pages if one fails
-          reject(new Error(`Warning: Could not get page ${pageId}: ${pageError.message}`));
+        } catch (cause) {
+          throw new Error(`Could not get page ${pageId}.`, {cause});
         }
       }
 
@@ -842,27 +841,23 @@ function addPageProperties(pageName, options){
   return new Task(async function(reject, resolve){
     try {
       if (!options.add || options.add.length === 0) {
-        reject(new Error('At least one --add option is required'));
-        return;
+        throw new Error('At least one --add option is required');
       }
 
       const {name} = await identify(pageName);
       if (!name) {
-        reject(new Error(`Page not found: ${pageName}`));
-        return;
+        throw new Error(`Page not found: ${pageName}`);
       }
 
       // Get page blocks tree to find first block (where page properties live)
       const blocksTree = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
       if (!blocksTree || blocksTree.length === 0) {
-        reject(new Error(`No blocks found for page: ${name}`));
-        return;
+        throw new Error(`No blocks found for page: ${name}`);
       }
 
       const firstBlock = blocksTree[0];
       if (!firstBlock || !firstBlock.uuid) {
-        reject(new Error(`Could not get first block UUID for: ${name}`));
-        return;
+        throw new Error(`Could not get first block UUID for: ${name}`);
       }
 
       // Read existing properties from first block
@@ -874,14 +869,12 @@ function addPageProperties(pageName, options){
       for (const propString of options.add) {
         const parts = propString.split('=');
         if (parts.length !== 2) {
-          reject(new Error(`Invalid property format: ${propString}. Expected "key=value"`));
-          return;
+          throw new Error(`Invalid property format: ${propString}. Expected "key=value"`);
         }
 
         const [key, value] = parts;
         if (!key.trim() || !value.trim()) {
-          reject(new Error(`Invalid property format: ${propString}. Key and value cannot be empty`));
-          return;
+          throw new Error(`Invalid property format: ${propString}. Key and value cannot be empty`);
         }
 
         const trimmedKey = key.trim().toLowerCase(); // Normalize to lowercase
