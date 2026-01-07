@@ -1370,7 +1370,7 @@ program
 
 program
   .command('post')
-  .description('Append stdin content to page')
+  .description("Append stdin content to named page, if omitted to today's journal entry")
   .arguments("[name]")
   .option('--prepend', 'Prepend content instead')
   .option('--overwrite', 'Purges any existing page content (not properties)')
