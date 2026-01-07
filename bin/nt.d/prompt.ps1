@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 
-$prompt = $input | Out-String
+$prompt = @($args) + @($input) | Out-String
 $wikilinks = $prompt | nt wikilinks
 
 $prompt
