@@ -6,6 +6,6 @@ $wikilinks = $prompt | nt wikilinks
 $prompt
 if ($wikilinks) {
   write-host "---"
-  $wikilinks | nt prereq | nt seen | nt page --agent --heading=2
+  $wikilinks | nt prereq | nt seen | nt page --agent --heading=2 | nt tidy
 }
 

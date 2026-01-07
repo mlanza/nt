@@ -1,3 +1,3 @@
 #!/usr/bin/env pwsh
 $names = @($input) + @($args)
-$names | nt prereq | nt seen | nt page --agent
+$names | nt prereq | nt seen | nt page --agent | nt tidy
