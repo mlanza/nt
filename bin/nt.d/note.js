@@ -21,7 +21,7 @@ function tskConfig(path){
     if (!token) {
       throw new Error("LOGSEQ_TOKEN environment var must be set.");
     }
-    const repo = logseq?.repo?.replace("~", Deno.env.get('HOME'));
+    const repo = logseq?.repo?.replace("~", HOME);
     if (!repo) {
       throw new Error("Logseq repo must be set.");
     }
@@ -43,7 +43,7 @@ function tskConfig(path){
 
       resolve({ logseq, shorthand, agentignore });
     } catch (error) {
-      reject(new Error(`Problem reading config at ${path}: ${error.message}`));
+      reject(new Error(`Problem reading config at ${path}.`, {cause: error}));
     }
   });
 }
@@ -61,8 +61,6 @@ function promise(tsk){
 
 const loadConfig = comp(promise, tskConfig);
 
-const config = await loadConfig(NOTE_CONFIG);
-
 function println(lines){
   const lns = Array.isArray(lines) ? lines : lines == null ? [] : [lines];
   lns.forEach(line => console.log(line))
@@ -72,6 +70,8 @@ function abort(error){
   error && console.error('Aborted:', error); //error?.message || error);
   Deno.exit(1);
 }
+
+const config = await loadConfig(NOTE_CONFIG).catch(abort);
 
 const take = (xs, n = Infinity) =>
   Array.isArray(xs) ? xs.slice(0, n) : [];
