@@ -1559,11 +1559,19 @@ program
   .option('--nest', 'Use hierarchical nesting with format output')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
-  .option('--agent', 'Hide what an agent must not see per agentignore config')
-  .option('--human', 'Show what only a human must see per agentignore config')
+  .option('--agent', 'Hide content not intended for agents (see agentignore)')
+  .option('--human', 'Show content intended only for humans (see agentignore)')
   .example("List wikilinks on a page", "nt page Mission | nt wikilinks")
   .example("Show content for wikilinked pages", "nt page Mission | nt wikilinks | nt page")
   .example("Show content for select pages", `nt list Atomic "Clojure Way" | nt page`)
+  .example("Show content minus bare and md links", `nt page "Start With Why" --nest --less '^https?://[^)]+$' --less '^\[.*\]\(https?://[^)]+\)$'`)
+  .example("Show only bare and md links", `nt page "Start With Why" --nest --only '^https?://[^)]+$' --only '^\[.*\]\(https?://[^)]+\)$'`)
+  .example("Show content minus tasks", `nt page Atomic --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)'`)
+  .example("Show only tasks", `nt page Atomic --only '^(TODO|DOING|DONE|WAITING|NOW|LATER)'`)
+  .example("Show content minus tasks and links using shorthand", `nt page Atomic --less tasks --less links`)
+  .example("Show only tasks and links content using shorthand", `nt page Atomic --only tasks --only links`)
+  .example("Show agent-facing content per agentignore for tasks and links", `nt page Atomic --agent`)
+  .example("Show human-facing content per agentignore for tasks and links", `nt page Atomic --human`)
   .example(`Find mention of "components" on a page`, `nt page Atomic | grep -C 3 components`)
   .action(pipeable(page));
 
@@ -1784,22 +1792,22 @@ program
         this.showHelp();
       })
       .command("file", new Command()
-        .description("Show config file path")
+        .description("Show the path to the config file")
         .action(function(){
           console.log(NOTE_CONFIG);
         }))
       .command("repo", new Command()
-        .description("Show Logseq repo")
+        .description("Show the path to the Logseq repo")
         .action(function(){
           console.log(config.logseq.repo);
         }))
       .command("shorthand", new Command()
-        .description("Show shorthand")
+        .description("Lists defined shorthand useful in place of tedious regexes in some commands")
         .action(function(){
           Object.entries(config.shorthand).forEach(([key, value]) => console.log(key, " => ", value));
         }))
       .command("agentignore", new Command()
-        .description("Show agentignore")
+        .description("Lists defined regexes (or shorthand) specifying what blocks agents ignore")
         .action(function(){
           config.agentignore.forEach(ignored => console.log(ignored));
         })));
