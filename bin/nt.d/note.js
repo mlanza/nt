@@ -67,7 +67,7 @@ function println(lines){
 }
 
 function abort(error){
-  error && console.error('Aborted:', error); //error?.message || error);
+  error && console.error(error);
   Deno.exit(1);
 }
 
