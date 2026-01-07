@@ -299,7 +299,7 @@ function qryPrerequisites(name){
   });
 }
 
-function prerequisites(name){
+function tskPrerequisites(name){
   return new Task(async function(reject, resolve){
     const seen = new Set();
     const result = [];
@@ -1579,7 +1579,7 @@ program
   .command('prereq')
   .description('Recursively list page prerequisites')
   .arguments(demand("name"))
-  .action(pipeable(constantly(prerequisites)));
+  .action(pipeable(constantly(tskPrerequisites)));
 
 program
   .command('path')
