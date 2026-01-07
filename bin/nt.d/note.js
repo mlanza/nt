@@ -654,7 +654,7 @@ function search(term){
 }
 
 function tskPath(name){
-  return tskIdentify(name).map(({path}) => path);
+  return tskIdentify(name).map(({path}) => orientSlashes(path));
 }
 
 function tskNamed(id){
@@ -1332,6 +1332,197 @@ class SerialParser {
   }
 }
 
+async function wipe(options, pageName){
+  try {
+    const result = await wipeCommand(pageName, options);
+
+    if (result.alreadyEmpty) {
+      if (result.propertiesCount > 0) {
+        console.log(`✅ Page '${pageName}' already only contains properties`);
+      } else {
+        console.log(`✅ Page '${pageName}' is already empty`);
+      }
+      return;
+    }
+
+    if (result.deletedCount === result.totalCount) {
+      console.log(`✅ Wiped ${result.deletedCount} content blocks from page '${pageName}' (preserved ${result.propertiesCount} property blocks)`);
+    } else {
+      throw new Error(`Only deleted ${result.deletedCount} out of ${result.totalCount} blocks`);
+    }
+
+  } catch (error) {
+    abort(error);
+  }
+}
+
+async function update(options, name){
+  const prependMode = options.prepend || false;
+  const overwriteMode = options.overwrite || false;
+  const logger = getLogger(options.debug || false);
+  const pageName = await promise(tskNamed(name || datestamp()));
+
+  logger.log(`Page: ${pageName}, Prepend: ${prependMode}, Overwrite: ${overwriteMode}`);
+
+  // Read JSON payload from stdin
+  const payload = await readStdin();
+
+  if (!payload) {
+    abort("Error: No payload received from stdin");
+  }
+
+  logger.log(`Payload: ${payload}`);
+
+  // Parse JSON payload
+  let parsedPayload;
+  try {
+    parsedPayload = JSON.parse(payload);
+  } catch (error) {
+    abort(`Error parsing JSON payload: ${error.message}`);
+  }
+
+  // Call purge if overwrite mode is enabled
+  if (overwriteMode) {
+    logger.log("Overwrite mode enabled, purging page first...");
+
+    try {
+      // Use integrated wipe command
+      await wipeCommand(pageName, options);
+    } catch (error) {
+      logger.log(`Warning: Purge had issues, continuing with overwrite... ${error.message}`);
+      // Continue with overwrite even if purge had issues
+    }
+  }
+
+  // Check if page exists and get page info
+  let pageCheck;
+  try {
+    pageCheck = await callLogseq('logseq.Editor.getPage', [pageName]);
+  } catch (error) {
+    abort(`Error checking page existence: ${error.message}`);
+  }
+
+  logger.log(`Page check result: ${JSON.stringify(pageCheck)}`);
+
+  let insertResponse;
+
+  if (pageCheck && pageCheck.uuid) {
+    // Page exists
+    const pageUuid = pageCheck.uuid;
+    logger.log(`Page exists with UUID: ${pageUuid}`);
+
+    if (prependMode) {
+      logger.log("Prepending content...");
+
+      // Get all page blocks to check for properties
+      const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
+
+      // Find the last block with properties
+      let lastPropertiesBlock = null;
+      if (pageBlocks && Array.isArray(pageBlocks)) {
+        for (const block of pageBlocks) {
+          if (block.properties && Object.keys(block.properties).length > 0) {
+            lastPropertiesBlock = block;
+          }
+        }
+      }
+
+      if (lastPropertiesBlock) {
+        logger.log(`Found properties, inserting after them...`);
+        logger.log(`Properties content: ${lastPropertiesBlock.content}`);
+
+        // Insert after the properties block using sibling:true
+        insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
+          lastPropertiesBlock.uuid,
+          parsedPayload,
+          { sibling: true }
+        ]);
+      } else {
+        logger.log("No properties found, prepending to top...");
+
+        // Prepend using page UUID with {sibling: false, before: true}
+        insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
+          pageUuid,
+          parsedPayload,
+          { sibling: false, before: true }
+        ]);
+      }
+    } else {
+      logger.log("Appending content...");
+
+      const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
+
+      if (pageBlocks && Array.isArray(pageBlocks) && pageBlocks.length > 0) {
+        const lastBlockUuid = pageBlocks[pageBlocks.length - 1].uuid;
+        logger.log(`Appending after block: ${lastBlockUuid}`);
+
+        // Append after last block using sibling:true
+        insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
+          lastBlockUuid,
+          parsedPayload,
+          { sibling: true }
+        ]);
+      } else {
+        logger.log("Page is empty, inserting at top...");
+
+        insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
+          pageUuid,
+          parsedPayload,
+          { sibling: false }
+        ]);
+      }
+    }
+  } else {
+    // Page doesn't exist, create it
+    logger.log("Page doesn't exist, creating new page...");
+
+    const createResponse = await callLogseq('logseq.Editor.createPage', [pageName, {}]);
+
+    if (createResponse && createResponse.uuid) {
+      const pageUuid = createResponse.uuid;
+      logger.log(`Created page with UUID: ${pageUuid}`);
+
+      // Insert into new page using page UUID
+      insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
+        pageUuid,
+        parsedPayload,
+        { sibling: false }
+      ]);
+    } else {
+      abort("Error creating page");
+    }
+  }
+
+  // Check if insertion was successful
+  if (insertResponse === null) {
+    const blockCount = Array.isArray(parsedPayload) ? parsedPayload.length : 1;
+    const action = prependMode ? "Prepended" : "Appended";
+    console.log(`✅ ${action} ${blockCount} blocks to page '${pageName}'`);
+  } else if (Array.isArray(insertResponse)) {
+    const blockCount = insertResponse.length;
+    const action = prependMode ? "Prepended" : "Added";
+    console.log(`✅ ${action} ${blockCount} blocks to page '${pageName}'`);
+  } else {
+    abort("Error creating page");
+  }
+}
+
+async function serial(){
+  const input = await new Response(Deno.stdin.readable).text();
+
+  if (!input.trim()) {
+    console.error("Error: No input provided via stdin");
+    Deno.exit(1);
+  }
+
+  const parser = new SerialParser();
+  const result = parser.parse(input);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+function pages(options){
+  return constantly(tskGetAllPages(options));
+}
 
 const PIPED = `🚚`;
 
@@ -1354,11 +1545,7 @@ program
   .example("List regular pages", "nt pages")
   .example("List regular and journal pages", "nt pages -t all")
   .example("List regular pages as json", "nt pages --json")
-  .action(pipeable(function(options){
-    return function(){
-      return tskGetAllPages(options);
-    }
-  }));
+  .action(pipeable(pages));
 
 program
   .command('page')
@@ -1374,6 +1561,9 @@ program
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
   .option('--agent', 'Hide what an agent must not see per agentignore config')
   .option('--human', 'Show what only a human must see per agentignore config')
+  .example("List all wikilinks on a page", "nt page Mission | nt wikilinks")
+  .example("List all wikilinked pages", "nt page Mission | nt wikilinks | nt page")
+  .example(`Find mention of "components" on a page`, `nt page Atomic | grep -C 3 components`)
   .action(pipeable(page));
 
 program
@@ -1392,185 +1582,14 @@ program
   .option('--prepend', 'Prepend content instead of appending')
   .option('--debug', 'Enable debug output')
   .option('--overwrite', 'Purge any existing page content (not properties)')
-  .action(async function(options, name){
-    const prependMode = options.prepend || false;
-    const overwriteMode = options.overwrite || false;
-    const logger = getLogger(options.debug || false);
-    const pageName = await promise(tskNamed(name || datestamp()));
-
-    logger.log(`Page: ${pageName}, Prepend: ${prependMode}, Overwrite: ${overwriteMode}`);
-
-    // Read JSON payload from stdin
-    const payload = await readStdin();
-
-    if (!payload) {
-      abort("Error: No payload received from stdin");
-    }
-
-    logger.log(`Payload: ${payload}`);
-
-    // Parse JSON payload
-    let parsedPayload;
-    try {
-      parsedPayload = JSON.parse(payload);
-    } catch (error) {
-      abort(`Error parsing JSON payload: ${error.message}`);
-    }
-
-    // Call purge if overwrite mode is enabled
-    if (overwriteMode) {
-      logger.log("Overwrite mode enabled, purging page first...");
-
-      try {
-        // Use integrated wipe command
-        await wipeCommand(pageName, options);
-      } catch (error) {
-        logger.log(`Warning: Purge had issues, continuing with overwrite... ${error.message}`);
-        // Continue with overwrite even if purge had issues
-      }
-    }
-
-    // Check if page exists and get page info
-    let pageCheck;
-    try {
-      pageCheck = await callLogseq('logseq.Editor.getPage', [pageName]);
-    } catch (error) {
-      abort(`Error checking page existence: ${error.message}`);
-    }
-
-    logger.log(`Page check result: ${JSON.stringify(pageCheck)}`);
-
-    let insertResponse;
-
-    if (pageCheck && pageCheck.uuid) {
-      // Page exists
-      const pageUuid = pageCheck.uuid;
-      logger.log(`Page exists with UUID: ${pageUuid}`);
-
-      if (prependMode) {
-        logger.log("Prepending content...");
-
-        // Get all page blocks to check for properties
-        const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
-
-        // Find the last block with properties
-        let lastPropertiesBlock = null;
-        if (pageBlocks && Array.isArray(pageBlocks)) {
-          for (const block of pageBlocks) {
-            if (block.properties && Object.keys(block.properties).length > 0) {
-              lastPropertiesBlock = block;
-            }
-          }
-        }
-
-        if (lastPropertiesBlock) {
-          logger.log(`Found properties, inserting after them...`);
-          logger.log(`Properties content: ${lastPropertiesBlock.content}`);
-
-          // Insert after the properties block using sibling:true
-          insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
-            lastPropertiesBlock.uuid,
-            parsedPayload,
-            { sibling: true }
-          ]);
-        } else {
-          logger.log("No properties found, prepending to top...");
-
-          // Prepend using page UUID with {sibling: false, before: true}
-          insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
-            pageUuid,
-            parsedPayload,
-            { sibling: false, before: true }
-          ]);
-        }
-      } else {
-        logger.log("Appending content...");
-
-        const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
-
-        if (pageBlocks && Array.isArray(pageBlocks) && pageBlocks.length > 0) {
-          const lastBlockUuid = pageBlocks[pageBlocks.length - 1].uuid;
-          logger.log(`Appending after block: ${lastBlockUuid}`);
-
-          // Append after last block using sibling:true
-          insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
-            lastBlockUuid,
-            parsedPayload,
-            { sibling: true }
-          ]);
-        } else {
-          logger.log("Page is empty, inserting at top...");
-
-          insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
-            pageUuid,
-            parsedPayload,
-            { sibling: false }
-          ]);
-        }
-      }
-    } else {
-      // Page doesn't exist, create it
-      logger.log("Page doesn't exist, creating new page...");
-
-      const createResponse = await callLogseq('logseq.Editor.createPage', [pageName, {}]);
-
-      if (createResponse && createResponse.uuid) {
-        const pageUuid = createResponse.uuid;
-        logger.log(`Created page with UUID: ${pageUuid}`);
-
-        // Insert into new page using page UUID
-        insertResponse = await callLogseq('logseq.Editor.insertBatchBlock', [
-          pageUuid,
-          parsedPayload,
-          { sibling: false }
-        ]);
-      } else {
-        abort("Error creating page");
-      }
-    }
-
-    // Check if insertion was successful
-    if (insertResponse === null) {
-      const blockCount = Array.isArray(parsedPayload) ? parsedPayload.length : 1;
-      const action = prependMode ? "Prepended" : "Appended";
-      console.log(`✅ ${action} ${blockCount} blocks to page '${pageName}'`);
-    } else if (Array.isArray(insertResponse)) {
-      const blockCount = insertResponse.length;
-      const action = prependMode ? "Prepended" : "Added";
-      console.log(`✅ ${action} ${blockCount} blocks to page '${pageName}'`);
-    } else {
-      abort("Error creating page");
-    }
-  });
+  .action(update);
 
 program
   .command('wipe')
   .description('Wipe content, but not properties, from a page')
   .arguments(demand("name"))
   .option('--debug', 'Enable debug output')
-  .action(async function(options, pageName){
-    try {
-      const result = await wipeCommand(pageName, options);
-
-      if (result.alreadyEmpty) {
-        if (result.propertiesCount > 0) {
-          console.log(`✅ Page '${pageName}' already only contains properties`);
-        } else {
-          console.log(`✅ Page '${pageName}' is already empty`);
-        }
-        return;
-      }
-
-      if (result.deletedCount === result.totalCount) {
-        console.log(`✅ Wiped ${result.deletedCount} content blocks from page '${pageName}' (preserved ${result.propertiesCount} property blocks)`);
-      } else {
-        throw new Error(`Only deleted ${result.deletedCount} out of ${result.totalCount} blocks`);
-      }
-
-    } catch (error) {
-      abort(error);
-    }
-  });
+  .action(wipe);
 
 program
   .command('tags')
@@ -1581,6 +1600,13 @@ program
   .option('--any', 'Require ANY tag to be present')
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
+  .example("List names of pages tagged Writing", "nt tags Writing")
+  .example("Show content of pages tagged Writing", "nt tags Writing | nt page")
+  .example("List pages tagged Writing and Editing", "nt tags Writing Editing")
+  .example("List pages tagged Writing or Editing", "nt tags Writing Editing --any")
+  .example("List pages tagged Writing and Editing, explicit", "nt tags Writing Editing --all")
+  .example("Normalize a tag then find pages tagged with it", "nt name writing | nt tags")
+  .example("Normalize tags then find pages tagged with either", "nt l writing editing | nt n | nt tags")
   .action(pipeable(tags));
 
 program
@@ -1604,6 +1630,8 @@ program
   .command('path')
   .description('The path to the page file')
   .arguments(demand("name"))
+  .example("Display the file system path to the page", `nt path "Article Ideas"`)
+  .example("Open Blog file in VS Code", `nt path Blog | xargs code`)
   .action(pipeable(path));
 
 program
@@ -1638,10 +1666,12 @@ program
 program
   .command('name')
   .alias('n')
-  .description('Get page name from ID or normalized name from name')
+  .description('Get page name as actually cased from page ID or case insensitive name.  Operations generally want correctly-cased names.')
   .arguments(demand("id|name"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', 'md')
   .option('--json', 'Output JSON format')
+  .example("Normalize to the actual casing of the page name via stdin", `echo "writing voice" | nt n`)
+  .example("Normalize to the actual casing of the page name", `nt n "writing voice"`)
   .action(pipeable(constantly(tskNamed)));
 
 program
@@ -1704,18 +1734,7 @@ program
   .command('serial')
   .description('Append stdin content to page')
   .arguments(PIPED)
-  .action(async function(){
-    const input = await new Response(Deno.stdin.readable).text();
-
-    if (!input.trim()) {
-      console.error("Error: No input provided via stdin");
-      Deno.exit(1);
-    }
-
-    const parser = new SerialParser();
-    const result = parser.parse(input);
-    console.log(JSON.stringify(result, null, 2));
-  });
+  .action(serial);
 
 program
   .command('seen')
@@ -1775,6 +1794,7 @@ if (import.meta.main) {
   if (Deno.args.length === 0) {
     program.showHelp();
     abort();
+  } else {
+    await program.parse();
   }
-  await program.parse();
 }
