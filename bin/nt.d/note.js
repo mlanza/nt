@@ -1631,7 +1631,8 @@ program
   .description('The path to the page file')
   .arguments(demand("name"))
   .example("Display the file system path to the page", `nt path "Article Ideas"`)
-  .example("Open Blog file in VS Code", `nt path Blog | xargs code`)
+  .example(`Open "About Me" page for editing in VS Code`, `nt path "About Me" | xargs code`)
+  .example("Undoing recent changes, human or agent, to select page", "nt path Moussaka | xargs git restore")
   .action(pipeable(path));
 
 program
