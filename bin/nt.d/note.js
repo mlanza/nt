@@ -203,7 +203,12 @@ async function exists(path){
 }
 
 function encode(name){
-  return name ? encodeURIComponent(name).replaceAll("%20", " ").replaceAll("%2C", ",").replaceAll(/\./g, "%2E") : null;
+  return name ?
+    encodeURIComponent(name).
+      replaceAll("%20", " ").
+      replaceAll("%2C", ",").
+      replaceAll(/\./g, "%2E") :
+    null;
 }
 
 function formatYYYYMMDD(n) {
