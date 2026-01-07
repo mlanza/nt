@@ -1554,7 +1554,7 @@ program
   .arguments(demand("name|datestamp"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
   .option('--json', 'Output JSON format')
-  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 2})
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('-a, --append <content:string>', 'Append content to page')
   .option('--nest', 'Use hierarchical nesting with format output')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
@@ -1647,7 +1647,7 @@ program
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
   .option('--desc', "With description")
   .option('--json', 'Output JSON format')
-  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 2})
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .action(pipeable(props));
 
 program
@@ -1657,7 +1657,7 @@ program
   .option('--add <property:string>', 'Add property in format "key=value"', { collect: true })
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
-  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 2})
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .action(pipeable(prop));
 
 program
