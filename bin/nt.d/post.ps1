@@ -33,11 +33,6 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
 }
 
-if (-not $pageName) {
-    Write-Error "Error: Page name is required"
-    exit 1
-}
-
 # Call nt prop first if any prop arguments provided
 if ($propArgs.Count -gt 0) {
     $propAddArgs = $propArgs | ForEach-Object { "--add", $_ }

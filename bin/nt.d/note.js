@@ -211,6 +211,20 @@ function encode(name){
     null;
 }
 
+function datestamp(dt = new Date()){
+  return dt.toISOString().slice(0, 10);
+}
+
+function isDatestamp(str) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(str);
+}
+
+function withWeekday(ymd) {
+  const d = new Date(ymd);
+  const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+  return `${ymd} ${day}`;
+}
+
 function formatYYYYMMDD(n) {
   const s = String(n).padStart(8, '0')
   return s.slice(0, 4) + '_' + s.slice(4, 6) + '_' + s.slice(6, 8)
@@ -1357,7 +1371,7 @@ program
 program
   .command('post')
   .description('Append stdin content to page')
-  .arguments(demand("name"))
+  .arguments("[name]")
   .option('--prepend', 'Prepend content instead')
   .option('--overwrite', 'Purges any existing page content (not properties)')
   .option('--debug', 'Enable debug output');
@@ -1366,18 +1380,15 @@ program
   .command('update')
   .hidden()
   .description('Append stdin structured content to page')
-  .arguments(demand("name"))
+  .arguments("[name]")
   .option('--prepend', 'Prepend content instead of appending')
   .option('--debug', 'Enable debug output')
   .option('--overwrite', 'Purge any existing page content (not properties)')
-  .action(async function(options, pageName){
+  .action(async function(options, name){
     const prependMode = options.prepend || false;
     const overwriteMode = options.overwrite || false;
     const logger = getLogger(options.debug || false);
-
-    if (!pageName) {
-      abort("Usage: modify [--prepend] [--debug] [--overwrite] <page_name>");
-    }
+    const pageName = await promise(tskNamed(name || datestamp()));
 
     logger.log(`Page: ${pageName}, Prepend: ${prependMode}, Overwrite: ${overwriteMode}`);
 
