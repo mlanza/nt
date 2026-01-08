@@ -792,7 +792,11 @@ function query(options){
 
 function qry(query, ...args){
   return new Task(function(reject, resolve){
-    tskLogseq('logseq.DB.datascriptQuery', [query, ...args]).fork(reject, resolve);
+    const q = args.reduce(function(q, value, idx){
+      return q.replaceAll(`$${idx + 1}`, value);
+    }, query);
+    const replacements = query.indexOf("$1") !== -1;
+    tskLogseq('logseq.DB.datascriptQuery', replacements ? [q] : [q, ...args]).fork(reject, resolve);
   });
 }
 
