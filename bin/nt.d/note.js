@@ -1649,6 +1649,7 @@ program
   .description('Recursively list page prerequisites')
   .arguments(demand("name"))
   .action(pipeable(constantly(tskPrerequisites)))
+  .example("List several pages and their unique prerequisites", `nt list Coding Tasking Decomposing | nt prereq | nt seen | nt page`)
   .example("List properties for all prerequisites for a topic", `nt prereq Coding | xargs -I {} nt props {} --vacant`);
 
 program
@@ -1757,6 +1758,7 @@ program
   .example(`Show yesterday's, today's, and tomorrow's journal page`, `nt day -1 0 1 | nt page`)
   .example(`Review 90 days of journal entries in zsh`, `nt day $(seq 0 -90) | nt page`)
   .example(`Review 90 days of journal entries in pwsh`, `nt day (0..-90) | nt page`)
+  .example(`Review talks over the past month`, `nt day $(seq 0 -30) | nt page --only tasks`)
 
 program
   .command('skills')
