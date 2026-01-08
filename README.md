@@ -124,7 +124,7 @@ Not all Datalog queries are supported by the HTTP API.
 
 ### Ergonomics
 
-The kit was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `nt` commands, for example, can receive the primary operand directly or via stdin.  With embedded spaces being an routine concern, it's modeled below.
+This tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `nt` commands, for example, can receive the primary operand directly or via stdin.  With embedded spaces being an routine concern, it's modeled below.
 
 #### Show pages having certain tags
 
