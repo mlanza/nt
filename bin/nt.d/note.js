@@ -1805,10 +1805,10 @@ if (import.meta.main) {
     program.showHelp();
     abort();
   } else {
-    const args = Deno.args.flatMap(function(arg){
-      if (arg === '--json') return ['--format=json']
-      if (arg === '--md') return ['--format=md']
-      return [arg]
+    const args = Deno.args.map(function(arg){
+      if (arg === '--json') return '--format=json';
+      if (arg === '--md') return '--format=md';
+      return arg;
     })
     await program.parse(args);
   }
