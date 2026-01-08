@@ -1811,15 +1811,15 @@ program
         .action(function(){
           console.log(config.logseq.repo);
         }))
-      .command("query", new Command()
-        .description("Lists defined queries")
-        .action(function(){
-          Object.entries(config.query ?? {}).forEach(([key, value]) => console.log(key, " => ", value));
-        }))
       .command("filter", new Command()
         .description("Lists defined filters")
         .action(function(){
           Object.entries(config.filter ?? {}).forEach(([key, value]) => console.log(key, " => ", value));
+        }))
+      .command("query", new Command()
+        .description("Lists defined queries")
+        .action(function(){
+          Object.entries(config.query ?? {}).forEach(([key, value]) => console.log(key, " => ", value));
         })));
 
 if (import.meta.main) {
