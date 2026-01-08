@@ -288,9 +288,11 @@ function tskLogseq(method, args){
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json()
-      if (result?.error) {
-        throw new Error(result.error);
+      const result = await response.json();
+      const {error} = result;
+
+      if (error) {
+        throw new Error(error);
       }
 
       resolve(result);
