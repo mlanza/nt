@@ -138,14 +138,12 @@ Some of the examples in the tool `--help` anticipate these defintions.
 
 This command is for a **human** and includes only what blocks filter out:
 ```zsh
-nt page Atomic --only
-nt page Atomic --human
+nt page Atomic --only # alternately: `nt page Atomic --human`
 ```
 
 This one is for an **agent** and includes everything but that noise:
 ```zsh
-nt page Atomic --less
-nt page Atomic --agent
+nt page Atomic --less # alternately, `nt page Atomic --agent`
 ```
 
 ### Querying via Datalog
