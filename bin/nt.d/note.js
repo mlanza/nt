@@ -50,14 +50,12 @@ function tskConfig(path){
       if (!existing) {
         throw new Guidance(`Note config not present at ${path}.`);
       }
+
       const text = await Deno.readTextFile(existing);
-      const cfg = parse(text);
+      const config = parse(text);
+      const logseq = expandLogseq(config?.logseq ?? {});
 
-      const logseq = expandLogseq(cfg?.logseq ?? {});
-      const shorthand = cfg.shorthand ?? {};
-      const agentignore = cfg.agentignore ?? [];
-
-      resolve({ logseq, shorthand, agentignore });
+      resolve({ ...config, logseq });
     } catch (cause) {
       reject(explain(`Problem reading config at ${path}.`, cause));
     }
@@ -573,9 +571,9 @@ function nestedJsonToMarkdown(blocks, level = 0) {
   return lines;
 }
 
-function keeping(patterns, shorthand, hit = true){
+function keeping(patterns, filter, hit = true){
   const miss = !hit;
-  const regexes = (patterns || []).map(what => shorthand[what] || what).map(pattern => new RegExp(pattern));
+  const regexes = (patterns || []).map(what => filter[what] || what).map(pattern => new RegExp(pattern));
   return regexes.length ? function(text){
     for(const re of regexes) {
       if (re.test(text)) {
@@ -588,12 +586,13 @@ function keeping(patterns, shorthand, hit = true){
 
 function tskGetPage(given, options){
   const {format} = options;
+  const {filter = {}} = config;
   return given ? new Task(async function(reject, resolve){
     try {
-      const patterns = options.agent || options.human ? config.agentignore : null;
+      const patterns = options.agent || options.human ? Object.values(filter) : null;
       const agentLess = options.agent ? patterns : null;
       const humanOnly = options.human ? patterns : null;
-      const keep = keeping(agentLess || options.less, config.shorthand, false) || keeping(humanOnly || options.only, config.shorthand, true);
+      const keep = keeping(agentLess || options.less, filter, false) || keeping(humanOnly || options.only, filter, true);
 
       const {name, path} = await identify(given);
 
@@ -785,7 +784,7 @@ function backlinks(options){
 
 function query(options){
   return function(q, ...args){
-    const query = config?.shorthand?.[q] || q;
+    const query = config?.query?.[q] || q;
     //console.log({limit, options, query, args});
     return qry(query, ...args).map(take(options.limit));
   }
@@ -1560,8 +1559,8 @@ program
   .option('-a, --append <content:string>', 'Append content to page')
   .option('-l, --less <patterns:string>', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only <patterns:string>', 'Only content matching regex patterns', { collect: true })
-  .option('--agent', 'Hide content not intended for agents (see agentignore)')
-  .option('--human', 'Show content intended only for humans (see agentignore)')
+  .option('--agent', 'Hide content not intended for agents (see config filter)')
+  .option('--human', 'Show content intended only for humans (see config filter)')
   .example("List wikilinks on a page", "nt page Mission | nt wikilinks")
   .example("Show content for wikilinked pages", "nt page Mission | nt wikilinks | nt page")
   .example("Show content for select pages", `nt list Atomic "Clojure Way" | nt page`)
@@ -1569,10 +1568,10 @@ program
   .example("Show only bare and md links", `nt page "Start With Why" --only '^https?://[^)]+$' --only '^\[.*\]\(https?://[^)]+\)$'`)
   .example("Show content minus tasks", `nt page Atomic --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)'`)
   .example("Show only tasks", `nt page Atomic --only '^(TODO|DOING|DONE|WAITING|NOW|LATER)'`)
-  .example("Show content minus tasks and links using shorthand", `nt page Atomic --less tasks --less links`)
-  .example("Show only tasks and links content using shorthand", `nt page Atomic --only tasks --only links`)
-  .example("Show agent-facing content per agentignore for tasks and links", `nt page Atomic --agent`)
-  .example("Show human-facing content per agentignore for tasks and links", `nt page Atomic --human`)
+  .example("Show content minus filters", `nt page Atomic --less tasks --less links`)
+  .example("Show only content for filters", `nt page Atomic --only tasks --only links`)
+  .example("Show agent-facing content per filters", `nt page Atomic --agent`)
+  .example("Show human-facing content per filters", `nt page Atomic --human`)
   .example(`Find mention of "components" on a page`, `nt page Atomic | grep -C 3 components`)
   .example(`Show journal page for select date, no heading`, `nt p --heading=0 2025-12-03`)
   .action(pipeable(page));
@@ -1807,15 +1806,15 @@ program
         .action(function(){
           console.log(config.logseq.repo);
         }))
-      .command("shorthand", new Command()
-        .description("Lists defined shorthand for use over tedious regexes in some commands")
+      .command("query", new Command()
+        .description("Lists defined queries")
         .action(function(){
-          Object.entries(config.shorthand).forEach(([key, value]) => console.log(key, " => ", value));
+          Object.entries(config.query ?? {}).forEach(([key, value]) => console.log(key, " => ", value));
         }))
-      .command("agentignore", new Command()
-        .description("Lists defined regexes (or shorthand) specifying what blocks agents ignore")
+      .command("filter", new Command()
+        .description("Lists defined filters")
         .action(function(){
-          config.agentignore.forEach(ignored => console.log(ignored));
+          Object.entries(config.filter ?? {}).forEach(([key, value]) => console.log(key, " => ", value));
         })));
 
 if (import.meta.main) {
