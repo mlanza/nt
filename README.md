@@ -38,15 +38,6 @@ And later retrieve it along with its prerequisites:
 $ nt about Coding
 ```
 
-Sample tools calls:
-
-* `nt page Atomic | nt links` - to view links on page
-* `nt list Coding Tasking Decomposing | nt prereq | nt seen | nt page` - several concepts and their unique prerequisites
-* `nt day $(seq 0 -30) | nt page | nt links` - links from latest journal entries
-* `nt day $(seq 0 -30) | nt page --only tasks` - to display only TODOs
-* `nt day $(seq 0 -30) | nt page --less tasks` - to display everything but TODOs
-
-
 These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
 ## Getting Started
@@ -118,7 +109,7 @@ You can send in multiple values:
 nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
 ```
 
-But typing that will get tedious fast.  Better to define a `filter` table in your config.
+But typing that will get tedious fast.  Better to define a `filter` table in your config.  Some of the examples in the tool `--help` assume the following filters are defined.
 
 ```toml
 [filter]
