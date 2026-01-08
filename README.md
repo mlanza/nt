@@ -61,8 +61,8 @@ Within the actual config, at minimum set:
 ```toml
 # config.toml
 [logseq]
-"repo" = "D:\\notes" # Windows
-"endpoint" = "http://127.0.0.1:12315/api"
+"repo" = 'D:\notes'
+"endpoint" = 'http://127.0.0.1:12315/api'
 ```
 
 The `endpoint` can be omitted assuming you haven't changed its default.
