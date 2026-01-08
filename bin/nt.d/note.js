@@ -608,7 +608,6 @@ function tskGetPage(given, options){
 }
 
 function page(options){
-  console.log({options})
   return function(given){
     return given ? tskNamed(given).
       chain(Task.juxt(Task.of, name => tskGetPage(name, options))).
