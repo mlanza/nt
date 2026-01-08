@@ -147,7 +147,7 @@ Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) sp
 It's a reason to prefer Logseq to Obsidian.
 
 ```zsh
-$ nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
+nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
 Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.
