@@ -109,7 +109,7 @@ You can send in multiple values:
 nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
 ```
 
-But typing that will get tedious fast.  Better to define a `filter` table in your config.  Some of the examples in the tool `--help` assume the following filters are defined.
+But typing that will get tedious fast.  Better to define a `filter` table in your config.
 
 ```toml
 [filter]
@@ -118,7 +118,7 @@ tasks = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
 links = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
 ```
 
-Having that you can exclude one type of block:
+Having that, you can exclude one type of block:
 ```zsh
 nt page Atomic --less props
 ```
@@ -127,6 +127,8 @@ Or include one type of block:
 ```zsh
 nt page Atomic --only props
 ```
+
+Some of the examples in the tool `--help` anticpate these defintions.
 
 Or include only all the filtered blocks (the sum of all filters):
 ```zsh
