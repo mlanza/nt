@@ -8,6 +8,8 @@
 
 Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
+The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `nt` commands, for example, can frequently receive the primary operand directly or via stdin.
+
 Take skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
 
 Getting frontmatter properties:
@@ -155,44 +157,6 @@ These links about advanced queries may help:
 * https://adxsoft.github.io/logseqadvancedquerybuilder/
 
 Not all Datalog queries are supported by the HTTP API.
-
-### Ergonomics
-
-This tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `nt` commands, for example, can receive the primary operand directly or via stdin.  With embedded spaces being an routine concern, it's modeled below.
-
-#### Show pages having certain tags
-
-Equivalents:
-```zsh
-nt list Atomic Clojure\ Way | nt tags
-```
-```zsh
-nt tags Atomic
-nt tags Clojure\ Way
-```
-```zsh
-printf "%s\n" Atomic Clojure\ Way | xargs -I {} nt tags {}
-```
-```pwsh
-'Atomic', 'Clojure Way' | % { nt tags $_ } # powershell
-```
-
-#### Show tags on certain pages
-
-Equivalents:
-```zsh
-nt list Atomic "Clojure Way" | nt props tags
-```
-```zsh
-nt props Atomic tags
-nt props "Clojure Way" tags
-```
-```zsh
-printf "%s\n" Atomic "Clojure Way" | xargs -I {} nt props {} tags
-```
-```pwsh
-'Atomic', 'Clojure Way' | % { nt props $_ tags } # powershell
-```
 
 ## License
 [MIT](./LICENSE.md)

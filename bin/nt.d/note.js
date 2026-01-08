@@ -1627,9 +1627,9 @@ program
   .example("List pages tagged Writing and Editing, explicit", "nt tags Writing Editing --all")
   .example("Normalize a tag then find pages tagged with it", "nt name writing | nt tags")
   .example("Normalize tags then find pages tagged with either", "nt l writing editing | nt n | nt tags")
-  .example("List pages with tags, zsh v1", `nt list Atomic Clojure\ Way | nt tags`)
-  .example("List pages with tags, zsh v2", `nt tags Atomic & nt tags Clojure\ Way`)
-  .example("List pages with tags, zsh v3", `printf "%s\\n" Atomic Clojure\ Way | xargs -I {} nt tags {}`)
+  .example("List pages with tags, piped in", `nt list Atomic Clojure\ Way | nt tags`)
+  .example("List pages with tags, directly", `nt tags Atomic & nt tags Clojure\ Way`)
+  .example("List pages with tags, args expansion", `printf "%s\\n" Atomic Clojure\ Way | xargs -I {} nt tags {}`)
   .example("List pages with tags, pwsh", `'Atomic', 'Clojure Way' | % { nt tags $_ }`)
   .action(pipeable(tags));
 
@@ -1669,9 +1669,9 @@ program
   .option('--json', 'Output JSON format')
   .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('--vacant', 'Include vacant entries')
-  .example("Show tags on certain pages, zsh v1", `nt list Atomic "Clojure Way" | nt props tags`)
-  .example("Show tags on certain pages, zsh v2", `nt props Atomic tags & nt props "Clojure Way" tags`)
-  .example("Show tags on certain pages, zsh v3", `printf "%s\\n" Atomic "Clojure Way" | xargs -I {} nt props {} tags`)
+  .example("Show tags on certain pages, piped in", `nt list Atomic "Clojure Way" | nt props tags`)
+  .example("Show tags on certain pages, directly", `nt props Atomic tags & nt props "Clojure Way" tags`)
+  .example("Show tags on certain pages, args expansion", `printf "%s\\n" Atomic "Clojure Way" | xargs -I {} nt props {} tags`)
   .example("Show tags on certain pages, pwsh", `'Atomic', 'Clojure Way' | % { nt props $_ tags }`)
   .action(pipeable(props));
 
