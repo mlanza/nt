@@ -74,9 +74,9 @@ function abort(error){
 const config = await loadConfig(NOTE_CONFIG).catch(abort);
 
 function take(n){
-  return function(xs){
+  return n == null ? xs => xs : function(xs){
     return xs.slice(0, n);
-  }
+  };
 }
 
 function all (tasks) {
@@ -769,7 +769,7 @@ function query(options){
   return function(q, ...args){
     const query = config?.shorthand?.[q] || q;
     //console.log({limit, options, query, args});
-    return qry(query, ...args).map(options.limit ? take(options.limit) : xs => xs);
+    return qry(query, ...args).map(take(options.limit));
   }
 }
 
