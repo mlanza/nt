@@ -1806,9 +1806,7 @@ if (import.meta.main) {
     abort();
   } else {
     const args = Deno.args.map(function(arg){
-      if (arg === '--json') return '--format=json';
-      if (arg === '--md') return '--format=md';
-      return arg;
+      return arg === '--json' ? '--format=json' : arg === '--md' ? '--format=md' : arg;
     })
     await program.parse(args);
   }
