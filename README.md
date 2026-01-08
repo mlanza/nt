@@ -42,14 +42,14 @@ These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude,
 
 ## Getting Started
 
-Have `pwsh` and `deno` and `node` installed.  These runtimes were targeted over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
-
-Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
-
-Install it to your path however you like:
+Install the tool to your path however you like:
 ```zsh
 export PATH=~/Documents/nt/bin:$PATH
 ```
+
+Have `pwsh` and `deno` and `node` installed.  The interal scripts target these runtimes over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
+
+Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
 Set these environment variables:
 
@@ -67,7 +67,7 @@ Within the actual config, at minimum set:
 
 The `endpoint` can be omitted assuming you haven't changed its default.
 
-Once done, start Logseq, start your shell and issue a few commands.
+Once done, start Logseq, start your shell and issue a command to confirm operability.
 
 ```zsh
 nt page Atomic # show some page, for example
