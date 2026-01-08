@@ -112,67 +112,34 @@ You can send in multiple values:
 nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
 ```
 
-But typing that will get tedious fast.  Better to define them in an `agentignore` table in your config.
+But typing that will get tedious fast.  Better to define a `filter` table in your config.
 
 ```toml
-agentignore = [
-  '^(TODO|DOING|DONE|WAITING|NOW|LATER)',
-  '^https?://[^)]+$',
-  '^[.*](https?://[^)]+)$'
-]
-
+[filter]
+"props" = "^[^\\s:]+::"
+"tasks" = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
+"links" = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
 ```
 
-Having that, you call the following to omit those blocks:
+Having that you can exclude one type of block:
 ```zsh
-nt page Atomic --agent
+nt page Atomic --less props
 ```
 
-Or the following to get only those blocks:
+Or include one type of block:
+```zsh
+nt page Atomic --only props
+```
+
+Or include only all the filtered blocks (the sum of all filters):
 ```zsh
 nt page Atomic --human
 ```
 
-As good practice, keep the `agentignore` table at the very top of the config. If it appears under another table it'll disappear.
-
-The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
-
-
-
-
-### Advanced Configurations
-
-Certain commands take values which can be tedious to type.  Look at the `shorthand` mappings below.  That's what shorthand is for.  It lets you type the abbreviated name instead of the full string expression.  This can be a useful alternative to hand-entering common regexes and Datalog queries.
-
-
-```toml
-# config.toml
-agentignore = [
-  "tasks",
-  "links",
-]
-
-[shorthand]
-"props" = "^[^\\s:]+::"
-"tasks" = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
-"links" = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
-"sched" = """
-[:find (pull ?b [*])
-:in $ ?start ?end
-:where
-[?b :block/content ?blockcontent]
-[?b :block/page ?page]
-[?page :block/name ?name]
-[?b :block/scheduled ?scheduled]
-[(>= ?scheduled ?start)]
-[(<= ?scheduled ?end)]]
-"""
+Or, for an agent, exclude all that noise:
+```zsh
+nt page Atomic --agent
 ```
-
-
-### `about` Design Rationale
-
-The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
 
 ### Querying via Datalog
 
