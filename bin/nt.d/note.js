@@ -1622,7 +1622,8 @@ program
   .command('prereq')
   .description('Recursively list page prerequisites')
   .arguments(demand("name"))
-  .action(pipeable(constantly(tskPrerequisites)));
+  .action(pipeable(constantly(tskPrerequisites)))
+  .example("List properties for all prerequisites for a topic", `nt prereq Coding | xargs -I {} nt props {} --vacant`);
 
 program
   .command('path')
