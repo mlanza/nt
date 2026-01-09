@@ -1542,20 +1542,23 @@ function pages(options){
   return constantly(tskGetAllPages(options));
 }
 
-const PIPED = `🚚`;
+const PIPED = `📥`;
+const PIPEABLE = `↳📥`;
 
 const program = new Command()
   .name('nt')
   .description(`A general-purpose tool for interacting with Logseq content.
 
- ${PIPED} = pipeline only operations
+  ${PIPED} = pipeline only operations
+ ${PIPEABLE} = primary operand may be piped in
+
 `.trim())
-  .version('0.7.0')
+  .version('1.0.0-beta')
   .stopEarly();
 
 program
   .command('pages')
-  .description('List pages')
+  .description(`List pages`)
   .option('-t, --type <type:string>', 'Page type (regular|journal|all)', 'regular')
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
@@ -1568,7 +1571,7 @@ program
 program
   .command('page')
   .alias('p')
-  .description("Get page")
+  .description(`Get page ${PIPEABLE}`)
   .arguments(demand("name|datestamp"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
   .option('--json', 'Output JSON format')
@@ -1626,7 +1629,7 @@ program
 program
   .command('tags')
   .alias('t')
-  .description('List pages with given tags (default: ALL tags)')
+  .description(`List pages with given tags (default: ALL tags)  ${PIPEABLE}`)
   .arguments(demand("tags..."))
   .option('--all', 'Require ALL tags to be present (default)')
   .option('--any', 'Require ANY tag to be present')
@@ -1648,7 +1651,7 @@ program
 program
   .command('has')
   .alias('h')
-  .description('List pages having a given prop with value(s)')
+  .description(`List pages having a given prop with value(s) ${PIPEABLE}`)
   .arguments(demand("prop", "vals..."))
   .option('--all', 'Require ALL tags to be present (default)')
   .option('--any', 'Require ANY tag to be present')
@@ -1658,7 +1661,7 @@ program
 
 program
   .command('prereq')
-  .description('Recursively list page prerequisites')
+  .description(`Recursively list page prerequisites ${PIPEABLE}`)
   .arguments(demand("name"))
   .action(pipeable(constantly(tskPrerequisites)))
   .example("List several pages and their unique prerequisites", `nt list Coding Tasking Decomposing | nt prereq | nt seen | nt page`)
@@ -1666,7 +1669,7 @@ program
 
 program
   .command('path')
-  .description('The path to the page file')
+  .description(`The path to the page file  ${PIPEABLE}`)
   .arguments(demand("name"))
   .example("Display the file system path to the page", `nt path "Article Ideas"`)
   .example(`Open Moussaka page for editing in VS Code`, `nt path Moussaka | xargs code`)
@@ -1675,7 +1678,7 @@ program
 
 program
   .command('props')
-  .description('Get page properties')
+  .description(`Get page properties ${PIPEABLE}`)
   .arguments(demand("name", "property"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
   .option('--desc', "With description")
@@ -1690,7 +1693,7 @@ program
 
 program
   .command('prop')
-  .description('Add properties to page')
+  .description(`Add properties to page ${PIPEABLE}`)
   .arguments(demand("name"))
   .option('--add <property:string>', 'Add property in format "key=value"', { collect: true })
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
@@ -1702,7 +1705,7 @@ program
 program
   .command('search')
   .alias('s')
-  .description('Search pages')
+  .description(`Search pages ${PIPEABLE}`)
   .arguments(demand("term"))
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
@@ -1711,7 +1714,7 @@ program
 program
   .command('name')
   .alias('n')
-  .description('Get page name as cased from page ID or case-insensitive name.')
+  .description(`Get page name as cased from page ID or case-insensitive name. ${PIPEABLE}`)
   .arguments(demand("id|name"))
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
@@ -1722,20 +1725,20 @@ program
 program
   .command('ident')
   .hidden()
-  .description('Get page identity details')
+  .description(`Get page identity details ${PIPEABLE}`)
   .arguments(demand("id|name"))
   .action(pipeable(ident));
 
 program
   .command('alias')
-  .description('Get page name from alias')
+  .description(`Get page name from alias ${PIPEABLE}`)
   .arguments(demand("alias"))
   .action(pipeable(alias));
 
 program
   .command('backlinks')
   .alias('b')
-  .description('List pages that link to a given page')
+  .description(`List pages that link to a given page ${PIPEABLE}`)
   .arguments(demand("name"))
   .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
@@ -1745,7 +1748,7 @@ program
 program
   .command('query')
   .alias('q')
-  .description('Run Datalog query and args')
+  .description(`Run Datalog query and args ${PIPEABLE}`)
   .arguments("<query> [args...]")
   .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
@@ -1763,7 +1766,7 @@ program
   .command('day')
   .alias('d')
   .arguments("[offset...]")
-  .description('List one or more days')
+  .description(`List one or more days ${PIPEABLE}`)
   .example(`Show today's journal page`, `nt day | nt page`)
   .example(`Show yesterday's journal page`, `nt day -1 | nt page`)
   .example(`Show tomorrows's journal page`, `nt day 1 | nt page`)
