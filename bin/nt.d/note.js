@@ -1791,7 +1791,6 @@ program
   .description('Extracts links from content')
   .option('-t, --type <type:string>', 'Type of link (md|bare|all)', {default: 'all'})
   .option('--bare', 'Include only bare portion of markdown links')
-
   .arguments(PIPED)
   .example("List links on a page", `nt page GenAI | nt links`);
 
