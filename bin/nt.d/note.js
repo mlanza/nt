@@ -1789,12 +1789,16 @@ program
 program
   .command('links')
   .description('Extracts links from content')
+  .option('-t, --type <type:string>', 'Type of link (md|bare|all)', {default: 'all'})
+  .option('--bare', 'Include only bare portion of markdown links')
+
   .arguments(PIPED)
   .example("List links on a page", `nt page GenAI | nt links`);
 
 program
   .command('wikilinks')
   .description('Extracts wikilinks from content')
+  .option('-t, --type <type:string>', 'Type of link (bracket|tag|all)', {default: 'bracket'})
   .arguments(PIPED)
   .example("List wikilinks on a page", `nt page Boardgames | nt wikilinks`);
 
