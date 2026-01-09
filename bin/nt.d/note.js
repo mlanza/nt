@@ -1550,7 +1550,7 @@ const program = new Command()
   .description(`A general-purpose tool for interacting with Logseq content.
 
   ${PIPED} = pipeline-only operations
- ${PIPEABLE} = supply primary argument directly or piped them in
+ ${PIPEABLE} = supply primary argument directly or pipe them in
 
 `.trim())
   .version('1.0.0-beta')
