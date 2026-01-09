@@ -729,9 +729,8 @@ function qryProps(prop, vals, mode = "any"){
 }
 
 function has(options, prop = null){
-  // Validate mutually exclusive options
   if (options.all && options.any) {
-    throw new Error('--all and --any options are mutually exclusive');
+    abort(new Guidance('--all and --any options are mutually exclusive'));
   }
 
   function qry(prop, ...vals){
