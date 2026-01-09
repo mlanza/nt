@@ -88,7 +88,7 @@ Some topics build on other other topics and cannot stand on their own.  These pa
 $ nt about Coding
 ```
 
-### Agent Content Filtering
+### Content Filtering
 
 Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I may have a smattering of links to interestings sites and/or a pile of tasks in various stages pertinent to the page topic or project.  I may also have information and/or instructions.  That means some of the content on a page is useful only to me.
 
