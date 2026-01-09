@@ -1032,7 +1032,7 @@ class SerialParser {
   }
 
   parseLine(line) {
-    const trimmed = line.trimStart();
+    const trimmed = line.trim();
 
     // Skip empty lines
     if (!trimmed) {
