@@ -1765,15 +1765,16 @@ program
 program
   .command('day')
   .alias('d')
-  .arguments("[offset...]")
-  .description(`List one or more days`)
+  .arguments("[offset]", {default: 0})
+  .description(`Find date from offset ${PIPEABLE}`)
   .example(`Show today's journal page`, `nt day | nt page`)
+  .example(`Show today's journal page name including dow`, `nt day | nt name`)
   .example(`Show yesterday's journal page`, `nt day -1 | nt page`)
   .example(`Show tomorrows's journal page`, `nt day 1 | nt page`)
-  .example(`Show yesterday's, today's, and tomorrow's journal page`, `nt day -1 0 1 | nt page`)
-  .example(`Review 90 days of journal entries in zsh`, `nt day $(seq 0 -90) | nt page`)
-  .example(`Review 90 days of journal entries in pwsh`, `nt day (0..-90) | nt page`)
-  .example(`Review talks over the past month`, `nt day $(seq 0 -30) | nt page --only tasks`)
+  .example(`Show yesterday's, today's, and tomorrow's journal page in pwsh`, `-1, 0, 1 | nt day | nt page`)
+  .example(`Review 90 days of journal entries in zsh`, `seq 0 -90 | nt day | nt page`)
+  .example(`Review 90 days of journal entries in pwsh`, `0..-90 | nt day | nt page`)
+  .example(`Review tasks from the past month`, `seq 0 -30 | nt day | nt page --only tasks`)
 
 program
   .command('skills')
