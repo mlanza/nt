@@ -779,9 +779,8 @@ function qryBacklinks(name, limit = Infinity){
 }
 
 function backlinks(options){
-  const limit = options.limit ? parseInt(options.limit) : Infinity;
   return function(name){
-    return qryBacklinks(name, limit);
+    return qryBacklinks(name, options.limit);
   }
 }
 
@@ -1561,7 +1560,7 @@ program
   .option('-t, --type <type:string>', 'Page type (regular|journal|all)', 'regular')
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
-  .option('--limit <type:string>', 'Limit to N entries (none = no limit) (default: "none")', Infinity)
+  .option('--limit <type:integer>', 'Limit to N entries (none = no limit) (default: "none")', Infinity)
   .example("List regular pages", "nt pages")
   .example("List regular and journal pages", "nt pages -t all")
   .example("List regular pages as json", "nt pages --json")
@@ -1739,7 +1738,7 @@ program
   .alias('b')
   .description(`List pages that link to a given page ${PIPEABLE}`)
   .arguments(demand("name"))
-  .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
+  .option('--limit <type:integer>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .action(pipeable(backlinks));
@@ -1749,7 +1748,7 @@ program
   .alias('q')
   .description(`Run Datalog query and args ${PIPEABLE}`)
   .arguments("<query> [args...]")
-  .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
+  .option('--limit <type:integer>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .action(pipeable(query));
