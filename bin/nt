@@ -1,34 +1,78 @@
-#!/usr/bin/env deno run --allow-run
-const [sub, ...rest] = Deno.args
+#!/usr/bin/env deno run --allow-run --allow-read --allow-env
+import "https://deno.land/x/dotenv/load.ts";
 
-const subcmd = sub || "notes";
+const [sub, ...rest] = Deno.args;
 
-let exe = `${import.meta.dirname}/nt.d/${subcmd}`
+// Handle help flags before subcommand delegation
+if (rest.includes('--help') || rest.includes('-h')) {
+  const subcmdName = sub || "note";
+  
+  // For help, we need to call the note.js with the subcommand name as first argument
+  const helpCmd = new Deno.Command("deno", {
+    args: ["run", "--allow-all", `${import.meta.dirname}/nt.d/note.js`, subcmdName, "--help"],
+    stdout: "inherit",
+    stderr: "inherit"
+  });
+  const helpStatus = await helpCmd.spawn().status;
+  Deno.exit(helpStatus.code);
+}
 
-const cmd = new Deno.Command(exe, {
-  args: rest,
+let subcmd = sub || "note"; // Default to "note"
+let finalArgs = rest;
+
+const psPath = `${import.meta.dirname}/nt.d/${subcmd}.ps1`;
+const jsPath = `${import.meta.dirname}/nt.d/${subcmd}.js`;
+const shPath = `${import.meta.dirname}/nt.d/${subcmd}.sh`;
+
+let command;
+let commandArgs;
+
+let psExists = false;
+try {
+  await Deno.stat(psPath);
+  psExists = true;
+} catch (e) { if (!(e instanceof Deno.errors.NotFound)) throw e; }
+
+let jsExists = false;
+if (!psExists) { // Only check for JS if no PS script found
+  try {
+    await Deno.stat(jsPath);
+    jsExists = true;
+  } catch (e) { if (!(e instanceof Deno.errors.NotFound)) throw e; }
+}
+
+let shExists = false;
+if (!psExists && !jsExists) { // Only check for SH if no PS or JS script found
+  try {
+    await Deno.stat(shPath);
+    shExists = true;
+  } catch (e) { if (!(e instanceof Deno.errors.NotFound)) throw e; }
+}
+
+if (psExists) {
+  command = "pwsh";
+  commandArgs = ["-NoProfile", "-File", psPath, ...finalArgs];
+} else if (jsExists) {
+  command = "deno";
+  commandArgs = ["run", "--allow-all", jsPath, ...finalArgs];
+} else if (shExists) {
+  command = "bash";
+  commandArgs = [shPath, ...finalArgs];
+} else {
+  // Fallback to notes.js if no matching script found
+  const fallbackNotesPath = `${import.meta.dirname}/nt.d/note.js`;
+  command = "deno";
+  // Pass the original subcmd as an argument to notes.js for catch-all behavior
+  commandArgs = ["run", "--allow-all", fallbackNotesPath, sub, ...rest];
+}
+
+const cmd = new Deno.Command(command, {
+  args: commandArgs,
   stdin: "inherit",
   stdout: "inherit",
   stderr: "inherit"
-})
+});
 
-try {
-  const child = cmd.spawn()
-  const status = await child.status
-  Deno.exit(status.code)
-} catch (err) {
-  if (err instanceof Deno.errors.NotFound) {
-    // Delegate to notes as catchall
-    exe = `${import.meta.dirname}/nt.d/notes`
-    const notesCmd = new Deno.Command(exe, {
-      args: [sub, ...rest],
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit"
-    })
-    const notesChild = notesCmd.spawn()
-    const notesStatus = await notesChild.status
-    Deno.exit(notesStatus.code)
-  }
-  throw err
-}
+const child = cmd.spawn();
+const status = await child.status;
+Deno.exit(status.code);

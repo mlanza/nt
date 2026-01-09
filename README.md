@@ -1,14 +1,16 @@
 # Note
 
-**Note** is a command line tool for accessing and updating [Logseq](https://logseq.com) knowhow.  Prefer command line tools to MCP tools because they're ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike. It's easier to wrap a command line tool as an MCP server, than the reverse.
+**Note** is a tool for managing text content whatever the flavor — Skills, Commands, Prompts, Rules, Knowledge — in [Logseq](https://logseq.com).  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
 
 <p align="center">
-  <img src="./images/logo.png" style="width: 250px; max-width: 100%;" />
+  <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
-Your local-first commonplace book 📖 is a near perfect spot for keeping all the information and instructions an agent needs to thrive — one place (💍) to rule them all.  How better to teach an agent your craft than by sharing your second 🧠 with it.
+Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
-That also makes it the ideal store for skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
+The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
+
+Take skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
 
 Getting frontmatter properties:
 
@@ -17,7 +19,7 @@ $ nt props Coding
 ```
 
 ```md
-## Coding
+# Coding
 tags:: AI, [[Making apps]], Skills
 alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
@@ -36,121 +38,143 @@ And later retrieve it along with its prerequisites:
 $ nt about Coding
 ```
 
-Sample tools calls:
-
-* `nt pages` - list regular pages
-* `nt pages -t journal` - list journal pages
-* `nt pages -t all` - list both journal and regular pages
-* `nt page Atomic | nt wikilinks` - to view wikilinks on a page
-* `nt page Atomic | nt wikilinks | nt page` - list all wikilinked pages
-* `nt page Atomic | nt links` - to view links on page
-* `nt page Atomic` - list a particular page by name
-* `nt tags Programming` - list notes tagged Programming
-* `nt name programming | nt t` - normalize the name and find pages tagged Programming
-* `nt tags Programming | nt page` - pipe names into page to list content for a bunch of pages
-* `nt page Atomic | grep -C 3 components` - use `grep` as usual
-* `nt path Atomic | xargs code` - open page in VS Code, nvim, etc.
-* `echo "My thoughts" | nt post Atomic` - writing a page
-* `echo "My thoughts" | nt post Atomic --overwrite` - overwriting an existing page
-* `nt path Atomic | xargs git restore` - undoing a mistaken overwrite
-* `echo "Atomic\nClojure Way" | nt tags` - tags on these pages
-* `nt list Atomic "Clojure Way" | nt page` -- display several pages
-* `nt list Coding Tasking Decomposing | nt prereq | nt seen | nt page` - several concepts and their unique prerequisites
-* `nt day | nt page` - today's journal page
-* `nt day -1 | nt page` - yesterday's journal page
-* `nt day $(seq 0 -90) | nt page` - to review 90 days of journal entries
-* `nt day $(seq 0 -30) | nt page | nt links` - links from latest journal entries
-* `nt day $(seq 0 -30) | nt page --only "~tasks"` - to display only TODOs
-* `nt day $(seq 0 -30) | nt page --less "~tasks"` - to display everything but TODOs
-* `nt day $(seq 0 -30) | nt page` - a range of journal entries (`zsh`)
-* `nt day (0..-30) | nt page` - a range of journal entries (`pwsh`)
-
-These can be issued directly in [OpenCode](https://opencode.ai) — by you or the agent.  Being command line, these can be used by any agentic runtime (Claude, Gemini, etc.) with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
 ## Getting Started
 
-Have `pwsh` and `deno` and `node` installed.  These runtimes were targeted over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
-
-Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
-
-Install it to your path however you like:
+Install the tool into your path or extend your path, whichever you like:
 ```zsh
 export PATH=~/Documents/nt/bin:$PATH
 ```
 
-Set these environment variables:
+Have `pwsh` and `deno` and `node` installed.  The interal scripts target these runtimes over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
 
-* **LOGSEQ_REPO** - the path to your Logseq notes repo, e.g. `~/Documents/notes`
-* **LOGSEQ_ENDPOINT** - the HTTP API endpoint, e.g. http://127.0.0.1:12315/api
+Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
+
+Add these environment variables to your shell:
+
 * **LOGSEQ_TOKEN** - a token you configured for the HTTP API
+* **NOTE_CONFIG** - path to config file (default is `~/.config/nt/config.toml`)
 
-Once done, start Logseq, start your shell and issue a few commands.
+Within config, at minimum, identify where your Logseq repo is:
+
+```toml
+# config.toml
+[logseq]
+repo = 'D:\notes'
+```
+
+If you change the `endpoint` to something other than the default of http://127.0.0.1:12315/api, you'll have to include that setting too.
+
+Once done, start Logseq, and then your shell. Issue some commands.
+
+```zsh
+nt page Atomic # show some page, for example
+```
 
 ## Going Deeper
 
 ### Generating `AGENTS.md`
 
-While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup the most crucial instructions outright, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
+While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup even the baseline instructions, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
 
-The following assumes the target page `prerequisites` is replete with your most critical items.  The `docmode` tool slightly flattens Logseq's outline formatting.
+The following assumes the target page `prerequisites` is replete with your most crucial rules and instructions.  The `document` tool slightly flattens Logseq's outline formatting.
 
 ```zsh
-nt about "Agent Instructions" | nt docmode --para | cat -s
+nt about "Agent Instructions" | nt document --para | cat -s
+```
+
+### Agent Content Filtering
+
+Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I may have a smattering of links to interestings sites and/or a pile of tasks in various stages pertinent to the page topic or project.  I may also have information and/or instructions.  What I'm getting at is some of the stuff on a page is useful to me alone, while other stuff is more generally useful to a third party like an agent.
+
+This is not about sensitive content as I don't keep that in my stores.  The concern is not leaks, but wasted or confusing context.  To help the `nt page` command has options to exclude certain blocks (along with the child content).
+
+This command filters out task blocks:
+
+```zsh
+nt page Atomic --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+```
+
+While, conversely, this one shows only task blocks:
+
+```zsh
+nt page Atomic --only '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+```
+
+You can send in multiple values:
+
+```zsh
+nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
+```
+
+But typing that will get tedious fast.  Better to define a `filter` table in your config.
+
+```toml
+[filter]
+props = "^[^\\s:]+::"
+tasks = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
+links = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
+```
+
+Having that, you can exclude one type of block:
+```zsh
+nt page Atomic --less tasks
+```
+
+Or include one type of block:
+```zsh
+nt page Atomic --only tasks
+```
+
+Or multiple:
+
+```zsh
+nt page Atomic --less tasks --less links
+```
+
+Some of the examples in the tool `--help` anticipate these defintions.
+
+This command is for a **human** and includes only what blocks filter out:
+```zsh
+nt page Atomic --only
+```
+
+This one is for an **agent** and includes everything but that noise:
+```zsh
+nt page Atomic --less
+```
+
+Alternately, if it helps you remember:
+```zsh
+nt page Atomic --human
+```
+or
+```zsh
+nt page Atomic --agent
 ```
 
 ### Querying via Datalog
 
-Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries and custom commands you can build.  The innards build on this.  It's one reason to prefer Logseq to Obsidian.
+Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine.  With Datalog queries in easy reach, there's no limit to the queries and custom commands you can build.  The innards build on this.  They can be parameterized.
+
+It's a reason to prefer Logseq to Obsidian.
 
 ```zsh
-$ nt q '[:find (pull ?p [*]) :where [?p :block/original-name "Atomic"]]'
+nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
-### `about` Design Rationale
+Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example if you get
 
-The `about` subcommand filters out blocks which are themselves either links or TODOs.  This is because of how I keep notes, combining [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) content in one spot.  This includes loose links — related posts and products or content to be examined.  TODOs are real work, half-baked ideas, or maybe links marked as future reading.  That's all noise to an agent which is why it gets filtered out.  Links which are embedded in statements as hyperlinks are kept.
-
-### Ergonomics
-
-The kit was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  The `nt` commands, for example, can receive the primary operand directly or via stdin.  With embedded spaces being an routine concern, it's modeled below.
-
-#### Show pages having certain tags
-
-Equivalents:
 ```zsh
-nt list Atomic Clojure\ Way | nt tags
-```
-```zsh
-nt tags Atomic
-nt tags Clojure\ Way
-```
-```zsh
-printf "%s\n" Atomic Clojure\ Way | xargs -I {} nt tags {}
-```
-```pwsh
-'Atomic', 'Clojure Way' | % { nt tags $_ } # powershell
+Error: Missing rules var '%' in :in
 ```
 
-#### Show tags on certain pages
+there's likely some syntax or advances queries it can't support.
 
-Equivalents:
-```zsh
-nt list Atomic "Clojure Way" | nt props tags
-```
-```zsh
-nt props Atomic tags
-nt props "Clojure Way" tags
-```
-```zsh
-printf "%s\n" Atomic "Clojure Way" | xargs -I {} nt props {} tags
-```
-```pwsh
-'Atomic', 'Clojure Way' | % { nt props $_ tags } # powershell
-```
+Look here for help forming valid queries:
 
-### OpenCode Custom Tools
-
-There is a custom `skills` and an `about` tool which together facilitate knowledge lookup minus computer use.  They're available to OpenCode when you start it in the repo.  Symlink them into your global opencode config path to make them universally available.
+* https://adxsoft.github.io/logseqadvancedquerybuilder/
 
 ## License
 [MIT](./LICENSE.md)
