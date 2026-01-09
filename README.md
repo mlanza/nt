@@ -77,9 +77,9 @@ nt page Atomic # show some page, for example
 
 ### Generating `AGENTS.md`
 
-While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup the most crucial instructions outright, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
+While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup even the baseline instructions, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
 
-The following assumes the target page `prerequisites` is replete with your most critical items.  The `document` tool slightly flattens Logseq's outline formatting.
+The following assumes the target page `prerequisites` is replete with your most crucial rules and instructions.  The `document` tool slightly flattens Logseq's outline formatting.
 
 ```zsh
 nt about "Agent Instructions" | nt document --para | cat -s
