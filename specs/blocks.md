@@ -1,4 +1,4 @@
-# Blockifier Specification
+# `blocks` Specification
 
 ## Mission Statement
 
@@ -217,7 +217,7 @@ function extractMarker(content) {
 }
 ```
 
-## Serial.js Architecture
+## Blockifier Architecture
 
 ### Input Processing Pipeline
 
@@ -388,8 +388,8 @@ Becomes:
 
 ### Usage Pattern
 ```bash
-# Pipe page content to serial.js
-nt p MyPage | serial.js > payload.json
+# Pipe page content to blocks
+nt p MyPage | nt blocks > payload.json
 
 # Use payload with existing insertion strategies
 LAST_UUID=$(curl -s ... | jq '.[-1].uuid' -r)
@@ -479,7 +479,7 @@ The specification is based on:
 - ✅ Failed attempt analysis (SAXLogseqBuilder)
 - ✅ Successful API pattern discovery (block-insertion.md)
 
-An implementation agent should be able to successfully build `serial.js` using this specification with high confidence of compatibility.
+An implementation agent should be able to successfully build `nt blocks` using this specification with high confidence of compatibility.
 
 ---
 
@@ -523,8 +523,8 @@ See `demo-whole-page.sh` which demonstrates:
 # 1. Analyze existing page structure
 PAGE_ANALYSIS=$(curl -s ... getPageBlocksTree)
 
-# 2. Create payload using serial.js
-cat existing_page.md | serial.js > payload.json
+# 2. Create payload using `blocks`
+cat existing_page.md | nt blocks > payload.json
 
 # 3. Single transactional insertion
 curl -s -X POST $LOGSEQ_ENDPOINT ... -d "{
@@ -567,7 +567,7 @@ The demo script proves that **entire pages work in single `insertBatchBlock` cal
 
 **CONFIRMED**: `insertBatchBlock` handles entire pages in **one transactional call** regardless of size or complexity.
 
-**IMPLEMENTATION PATH**: The `serial.js` specification is research-validated and ready for implementation with high confidence of success.
+**IMPLEMENTATION PATH**: The `blocks` specification is research-validated and ready for implementation with high confidence of success.
 
 ---
 
@@ -596,7 +596,7 @@ The demo script proves that **entire pages work in single `insertBatchBlock` cal
 PAGE_ANALYSIS=$(curl -s -X POST $LOGSEQ_ENDPOINT ... getPageBlocksTree)
 
 # 2. Create structured payload
-cat existing_page.md | serial.js > payload.json
+cat existing_page.md | nt blocks > payload.json
 
 # 3. Single transactional insertion
 curl -s -X POST $LOGSEQ_ENDPOINT ... insertBatchBlock
@@ -604,7 +604,7 @@ curl -s -X POST $LOGSEQ_ENDPOINT ... insertBatchBlock
 
 ### Comprehensive Content Type Coverage
 
-Based on validated research, `serial.js` MUST handle:
+Based on validated research, `blocks` MUST handle:
 
 #### 1. Page Properties Blocks
 ```javascript
@@ -702,7 +702,7 @@ if (content.includes('collapsed:: true')) {
 
 #### Core Parser Logic
 ```javascript
-class SerialParser {
+class Blockifier {
   constructor() {
     this.state = {
       stack: [],           // Parent chain by level
@@ -806,7 +806,7 @@ try {
 #### Input Processing
 ```bash
 # Accept stdin, output JSON to stdout
-nt p ExistingPage | serial.js > payload.json
+nt p ExistingPage | nt blocks > payload.json
 ```
 
 #### Output Verification
@@ -840,4 +840,4 @@ This specification provides **research-validated implementation path** for `seri
 ✅ **Error Resilience**: Graceful handling for malformed input
 ✅ **Unix Integration**: stdin → JSON → stdout pipeline pattern
 
-An implementation agent following this specification has **highest possible chance of success** for creating `serial.js` that converts any Logseq page to valid `insertBatchBlock` payload.
+An implementation agent following this specification has **highest possible chance of success** for creating `blocks` that converts any Logseq page to valid `insertBatchBlock` payload.
