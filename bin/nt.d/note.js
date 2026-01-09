@@ -502,12 +502,10 @@ async function incoming(one, only) {
 }
 
 // Recursive filtering function for blocks
-function selectBlock(block, keep) {
+function selectBlock(block, keep, fixed) {
   const {content, properties} = block;
-  const props = /^[^\s:]+:: .+/;
-
   // Test content with and without marker to catch both cases
-  const kept = props.test(content) || keep(content);
+  const kept = fixed(content) || keep(content);
 
   if (!kept) {
     return null;
@@ -516,7 +514,7 @@ function selectBlock(block, keep) {
   let filteredChildren = [];
   if (block.children && Array.isArray(block.children)) {
     filteredChildren = block.children
-      .map(child => selectBlock(child, keep))
+      .map(child => selectBlock(child, keep, fixed))
       .filter(child => child !== null); // Remove null entries (filtered out children)
   }
 
@@ -588,8 +586,10 @@ function keeping(patterns, filter, hit = true){
 
 function tskGetPage(given, options){
   const {format, less, only} = options;
+  const props = /^[^\s:]+:: .+/;
   const agent = less?.[0] === true;
   const human = only?.[0] === true;
+  const fixed = less?.includes("props") ? () => false : props.test.bind(props);
   const {filter = {}} = config;
   return given ? new Task(async function(reject, resolve){
     try {
@@ -619,7 +619,7 @@ function tskGetPage(given, options){
 
       const result = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
       const data = keep ? result
-          .map(block => selectBlock(block, keep))
+          .map(block => selectBlock(block, keep, fixed))
           .filter(block => block !== null) : result;
 
       const lines = format === "md" ? nestedJsonToMarkdown(data).join("\n") : data;
@@ -840,7 +840,7 @@ function fmtBody({heading, format, vacant}){
       return [name, content];
     } else if (format === 'md') {
       const lines = [];
-      const furniture = heading != null && name && (vacant || content);
+      const furniture = heading && name && (vacant || content);
       if (furniture) {
         lines.push(`${'#'.repeat(heading)} ${name}`.trim());
       }
