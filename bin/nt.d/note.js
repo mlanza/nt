@@ -789,7 +789,9 @@ function backlinks(options){
 function query(options){
   return function(query, ...args){
     //console.log({limit, options, query, args});
-    return qry(query, ...args).map(take(options.limit));
+    return qry(query, ...args)
+      .map(take(options.limit))
+      .map(results => options.flatten ? results.flat() : results);
   }
 }
 
