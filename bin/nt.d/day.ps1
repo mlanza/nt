@@ -1,9 +1,12 @@
 #!/usr/bin/env pwsh
 param(
-  [Parameter(ValueFromRemainingArguments)]
-  [int[]]$Offset = @(0)
+  [int]$Offset = 0
 )
 
-foreach ($i in $Offset) {
-  (Get-Date).AddDays($i).ToString('yyyy-MM-dd')
+if ($MyInvocation.ExpectingInput) {
+  foreach ($Offset in $input) {
+    (Get-Date).AddDays($Offset).ToString('yyyy-MM-dd')
+  }
+} else {
+  (Get-Date).AddDays($Offset).ToString('yyyy-MM-dd')
 }
