@@ -44,6 +44,10 @@ function tskConfig(path){
     const endpoint = "http://127.0.0.1:12315/api";
     return {endpoint, token, ...logseq, repo};
   }
+  function expandConfig(config){
+    const logseq = expandLogseq(config?.logseq ?? {});
+    return { ...config, logseq };
+  }
   return new Task(async function(reject, resolve){
     try {
       const existing = await exists(path);
@@ -52,10 +56,9 @@ function tskConfig(path){
       }
 
       const text = await Deno.readTextFile(existing);
-      const config = parse(text);
-      const logseq = expandLogseq(config?.logseq ?? {});
+      const config = expandConfig(parse(text));
 
-      resolve({ ...config, logseq });
+      resolve(config);
     } catch (cause) {
       reject(explain(`Problem reading config at ${path}.`, cause));
     }
