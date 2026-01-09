@@ -144,7 +144,7 @@ This command is for the **human** and includes only what's normally filtered out
 nt page Atomic --only
 ```
 
-This one is for an **agent** and includes all but the noise:
+This one is for the **agent** and includes all but the noise:
 ```zsh
 nt page Atomic --less
 ```
