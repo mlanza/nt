@@ -58,15 +58,15 @@ nt about "Agent Instructions" | nt document --para | cat -s
 
 ### Progressive Disclosure
 
-Take skills.  Want to provide a menu of capabilities?  Create a page called `Skills` in Logseq with some general instruction for skill use for agents. Then start defining pages, tagging them `Skills`, and describing them with a `description` property.
+Take skills.  Want to provide a menu of capabilities?  Create a page called `Skills` in Logseq with some general instruction for skill use for agents. Then start defining pages, tagging them `Skills`, and add a `description` property.
 
-When you've defined a bunch you can, conveniently, list them via:
+After defining a bunch, they can, conveniently, be listed via:
 
 ```zsh
 $ nt skills
 ```
 
-Seeing the properties — or frontmatter — for a page gives you a sense of it:
+Seeing the properties — or frontmatter — for a page gives a sense of it:
 
 ```zsh
 $ nt props Coding
