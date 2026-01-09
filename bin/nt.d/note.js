@@ -1629,10 +1629,10 @@ program
 program
   .command('tags')
   .alias('t')
-  .description(`List pages with given tags (default: ALL tags)  ${PIPEABLE}`)
+  .description(`List pages with all of the given tags ${PIPEABLE}`)
   .arguments(demand("tags..."))
-  .option('--all', 'Require ALL tags to be present (default)')
-  .option('--any', 'Require ANY tag to be present')
+  .option('--all', 'Require all tags to be present (default)')
+  .option('--any', 'Require any tag to be present')
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .example("List names of pages tagged Writing", "nt tags Writing")
