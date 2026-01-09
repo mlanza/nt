@@ -1669,7 +1669,7 @@ program
 
 program
   .command('path')
-  .description(`The path to the page file  ${PIPEABLE}`)
+  .description(`The path to the page file ${PIPEABLE}`)
   .arguments(demand("name"))
   .example("Display the file system path to the page", `nt path "Article Ideas"`)
   .example(`Open Moussaka page for editing in VS Code`, `nt path Moussaka | xargs code`)
