@@ -1574,7 +1574,6 @@ program
   .option('--json', 'Output JSON format')
   .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('--vacant', 'Include vacant entries')
-  .option('-a, --append <content:string>', 'Append content to page')
   .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
   .example("List wikilinks on a page", "nt page Mission | nt wikilinks")
@@ -1594,9 +1593,10 @@ program
 
 program
   .command('post')
-  .description("Append stdin content to named page, if omitted to today's journal entry")
-  .arguments("[name]")
-  .option('--prepend', 'Prepend content instead')
+  .description("Sends content to named page or, if omitted, to today's journal entry")
+  .arguments("[name] [content]")
+  .option('-a, --append', 'Append mode (the default if omitted)')
+  .option('-p, --prepend', 'Prepend mode')
   .option('--overwrite', 'Purges any existing page content (not properties)')
   .option('--debug', 'Enable debug output')
   .example("Append content to current journal page", `echo "Walked for 1h" | nt post`)
