@@ -10,36 +10,6 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
-Take skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
-
-Getting frontmatter properties:
-
-```zsh
-$ nt props Coding
-```
-
-```md
-# Coding
-tags:: AI, [[Making apps]], Skills
-alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
-prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Guidance for writing, refactoring or fixing code
-```
-
-Conveniently list it among all skills via:
-
-```zsh
-$ nt skills
-```
-
-And later retrieve it along with its prerequisites:
-
-```zsh
-$ nt about Coding
-```
-
-These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
-
 ## Getting Started
 
 Install the tool into your path or extend your path, whichever you like:
@@ -72,6 +42,8 @@ Once done, start Logseq, and then your shell. Issue some commands.
 nt page Atomic # show some page, for example
 ```
 
+These commands can, of course, be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+
 ## Going Deeper
 
 ### Generating `AGENTS.md`
@@ -82,6 +54,38 @@ The following assumes the target page `prerequisites` is replete with your most 
 
 ```zsh
 nt about "Agent Instructions" | nt document --para | cat -s
+```
+
+## Progressive Disclosure
+
+Take skills.  You want to provide a menu to your pages.  Create a page called `Skills` in Logseq, the start defining skills pages, tagging them `Skills` and describing them with a `description` property.
+
+Getting frontmatter properties:
+
+```zsh
+$ nt props Coding
+```
+
+```md
+# Coding
+tags:: AI, [[Making apps]], Skills
+alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
+prerequisites:: [[Clojure Way]], [[Coding Style]]
+description:: Guidance for writing, refactoring or fixing code
+```
+
+Conveniently list it among all skills via:
+
+```zsh
+$ nt skills
+```
+
+## Prerequisites
+
+Some topics build other other topics and cannot stand on their own.  These pages require that content to make sense.  Include a `prerequisites` property on the page and add wikilinks to the prerequisites.  When you later retrieve the page via `about` those prerequisite topics are automatically — and recursively — included.
+
+```zsh
+$ nt about Coding
 ```
 
 ### Agent Content Filtering
