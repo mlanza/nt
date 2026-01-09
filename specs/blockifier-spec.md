@@ -1,22 +1,22 @@
-# Serial.js Specification
+# Blockifier Specification
 
 ## Mission Statement
 
-Create `serial.js` - a program that receives structured markdown content from stdin (representing Logseq page content) and outputs `insertBatchBlock`-compatible JSON payload. This bridges the gap between existing Logseq page format and the transactional insertion API we've discovered.
+Create Blockifier a component receives structured markdown content from stdin (representing Logseq page content) and outputs `insertBatchBlock`-compatible JSON payload. This bridges the gap between existing Logseq page format and the transactional insertion API we've discovered.
 
 ## Research Context
 
 ### Prior Learning Sources
 
 1. **SAXLogseqBuilder.md** - Failed attempt at real-time streaming API calls
-2. **block-insertion.md** - Successful discovery of `insertBatchBlock` transactional patterns  
+2. **block-insertion.md** - Successful discovery of `insertBatchBlock` transactional patterns
 3. **Live Page Analysis** - Examined actual Logseq block structure via `getPageBlocksTree`
 
-### Key Discovery: Serial vs Streaming
+### Key Discovery: Blockifier vs Streaming
 
 The SAX approach failed because it tried to make **real-time API calls** during parsing. The new approach separates concerns:
 
-- **Serial.js**: Parse input → Output structured JSON payload
+- **Blockifier**: Parse input → Output structured blocks as a JSON payload
 - **External Script**: Uses payload → Makes single `insertBatchBlock` call
 
 This follows Unix philosophy: **Do one thing well** and enable composition via pipelines.
@@ -94,7 +94,7 @@ description:: Page description
   "content": "Root task",
   "children": [
     {
-      "content": "Nested level 2", 
+      "content": "Nested level 2",
       "children": [
         {"content": "Deep level 3"}
       ]
@@ -136,19 +136,19 @@ description:: Page description
 
 **Solution Strategy**:
 ```javascript
-// Extract properties from content  
+// Extract properties from content
 function extractProperties(content) {
   const propertyRegex = /^(.+?)::\s*(.+)$/gm;
   const properties = {};
   let cleanContent = content;
-  
+
   let match;
   while ((match = propertyRegex.exec(content)) !== null) {
     const [full, key, value] = match;
     properties[key.trim()] = value.trim();
     cleanContent = cleanContent.replace(full, '').trim();
   }
-  
+
   return { properties, cleanContent };
 }
 
@@ -175,20 +175,20 @@ function handleCollapsedMarker(content) {
 ```javascript
 function parseLine(line, currentLevel) {
   const trimmed = line.trimStart();
-  
+
   // Block starts with -
   if (trimmed.startsWith('- ')) {
     const indentLevel = Math.floor((line.length - trimmed.length) / 2);
     const content = trimmed.substring(2).trim();
     return { type: 'block', level: indentLevel, content };
   }
-  
+
   // Property or hanging content
   if (trimmed.includes('::')) {
     const indentLevel = Math.floor((line.length - trimmed.length) / 2);
     return { type: 'property', level: indentLevel, content: trimmed };
   }
-  
+
   // Hanging content (continuation)
   const indentLevel = Math.floor((line.length - trimmed.length) / 2);
   return { type: 'content', level: indentLevel, content: trimmed };
@@ -199,7 +199,7 @@ function parseLine(line, currentLevel) {
 
 **Discovered Markers**:
 - `TODO` - Task state
-- `DOING` - In progress  
+- `DOING` - In progress
 - `DONE` - Completed
 - `WAITING` - Blocked
 - `NOW` - Active
@@ -228,7 +228,7 @@ stdin → Line Parser → Structure Builder → JSON Output
 #### 1. Line Classification
 For each line, determine:
 - **Type**: block-header, property, hanging-content
-- **Level**: Indentation-based hierarchy depth  
+- **Level**: Indentation-based hierarchy depth
 - **Content**: Actual text content
 - **Marker**: Task state if present
 - **Properties**: Extracted key-value pairs
@@ -248,26 +248,26 @@ const state = {
 ```javascript
 function handleLine(parsedLine, state) {
   const { type, level, content } = parsedLine;
-  
+
   // Going deeper (indentation increased)
   if (level > state.currentLevel) {
     state.stack.push(state.currentParent);
     state.currentParent = state.currentParent.children || [];
   }
-  
-  // Going shallower (indentation decreased)  
+
+  // Going shallower (indentation decreased)
   else if (level < state.currentLevel) {
     const stepsBack = state.currentLevel - level;
     for (let i = 0; i < stepsBack; i++) {
       state.currentParent = state.stack.pop();
     }
   }
-  
+
   state.currentLevel = level;
-  
+
   // Create block object
   const block = createBlock(parsedLine);
-  
+
   // Add to appropriate parent
   if (level === 0) {
     state.rootBlocks.push(block);
@@ -289,27 +289,27 @@ function handleLine(parsedLine, state) {
 ```javascript
 function createBlock(parsedLine) {
   const { content, type } = parsedLine;
-  
+
   // Extract marker (TODO, DOING, etc.)
   const { marker, cleanContent } = extractMarker(content);
-  
+
   // Extract properties
   const { properties, cleanContent: finalContent } = extractProperties(cleanContent);
-  
+
   const block = {
     content: finalContent
   };
-  
+
   // Add marker if present
   if (marker) {
     block.marker = marker;
   }
-  
+
   // Add properties if present
   if (Object.keys(properties).length > 0) {
     block.properties = properties;
   }
-  
+
   return block;
 }
 ```
@@ -409,7 +409,7 @@ curl -s -X POST $LOGSEQ_ENDPOINT ... -d "{
 
 ### Phase 1: Core Parser
 1. Line classification logic
-2. Basic hierarchy detection  
+2. Basic hierarchy detection
 3. Simple block creation
 
 ### Phase 2: Property Handling
@@ -435,7 +435,7 @@ curl -s -X POST $LOGSEQ_ENDPOINT ... -d "{
 - ✅ Preserve exact hierarchy and internal order
 - ✅ Handle all discovered content types
 
-### Quality Requirements  
+### Quality Requirements
 - ✅ Zero information loss from input → output → API
 - ✅ Graceful handling of malformed input
 - ✅ Unix-style error reporting (stderr, exit codes)
@@ -474,7 +474,7 @@ From my parsing test, the logic correctly identified:
 
 The specification is based on:
 - ✅ Real Logseq API data analysis
-- ✅ Actual page structure examination  
+- ✅ Actual page structure examination
 - ✅ Parsing logic validation
 - ✅ Failed attempt analysis (SAXLogseqBuilder)
 - ✅ Successful API pattern discovery (block-insertion.md)
@@ -555,7 +555,7 @@ The demo script proves that **entire pages work in single `insertBatchBlock` cal
 
 ✅ **All Content Types Included**:
 - Page properties (tags, icon, alias, description) as `preBlock: true`
-- Task states: TODO, DOING, DONE, NOW, LATER, WAITING  
+- Task states: TODO, DOING, DONE, NOW, LATER, WAITING
 - Complex nesting: 4+ levels deep with properties at each level
 - Multiple properties: priority, deadline, tags arrays, status, related
 - Mixed content: Regular text, URLs, wikilinks
@@ -595,7 +595,7 @@ The demo script proves that **entire pages work in single `insertBatchBlock` cal
 # 1. Analyze existing page structure
 PAGE_ANALYSIS=$(curl -s -X POST $LOGSEQ_ENDPOINT ... getPageBlocksTree)
 
-# 2. Create structured payload  
+# 2. Create structured payload
 cat existing_page.md | serial.js > payload.json
 
 # 3. Single transactional insertion
@@ -613,13 +613,13 @@ Based on validated research, `serial.js` MUST handle:
   "content": "tags:: Programming, [[Test Framework]]\\nicon:: 🧪\\n",
   "properties": {
     "tags": ["Programming", "Test Framework"],
-    "icon": "🧪"  
+    "icon": "🧪"
   },
   "preBlock": true
 }
 ```
 
-#### 2. Task State Blocks  
+#### 2. Task State Blocks
 ```javascript
 // All possible markers with properties
 {
@@ -670,7 +670,7 @@ Based on validated research, `serial.js` MUST handle:
 function formatProperties(properties) {
   const arrayKeys = ['tags', 'alias', 'prerequisites'];
   const formatted = { ...properties };
-  
+
   Object.keys(properties).forEach(key => {
     if (arrayKeys.includes(key)) {
       // Convert comma-separated to array
@@ -680,7 +680,7 @@ function formatProperties(properties) {
         .filter(item => item.length > 0);
     }
   });
-  
+
   return formatted;
 }
 ```
@@ -715,25 +715,25 @@ class SerialParser {
 
   parseLine(line) {
     const trimmed = line.trimStart();
-    
+
     // Page header (only first line)
     if (this.state.isFirstBlock && trimmed.startsWith('# ')) {
       return this.handleHeader(trimmed);
     }
-    
+
     // Block starts with -
     if (trimmed.startsWith('- ')) {
       const indentLevel = Math.floor((line.length - trimmed.length) / 2);
       const content = trimmed.substring(2).trim();
       return { type: 'block', level: indentLevel, content };
     }
-    
+
     // Property line
     if (trimmed.includes('::')) {
       const indentLevel = Math.floor((line.length - trimmed.length) / 2);
       return { type: 'property', level: indentLevel, content: trimmed };
     }
-    
+
     // Hanging content
     const indentLevel = Math.floor((line.length - trimmed.length) / 2);
     return { type: 'content', level: indentLevel, content: trimmed };
@@ -755,7 +755,7 @@ class SerialParser {
 ```javascript
 handleLine(parsedLine) {
   const { type, level, content } = parsedLine;
-  
+
   // Level tracking for hierarchy
   if (level > this.state.currentLevel) {
     this.state.stack.push(this.state.currentParent);
@@ -765,12 +765,12 @@ handleLine(parsedLine) {
       this.state.currentParent = this.state.stack.pop();
     }
   }
-  
+
   this.state.currentLevel = level;
-  
+
   // Create block with all features
   const block = this.createBlock(parsedLine);
-  
+
   // Add to correct parent
   if (level === 0) {
     this.state.rootBlocks.push(block);
@@ -778,7 +778,7 @@ handleLine(parsedLine) {
   } else if (this.state.currentParent) {
     this.state.currentParent.children = this.state.currentParent.children || [];
     this.state.currentParent.children.push(block);
-    
+
     // Update parent reference for deeper nesting
     if (block.children || block.properties) {
       this.state.currentParent = block;
@@ -809,7 +809,7 @@ try {
 nt p ExistingPage | serial.js > payload.json
 ```
 
-#### Output Verification  
+#### Output Verification
 ```bash
 # Validate JSON before API call
 jq 'length' payload.json  # Block count
@@ -834,10 +834,10 @@ curl -s -X POST $LOGSEQ_ENDPOINT ... -d "{
 
 This specification provides **research-validated implementation path** for `serial.js` with:
 
-✅ **100% API Compatibility**: Based on real Logseq API analysis  
-✅ **Complete Coverage**: All content types discovered and tested  
-✅ **Production Workflow**: Real-world validated three-step process  
-✅ **Error Resilience**: Graceful handling for malformed input  
-✅ **Unix Integration**: stdin → JSON → stdout pipeline pattern  
+✅ **100% API Compatibility**: Based on real Logseq API analysis
+✅ **Complete Coverage**: All content types discovered and tested
+✅ **Production Workflow**: Real-world validated three-step process
+✅ **Error Resilience**: Graceful handling for malformed input
+✅ **Unix Integration**: stdin → JSON → stdout pipeline pattern
 
 An implementation agent following this specification has **highest possible chance of success** for creating `serial.js` that converts any Logseq page to valid `insertBatchBlock` payload.
