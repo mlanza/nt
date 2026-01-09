@@ -152,8 +152,8 @@ Internally, this is how `about` provides your agent with trimmed context.
 
 Alternately, if the use of audience-focused terms aids your remembrance, use
 ```zsh
-nt page Atomic --human # i.e., only
-nt page Atomic --agent # i.e., less
+nt page Atomic --human # i.e., only, mine
+nt page Atomic --agent # i.e., less, theirs
 ```
 
 ### Querying via Datalog

@@ -1857,6 +1857,8 @@ if (import.meta.main) {
     const replacing = {
       "--json" : "--format=json",
       "--md" : "--format=md",
+      "--theirs" : "--less",
+      "--mine" : "--only",
       "--agent" : "--less",
       "--human" : "--only"
     }
