@@ -801,7 +801,7 @@ function qry(query, ...args){
     const params = query.search(placeholder) !== -1;
     const ready = q.search(placeholder) === -1;
     if (!ready) {
-      reject(new Guidance(`Must supply placeholders first: ${q}`));
+      reject(new Guidance(`Supply placeholders: ${q}`));
     } else {
       //console.log({q, args, params})
       tskLogseq('logseq.DB.datascriptQuery', params ? [q] : [q, ...args]).fork(reject, resolve);
