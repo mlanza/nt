@@ -1,7 +1,9 @@
 #!/usr/bin/env pwsh
 param(
   [Alias('t')]
-  [string]$type = 'bracket'
+  [string]$type = 'bracket',
+  [Alias('priority')]
+  [switch]$include_priority
 )
 
 # Split comma-separated types into array
@@ -27,6 +29,7 @@ foreach ($t in $typeArray) {
   }
 }
 
+$results = @()
 $input | ForEach-Object {
   $line = $_
   foreach ($pattern in $selectedPatterns) {
@@ -35,10 +38,16 @@ $input | ForEach-Object {
       if ($match.Groups.Count -gt 1) {
         for ($i = 1; $i -lt $match.Groups.Count; $i++) {
           if ($match.Groups[$i].Success) {
-            $match.Groups[$i].Value
+            $results += $match.Groups[$i].Value
           }
         }
       }
     }
   }
+}
+
+if ($include_priority) {
+  $results
+} else {
+  $results | Where-Object { $_ -notin @('A', 'B', 'C') }
 }
