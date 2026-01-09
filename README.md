@@ -60,7 +60,13 @@ nt about "Agent Instructions" | nt document --para | cat -s
 
 Take skills.  Want to provide a menu of capabilities?  Create a page called `Skills` in Logseq with some general instruction for agents. Then start defining pages, tagging them `Skills`, and describing them with a `description` property.
 
-This gets you the properties — or frontmatter — for a page:
+When you've defined a bunch you can, conveniently, list them via:
+
+```zsh
+$ nt skills
+```
+
+Seeing the properties — or frontmatter — for a page gives you a sense of it:
 
 ```zsh
 $ nt props Coding
@@ -72,12 +78,6 @@ tags:: AI, [[Making apps]], Skills
 alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
 description:: Guidance for writing, refactoring or fixing code
-```
-
-Conveniently, list it among all skills via:
-
-```zsh
-$ nt skills
 ```
 
 ### Prerequisites
