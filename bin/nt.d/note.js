@@ -504,8 +504,10 @@ async function incoming(one, only) {
 // Recursive filtering function for blocks
 function selectBlock(block, keep, fixed) {
   const {content, properties} = block;
+
+  const line = content.split("\n")?.[0]; //matching happens against first line only
   // Test content with and without marker to catch both cases
-  const kept = fixed(content) || keep(content);
+  const kept = fixed(line) || keep(line);
 
   if (!kept) {
     return null;
