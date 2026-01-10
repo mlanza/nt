@@ -1542,15 +1542,15 @@ function pages(options){
   return constantly(tskGetAllPages(options));
 }
 
-const PIPED = `📥`;
 const PIPEABLE = `📨`;
+const PIPED = `📥`;
 
 const program = new Command()
   .name('nt')
   .description(`A general-purpose tool for interacting with Logseq content.
 
- ${PIPED} = pipeline-only operations
  ${PIPEABLE} = supply primary argument directly or pipe them in
+ ${PIPED} = pipeline-only operations
 
 `.trim())
   .version('1.0.0-beta')
