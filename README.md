@@ -1,6 +1,6 @@
 # Note
 
-**Note** is a tool for managing text content whatever the flavor — Skills, Commands, Prompts, Rules, Knowledge — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
+**Note** is a command line tool for managing text content — Skills, Commands, Prompts, Rules, Knowledge, whatever the flavor — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
 
 <p align="center">
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
