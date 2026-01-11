@@ -22,7 +22,7 @@ function selectBlock(block, keep, fixed) {
 
   const line = content.split("\n")?.[0]; //matching happens against first line only
   // Test content with and without marker to catch both cases
-  const kept = fixed(line) || keep(line);
+  const kept = fixed(line) || keep(line) || block.preBlock;
 
   if (!kept) {
     return null;
