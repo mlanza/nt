@@ -326,7 +326,8 @@ function tskPrerequisites(name){
     const result = [];
 
     async function dfs(given) {
-      const {name} = await identify(given);
+      const { name } = await identify(given);
+      if (!name) return;
 
       if (seen.has(name)) return;          // dedupe + short-circuit
 
