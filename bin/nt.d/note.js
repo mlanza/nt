@@ -4,7 +4,7 @@ import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.t
 import * as toml from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 import LogseqPage from "./libs/logseq-page.js";
-import { keeping } from "./libs/logseq-page.js";
+import { Str } from "./libs/logseq-page.js";
 
 const isWindows = Deno.build.os === "windows";
 
@@ -492,22 +492,8 @@ function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
 
-function filterOn(options) {
-  const {format, less, only} = options;
-  const props = /^[^\s:]+:: .+/;
-  const agent = less?.[0] === true;
-  const human = only?.[0] === true;
-  const fixed = less?.includes("props") ? () => false : props.test.bind(props);
-  const {filter = {}} = config;
-  const patterns = agent || human ? Object.values(filter) : null;
-  const agentLess = agent ? patterns : null;
-  const humanOnly = human ? patterns : null;
-  const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
-  return { keep, fixed, format };
-}
-
 function tskGetPage(given, options) {
-  const {keep, fixed, format} = filterOn(options);
+  const {keep, fixed} = Str(options, config);
   return given ? new Task(async function(reject, resolve){
     try {
       const {name, path} = await identify(given);
@@ -517,7 +503,7 @@ function tskGetPage(given, options) {
         return;
       }
 
-      if (format === 'md' && keep == null) {
+      if (options.format === 'md' && keep == null) {
         const found = await exists(path);
         if (!found) {
           resolve(null);
@@ -530,7 +516,7 @@ function tskGetPage(given, options) {
       }
 
       const blocks = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
-      const content = format === "md" ? LogseqPage.stringify(blocks, keep, fixed) : blocks;
+      const content = options.format === "md" ? LogseqPage.stringify(blocks, keep, fixed) : blocks;
 
       resolve(content);
 
@@ -1376,7 +1362,7 @@ program
   .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
   .arguments(PIPED)
   .action(async (options) => {
-    const { keep, fixed } = filterOn(options);
+    const { keep, fixed } = Str(options, config);
     const input = await new Response(Deno.stdin.readable).text();
 
     if (!input.trim()) {

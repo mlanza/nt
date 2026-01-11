@@ -3,7 +3,7 @@ function normalizeSeparator(lines) {
   return lines.filter(line => line.trim() !== '');
 }
 
-export function keeping(patterns, filter, hit = true){
+function keeping(patterns, filter, hit = true){
   const miss = !hit;
   const regexes = (patterns || []).map(what => filter[what] || what).map(pattern => new RegExp(pattern));
   return regexes.length ? function(text){
@@ -14,6 +14,18 @@ export function keeping(patterns, filter, hit = true){
     }
     return miss;
   } : null
+}
+
+export function Str({ less, only }, { filter = {} } = {}) {
+  const props = /^[^\s:]+:: .+/;
+  const agent = less?.[0] === true;
+  const human = only?.[0] === true;
+  const fixed = less?.includes("props") ? () => false : props.test.bind(props);
+  const patterns = agent || human ? Object.values(filter) : null;
+  const agentLess = agent ? patterns : null;
+  const humanOnly = human ? patterns : null;
+  const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
+  return { keep, fixed };
 }
 
 // Recursive filtering function for blocks
