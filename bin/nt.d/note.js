@@ -1,7 +1,7 @@
 #!/usr/bin/env deno run --allow-all
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.ts";
-import { parse } from "jsr:@std/toml";
+import * as t from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 import LogseqPage from "./libs/logseq-page.js";
 
@@ -57,7 +57,7 @@ function tskConfig(path){
       }
 
       const text = await Deno.readTextFile(existing);
-      const config = expandConfig(parse(text));
+      const config = expandConfig(t.parse(text));
 
       resolve(config);
     } catch (cause) {
@@ -1126,7 +1126,7 @@ async function update(options, name){
   }
 }
 
-async function blocks(){
+async function parse(){
   const input = await new Response(Deno.stdin.readable).text();
 
   if (!input.trim()) {
@@ -1391,7 +1391,7 @@ program
   .command('parse')
   .description('Convert flat markdown to structured blocks')
   .arguments(PIPED)
-  .action(blocks);
+  .action(parse);
 
 program
   .command('stringify')
@@ -1407,9 +1407,9 @@ program
     }
 
     try {
-      const data = JSON.parse(input);
-      const result = LogseqPage.stringify(data);
-      console.log(result);
+      const blocks = JSON.parse(input);
+      const page = LogseqPage.stringify(blocks);
+      console.log(page);
     } catch (error) {
       console.error("Error parsing JSON input:", error);
       Deno.exit(1);
