@@ -490,6 +490,10 @@ function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
 
+function wikified(value) {
+  return value.includes(' ') ? `[[${value}]]` : value;
+}
+
 async function prop(options) {
   const props = /^([^\s:]+):: (.+)/;
   const consolidatedAdds = {};
@@ -555,14 +559,14 @@ async function prop(options) {
       if (consolidatedAdds[key]) {
         for (const value of consolidatedAdds[key]) {
           if (!currentValues.includes(value)) {
-            currentValues.push(value);
+            currentValues.push(wikified(value));
           }
         }
       }
 
       // Output modified property line if we still have values
       if (currentValues.length > 0) {
-        const formattedValues = currentValues.map(v => v.includes(' ') ? `[[${v}]]` : v);
+        const formattedValues = currentValues.map(wikified);
         output.push(`${key}:: ${currentValues.join(', ')}`);
       }
 
@@ -576,7 +580,7 @@ async function prop(options) {
   // Output unprocessed add operations as new properties
   for (const [key, values] of Object.entries(consolidatedAdds)) {
     if (!processedKeys.has(key)) {
-      const formattedValues = values.map(v => v.includes(' ') ? `[[${v}]]` : v);
+      const formattedValues = values.map(wikified);
       output.push(`${key}:: ${formattedValues.join(', ')}`);
       processedKeys.add(key);
     }
