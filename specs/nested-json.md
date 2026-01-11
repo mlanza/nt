@@ -1,5 +1,22 @@
 # PRD: Blockifier ↔ nestedJsonToMarkdown Coupling Analysis
 
+## Job description
+
+I want to start by extracting Blockifer as a module to a libs folder in @bin/nt.d/ .  Create that as a module `blockifer.js` and put all the code from @bin/nt.d/note.js in that module.  Export it. Then import it into @bin/nt.d/note.js .  Take all the code from nestedJsonToMarkdown and put that into an unblockifer.js module in the same libs folder. Export it from that module, then import it into @bin/nt.d/note.js, same approach. Thus both the blockifer and unblockifier will live externally. 
+
+I want to set you up for success.  
+
+Before you start have a subagent run `nt p Atomic`, then run `nt p Atomic --less` and `nt p Atomic --only`.  Then, in your session do the refactoring.  
+
+Then run `nt p Atomic | nt blocks | nt reconst` with each of the original runs.  
+
+The `nt reconst` will be a reconsitute command which takes the output of blocks and compiles it back into markdown.  You are exposing this as a new command from within @bin/nt.d/note.js .  You are also using the Unblockifer as the basis of replcaing nestedJsonToMarkdown.  
+
+The Unblockifer must be recursive in nature, doing all its recursion from within itself.  In this way, the refactoring of @bin/nt.d/note.js will be trivial. A drop in replacement, a one liner even.  In fact, expose the one liner as a static method on Unblockifer.  In the end, nestedJsonToMarkdown will be no more. The program will do all that it already does.  There will be a new `reconst` subcommand.  This is project work.
+
+When you're done and you've done the lighter testing, using `head -n 10` on all the above to conserve context, you can ask the subagent on the same session left hanging around to run the tests again and confirm no differences with the unfettered context. And getting good results, return to me with a report of success.
+
+
 ## Overview
 This document analyzes the tight coupling between the `Blockifier` class and `nestedJsonToMarkdown` function in `@bin/nt.d/note.js`, and the implications for replacing `nt struct` with `nt blocks`.
 
