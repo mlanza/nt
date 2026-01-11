@@ -490,6 +490,38 @@ function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
 
+async function look(options, given, ...adds) {
+  console.log({ options });
+  const props = /^([^\s:]+):: (.+)/;
+  const collected = [];
+  const properties = {};
+  const additions = [];
+
+  const {name, path} = await identify(given);
+  const contents = (await Deno.readTextFile(path)).replace(/\s+$/, '');
+  for (const content of contents.split("\n")) {
+    const m = content.match(props)
+    if (!m) break;
+
+    const [, key, values] = m;
+    if (props.test(content)) {
+      properties[key] = values;
+      collected.push({key, values, content});
+    } else {
+      break;
+    }
+  }
+
+  for(const add of adds){
+    const [key, value] = add.split("=");
+
+    pairs.push({key, value});
+  }
+
+  console.log({ pairs , properties, collected });
+}
+
+
 function tskGetPage(given, options) {
   const {keep, fixed} = LogseqPage.selects(options, config);
   return given ? new Task(async function(reject, resolve){
@@ -1200,6 +1232,13 @@ program
   .description('Convert flat markdown to structured blocks')
   .arguments(PIPED)
   .action(parse);
+
+program
+  .command('look')
+  .description('Convert flat markdown to structured blocks')
+  .arguments("<name> [adds...]")
+  .action(look);
+
 
 program
   .command('stringify')
