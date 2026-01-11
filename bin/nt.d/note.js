@@ -492,20 +492,24 @@ function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
 
-function tskGetPage(given, options){
+function filterOn(options) {
   const {format, less, only} = options;
   const props = /^[^\s:]+:: .+/;
   const agent = less?.[0] === true;
   const human = only?.[0] === true;
   const fixed = less?.includes("props") ? () => false : props.test.bind(props);
   const {filter = {}} = config;
+  const patterns = agent || human ? Object.values(filter) : null;
+  const agentLess = agent ? patterns : null;
+  const humanOnly = human ? patterns : null;
+  const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
+  return { keep, fixed, format };
+}
+
+function tskGetPage(given, options) {
+  const {keep, fixed, format} = filterOn(options);
   return given ? new Task(async function(reject, resolve){
     try {
-      const patterns = agent || human ? Object.values(filter) : null;
-      const agentLess = agent ? patterns : null;
-      const humanOnly = human ? patterns : null;
-      const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
-
       const {name, path} = await identify(given);
 
       if (!name) {
@@ -1366,8 +1370,13 @@ program
   .command('stringify')
   .alias('str')
   .description('Convert structured blocks back to markdown')
+  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
+  .option('--json', 'Output JSON format')
+  .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
+  .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
   .arguments(PIPED)
-  .action(async () => {
+  .action(async (options) => {
+    const { keep, fixed } = filterOn(options);
     const input = await new Response(Deno.stdin.readable).text();
 
     if (!input.trim()) {
@@ -1377,7 +1386,7 @@ program
 
     try {
       const blocks = JSON.parse(input);
-      const page = LogseqPage.stringify(blocks);
+      const page = LogseqPage.stringify(blocks, keep, fixed);
       console.log(page);
     } catch (error) {
       console.error("Error parsing JSON input:", error);
