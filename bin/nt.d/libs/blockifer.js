@@ -334,6 +334,11 @@ class Blockifier {
 
     return this.state.rootBlocks;
   }
+
+  static parse(input) {
+    const blockifier = new Blockifier();
+    return blockifier.parse(input);
+  }
 }
 
 export default Blockifier;
