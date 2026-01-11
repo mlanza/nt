@@ -1,7 +1,7 @@
 #!/usr/bin/env deno run --allow-all
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.ts";
-import * as t from "jsr:@std/toml";
+import * as toml from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
 import LogseqPage from "./libs/logseq-page.js";
 
@@ -57,7 +57,7 @@ function tskConfig(path){
       }
 
       const text = await Deno.readTextFile(existing);
-      const config = expandConfig(t.parse(text));
+      const config = expandConfig(toml.parse(text));
 
       resolve(config);
     } catch (cause) {
