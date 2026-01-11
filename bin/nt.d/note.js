@@ -556,10 +556,10 @@ function tskGetPage(given, options){
         return;
       }
 
-      const result = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
-      const lines = format === "md" ? LogseqPage.stringify(result, keep, fixed) : result;
+      const blocks = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
+      const content = format === "md" ? LogseqPage.stringify(blocks, keep, fixed) : blocks;
 
-      resolve(lines);
+      resolve(content);
 
     } catch (ex) {
       reject(ex);
