@@ -185,21 +185,6 @@ function getLogger(debug = false) {
   return debug ? console : { log: () => null };
 }
 
-async function readStdin() {
-  const decoder = new TextDecoder();
-  let payload = "";
-
-  try {
-    for await (const chunk of Deno.stdin.readable) {
-      payload += decoder.decode(chunk);
-    }
-  } catch (error) {
-    abort(error);
-  }
-
-  return payload.trim();
-}
-
 function tskNormalizedName(name){
   return tskLogseq('logseq.Editor.getPage', [toInt(name) || name]).map(page => page?.originalName);
 }
@@ -973,7 +958,7 @@ async function update(options, name){
   // Parse JSON payload
   let parsedPayload;
   try {
-    const payload = await readStdin();
+    const payload = await new Response(Deno.stdin.readable).text();
 
     if (!payload) {
       throw new Error("No payload received from stdin.");
