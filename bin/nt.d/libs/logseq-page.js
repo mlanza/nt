@@ -16,10 +16,9 @@ export function keeping(patterns, filter, hit = true){
   } : null
 }
 
-
 // Recursive filtering function for blocks
 function selectBlock(block, keep, fixed) {
-  const {content, properties} = block;
+  const { content, properties } = block;
 
   const line = content.split("\n")?.[0]; //matching happens against first line only
   // Test content with and without marker to catch both cases
@@ -406,10 +405,14 @@ class Stringifier {
     const hanging = '  '.repeat(level + 1);
 
     blocks.forEach(function(block) {
-      const {content, children, properties, preBlock} = block;
-      
-      // Handle preBlock (headers with properties) and page properties  
-      if (properties && (preBlock || (!preBlock && content && content.includes('::')))) {
+      const { content, children, properties, preBlock } = block;
+
+      //console.log({content, children, properties, preBlock});
+
+
+      // Handle properties blocks (preBlock with properties or blocks with only properties)
+      // Only add blank line for header properties (preBlock), not database properties
+      if (properties && preBlock) {
 
         // Handle content (header) first
         if (content) {
@@ -419,7 +422,7 @@ class Stringifier {
             lines.push(`${indent}${line}`);
           }
         }
-        
+
         // Add properties after header
         for (const [key, value] of Object.entries(properties)) {
           if (Array.isArray(value)) {
@@ -435,14 +438,17 @@ class Stringifier {
 
         // Add blank line after properties
         lines.push('');
-      }
-      // Handle regular blocks
-      else if (content) {
+      } else if (content) {
+        let props = false;
         const [line, ...parts] = content.split("\n");
         if (line.includes("::")) {
+          props = true;
           lines.push(`${indent}${line}`);
           for(const line of normalizeSeparator(parts)){
             lines.push(`${indent}${line}`);
+          }
+          if (props) {
+            lines.push("");
           }
         } else {
           lines.push(`${indent}- ${line}`);
