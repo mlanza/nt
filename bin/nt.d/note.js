@@ -335,7 +335,7 @@ function qryPrerequisites(name){
 }
 
 function tskPrerequisites(name){
-  return new Task(async function(reject, resolve){
+  return name ? new Task(async function(reject, resolve){
     const seen = new Set();
     const result = [];
 
@@ -359,7 +359,7 @@ function tskPrerequisites(name){
       reject(ex);
     }
     resolve(result);
-  });
+  }) : Task.of(null);
 }
 
 // Helper function to call wipe command logic
@@ -824,10 +824,14 @@ function fmtProps({format}, propName = null){
     if (format === 'json') {
       return [name, pageData ? results : null];
     } else if (format === 'md') {
-      const props = propName ? pageData?.properties?.[propName] || null : Object.entries(pageData?.["properties-text-values"] ?? {}).map(function([key, vals]){
-        return `${key}:: ${vals}`;
-      });
-      return [name, props.length? props : null];
+      try {
+        const props = propName ? pageData?.properties?.[propName] || null : Object.entries(pageData?.["properties-text-values"] ?? {}).map(function([key, vals]){
+          return `${key}:: ${vals}`;
+        });
+        return [name, props.length? props : null];
+      } catch {
+        return [name, null];
+      }
     } else {
       throw new Error(`Unknown format: ${format}`);
     }
