@@ -407,9 +407,10 @@ class Stringifier {
 
     blocks.forEach(function(block) {
       const {content, children, properties, preBlock} = block;
+      
+      // Handle preBlock (headers with properties) and page properties  
+      if (properties && (preBlock || (!preBlock && content && content.includes('::')))) {
 
-      // Handle preBlock (headers with properties)
-      if (preBlock && properties) {
         // Handle content (header) first
         if (content) {
           const [line, ...parts] = content.split("\n");
@@ -418,7 +419,7 @@ class Stringifier {
             lines.push(`${indent}${line}`);
           }
         }
-
+        
         // Add properties after header
         for (const [key, value] of Object.entries(properties)) {
           if (Array.isArray(value)) {
