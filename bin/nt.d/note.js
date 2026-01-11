@@ -502,13 +502,9 @@ async function incoming(one, only) {
   }
 }
 
-
-
 function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
-
-
 
 function keeping(patterns, filter, hit = true){
   const miss = !hit;
