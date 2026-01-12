@@ -33,7 +33,7 @@ if ($pipelineArgs.Count -eq 1 -and $pipelineArgs[0].Contains("|")) {
 # Build complete command string with temp file for buffering
 $tempFile = [System.IO.Path]::GetTempFileName()
 $pageArgsString = $pageArgs | ForEach-Object { if ($_ -match '\s') { "`"$_`"" } else { $_ } }
-$fullCommand = "nt page " + ($pageArgsString -join " ") + " | " + $pipelineString + " | Out-File -FilePath `"$tempFile`" -Encoding utf8"
+$fullCommand = "nt page " + ($pageArgsString -join " ") + " --heading=0 | " + $pipelineString + " | Out-File -FilePath `"$tempFile`" -Encoding utf8"
 
 # Execute the pipeline directly using pwsh
 pwsh -Command $fullCommand
