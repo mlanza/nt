@@ -1170,7 +1170,7 @@ program
 program
   .command('update')
   .hidden()
-  .description(`Append blocks to page from stdin  ${PIPED}`)
+  .description(`Append blocks to page from stdin ${PIPED}`)
   .arguments("[name]")
   .option('-p, --prepend', 'Prepend instead of append')
   .option('--debug', 'Enable debug output')
