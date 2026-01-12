@@ -1,15 +1,15 @@
 #!/usr/bin/env pwsh
 
 param(
-    [int]$level = $null
+  [int]$level = $null
 )
 
 if ($level) {
-    $pattern = "^#{${level}}\s+(.+)$"
-    $replacement = ("#" * $level) + " [[`$1]]"
+  $pattern = "^#{${level}}\s+(.+)$"
+  $replacement = ("#" * $level) + " [[`$1]]"
 } else {
-    $pattern = "^(#+)\s+(.+)$"
-    $replacement = "`$1 [[`$2]]"
+  $pattern = "^(#+)\s+(.+)$"
+  $replacement = "`$1 [[`$2]]"
 }
 
 $input | ForEach-Object { $_ -replace $pattern, $replacement }
