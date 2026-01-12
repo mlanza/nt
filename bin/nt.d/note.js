@@ -921,7 +921,7 @@ async function write(options, given) {
     const create = !(await exists(path))
 
     if (!create && !options.overwrite) {
-      throw new Error(`Page '${path}' already exists`);
+      throw new Guidance(`Page '${path}' already exists`);
     }
 
     const file = await Deno.open(path, {
