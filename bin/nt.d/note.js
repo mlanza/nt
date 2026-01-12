@@ -910,7 +910,7 @@ async function wipe(options, pageName){
 }
 
 async function write(options, given) {
-  let file
+  let file = null;
 
   try {
     const { path } = await identify(given)
