@@ -30,8 +30,18 @@ if ($pipelineArgs.Count -eq 1 -and $pipelineArgs[0].Contains("|")) {
     $pipelineString = $pipelineArgs -join " "
 }
 
-# Build complete command string and capture output in memory
+# Check if the page exists before proceeding
 $pageArgsString = $pageArgs | ForEach-Object { if ($_ -match '\s') { "`"$_`"" } else { $_ } }
+$checkCommand = "nt page " + ($pageArgsString -join " ") + " --heading=0"
+$pageContent = pwsh -Command $checkCommand 2>$null
+
+if ([string]::IsNullOrWhiteSpace($pageContent)) {
+    $pageName = $pageArgs[0]
+    Write-Error "Page '$pageName' does not exist."
+    exit 1
+}
+
+# Build complete command string and capture output in memory
 $fullCommand = "nt page " + ($pageArgsString -join " ") + " --heading=0 | " + $pipelineString
 
 # Execute the pipeline and capture output in memory
