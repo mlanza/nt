@@ -261,10 +261,11 @@ function tskIdentify(given){
       const journal = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/);
       const normalized = await getNormalizedName(given) || (journal ? await getJournalPage(given) : null);
       const alias = normalized ? await aka(normalized) : null;
-      const name = alias || normalized;
+      const name = alias || normalized || given;
       const day = journal ? parseInt(journal[1] + journal[2] + journal[3]) : await journalDay(name);
       const path = name ? getFilePath(day, name) : null;
-      const identifiers = {given, day, normalized, name, path};
+      const identifiers = { given, day, normalized, name, path };
+      //console.log({identifiers})
       resolve(identifiers);
 
     } catch (ex) {
@@ -910,16 +911,12 @@ async function wipe(options, pageName){
 }
 
 async function proposed(given) {
-  return await promise(tskNamed(given || datestamp())) ?? given;
+  return await promise(tskNamed(given)) ?? given;
 }
 
 async function write(options, given) {
-  let file = null;
-
   try {
-    const pageName = await proposed(given);
-
-    const { path } = await identify(pageName);
+    const { path } = await identify(given);
 
     const create = !(await exists(path))
 
@@ -927,7 +924,7 @@ async function write(options, given) {
       throw new Error(`Page '${path}' already exists`);
     }
 
-    file = await Deno.open(path, {
+    const file = await Deno.open(path, {
       write: true,
       create,
       truncate: true
@@ -936,8 +933,6 @@ async function write(options, given) {
     await Deno.stdin.readable.pipeTo(file.writable)
   } catch (error) {
     abort(error)
-  } finally {
-    if (file) file.close()
   }
 }
 
@@ -945,7 +940,7 @@ async function update(options, name){
   const prependMode = options.prepend || false;
   const overwriteMode = options.overwrite || false;
   const logger = getLogger(options.debug || false);
-  const pageName = await proposed(name);
+  const pageName = await proposed(name ?? datestamp());
 
   logger.log(`Page: ${pageName}, Prepend: ${prependMode}, Overwrite: ${overwriteMode}`);
 
@@ -1184,8 +1179,8 @@ program
 
 program
   .command('write')
-  .description(`Write page from stdin ${PIPED}`)
-  .arguments("[name]")
+  .description(`Write page from stdin`)
+  .arguments("<name>")
   .option('--overwrite', 'Purge existing page content')
   .action(write);
 
