@@ -90,7 +90,7 @@ $ nt about Coding
 
 ### Content Filtering
 
-Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I may have a smattering of links to interestings sites and/or a pile of tasks in various stages pertinent to the page topic or project.  I may also have information and/or instructions.  That means some of the content on a page is useful only to me.
+Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I have pages with a smattering of links to interesting sites and — since some are projects — a pile of tasks in various stages.  A page may also have information and/or instructions.  That means some content is useful only to me.
 
 It's not a question of sensitivity or leaks. I don't keep that kind of content in my stores.  It's about wasted or confusing context.  To help, the `nt page` command has options to exclude extraneous blocks along with their children.
 
