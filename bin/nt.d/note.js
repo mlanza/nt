@@ -264,7 +264,7 @@ function tskIdentify(given){
       const name = alias || normalized || given;
       const day = journal ? parseInt(journal[1] + journal[2] + journal[3]) : await journalDay(name);
       const path = name ? getFilePath(day, name) : null;
-      const identifiers = { given, day, normalized, name, path };
+      const identifiers = { given, day, normalized, name, alias, path };
       //console.log({identifiers})
       resolve(identifiers);
 
@@ -639,7 +639,7 @@ function tskGetPage(given, options) {
 
 function page(options){
   return function(given){
-    return given ? tskNamed(given).
+    return given ? tskNamed(given, options).
       chain(Task.juxt(Task.of, name => tskGetPage(name, options))).
       map(fmtBody(options)) : Task.of(null);
   }
@@ -682,8 +682,10 @@ function tskPath(name){
   return tskIdentify(name).map(({path}) => orientSlashes(path));
 }
 
-function tskNamed(id){
-  return tskIdentify(id).map(({name}) => name);
+function tskNamed(id, options = {}){
+  return tskIdentify(id).map(function({given, name, alias}){
+    return !options.unaliased || !alias ? name : null;
+  });
 }
 
 function constantly(f){
@@ -1280,9 +1282,14 @@ program
   .arguments(demand("id|name"))
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
+  .option('--unaliased', 'Names without alias')
   .example("Get the actual casing of a page name via stdin", `echo "writing voice" | nt n`)
   .example("Get the actual casing of a page name", `nt n "writing voice"`)
-  .action(pipeable(constantly(tskNamed)));
+  .action(pipeable(function(options){
+    return function(name){
+      return tskNamed(name, options);
+    }
+  }));
 
 program
   .command('ident')
