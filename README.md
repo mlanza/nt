@@ -170,15 +170,9 @@ nt page --filter=public Atomic --only
 nt page --filter=public Atomic --less 
 ```
 
-If desired, in your shell profile define:
+If desired, you can abbreviate this via your shell profile:
 ```zsh
 alias pg_public="nt page --filter=public"
-```
-
-So that:
-```zsh
-pg_public Atomic --only
-pg_public Atomic --less 
 ```
 
 ### Querying via Datalog
