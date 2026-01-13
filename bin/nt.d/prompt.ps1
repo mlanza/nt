@@ -6,12 +6,10 @@ $wikilinks = $prompt | nt commented | nt wikilinks | nt prereq
 $prompt
 if ($LASTEXITCODE -eq 0) {
   if ($wikilinks) {
-    write-host "---"
     $copy = $wikilinks | nt seen | nt page --less --heading=2 | nt tidy
-    $copy
-    write-host "---"
+    $copy | nt sep
     $others = $copy | nt wikilinks | nt seen
-    $others | Where-Object { $_ -notin ($wikilinks) } | nt props tags description -r description -u description --heading=2
+    $others | Where-Object { $_ -notin ($wikilinks) } | nt props tags description -r description -u description --heading=2 | nt sep
   }
 } else {
   $code = $LASTEXITCODE
