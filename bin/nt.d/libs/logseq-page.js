@@ -478,7 +478,12 @@ class LogseqPage {
     return Parser.parse(text);
   }
 
-  static selects({ less, only }, { filter = {} } = {}) {
+  static selects(options, config) {
+    const filter = config[options.filter];
+    if (!filter) {
+      throw new Error(`Filter '${options.filter}' not found in config`);
+    }
+    const { less, only } = options;
     const props = /^[^\s:]+:: .+/;
     const agent = less?.[0] === true;
     const human = only?.[0] === true;
