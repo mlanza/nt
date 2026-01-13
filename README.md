@@ -170,7 +170,7 @@ nt page --filter=public Atomic --only
 nt page --filter=public Atomic --less 
 ```
 
-If desired, you can abbreviate this via your shell profile:
+If desired, you can abbreviate this in your shell profile:
 ```zsh
 alias pg_public="nt page --filter=public"
 ```
