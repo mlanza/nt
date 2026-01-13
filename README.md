@@ -156,7 +156,7 @@ nt page Atomic --human # i.e., only
 nt page Atomic --agent # i.e., less
 ```
 
-If you have other filtering needs, you can define another filter table, then select it with `--filter`.  It all works the same except for the use of a different filter.
+If you have other filtering needs, you can define another filter table, then select it with `--filter`.  It all works the same except for swapping the filter source.
 
 ```zsh
 nt page Atomic --only --filter=public
