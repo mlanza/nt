@@ -10,7 +10,8 @@ if ($LASTEXITCODE -eq 0) {
     $copy = $wikilinks | nt seen | nt page --less --heading=2 | nt tidy
     $copy
     write-host "---"
-    $copy | nt wikilinks | nt seen | nt props -r description -u description --heading=2
+    $others = $copy | nt wikilinks | nt seen
+    $others | Where-Object { $_ -notin ($wikilinks) } | nt props tags description -r description -u description --heading=2
   }
 } else {
   $code = $LASTEXITCODE
