@@ -166,8 +166,8 @@ nt page Atomic --agent # i.e., less
 If you have other filtering needs, you can define another filter table, then select it with `--filter`.  It all works the same except for swapping the filter source.
 
 ```zsh
-nt page Atomic --only --filter=public
-nt page Atomic --less --filter=public
+nt page --filter=public Atomic --only
+nt page --filter=public Atomic --less 
 ```
 
 ### Querying via Datalog
