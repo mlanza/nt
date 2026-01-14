@@ -1194,6 +1194,14 @@ program
   .action(write);
 
 program
+  .command('copy')
+  .description(`Copy page to destination directory`)
+  .arguments("<name>")
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 0})
+  .option('--dest', 'The directory to write the file')
+  .option('--overwrite', 'Overwrite if file already exists');
+
+program
   .command('wipe')
   .description('Wipe content, but not properties, from a page')
   .arguments(demand("name"))
