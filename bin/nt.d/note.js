@@ -701,7 +701,11 @@ function constantly(f){
   }
 }
 
-const path = constantly(tskPath);
+function tskPagePath(name){
+  return tskIdentify(name).map(({path}) => path);
+}
+
+const path = constantly(tskPagePath);
 
 function tags(options){
   return has(options, "tags");
