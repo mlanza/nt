@@ -237,10 +237,14 @@ function formatYYYYMMDD(n) {
   return s.slice(0, 4) + '_' + s.slice(4, 6) + '_' + s.slice(6, 8)
 }
 
-function getFilePath(day, name){
-  const where = day ? "journals" : "pages";
-  const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
-  return `${config.logseq.repo}/${where}/${normalized}.md`;
+async function getFilePath(day, name){
+  try {
+    return await promise(tskGetPath(name));
+  } catch {
+    const where = day ? "journals" : "pages";
+    const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
+    return `${config.logseq.repo}/${where}/${normalized}.md`;
+  }
 }
 
 function tskGetJournalPage(datestamp){
@@ -263,7 +267,7 @@ function tskIdentify(given){
       const alias = normalized ? await aka(normalized) : null;
       const name = alias || normalized || given;
       const day = journal ? parseInt(journal[1] + journal[2] + journal[3]) : await journalDay(name);
-      const path = name ? getFilePath(day, name) : null;
+      const path = name ? await getFilePath(day, name) : null;
       const identifiers = { given, day, normalized, name, alias, path };
       //console.log({identifiers})
       resolve(identifiers);
@@ -312,6 +316,13 @@ function tskLogseq(method, args){
 }
 
 const callLogseq = comp(promise, tskLogseq);
+
+function tskGetPath(name){
+  return tskLogseq('logseq.Editor.getPage', [name]).chain(function({file}){
+    const {id} = file;
+    return qry("[:find (pull ?fid [:file/path :file/name]) :in $ ?fid]", id);
+  }).map((result) => result?.[0]?.[0]?.path).map(file => `${config.logseq.repo}/${file}`).map(orientSlashes);
+}
 
 function qryPrerequisites(name){
   return new Task(function(reject, resolve){
