@@ -1371,7 +1371,28 @@ program
   .command('about')
   .alias('a')
   .arguments(demand("name..."))
-  .description('Retrieves information about a topic including prequisites');
+  .option('--filter [table:string]', 'Select filter table from config', { default: "agent" })
+  .description('Retrieves information about a topic including prequisites')
+  .action(pipeable(function(options){
+    return function(name){
+      return tskNamed(name, options).
+        chain(Task.juxt(
+          name => tskGetPage(name, options),
+          name => tskPrerequisites(name).
+            chain(prereqs => {
+              if (!prereqs?.length) return Task.of(null);
+              return Task.traverse(prereqs, prereq => tskGetPage(prereq, options)).
+                map(content => prereqs.map((n, i) => content?.[i] ?? `# ${n}`).join('\n\n'));
+            })
+        )).
+        map(([content, prereqContent]) => {
+          const lines = [];
+          if (content) lines.push(content);
+          if (prereqContent) lines.push(prereqContent);
+          return lines.join('\n\n');
+        });
+    }
+  }));
 
 program
   .command('prop')
