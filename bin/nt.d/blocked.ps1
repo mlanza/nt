@@ -7,16 +7,16 @@
 # Read all input lines first
 $lines = @()
 while ($input.MoveNext()) {
-    $lines += $input.Current
+  $lines += $input.Current
 }
 
 # Check if any line starts with space or "- "
 $hasBlockedLines = $lines | Where-Object { $_.StartsWith(" ") -or $_.StartsWith("- ") } | Measure-Object | Select-Object -ExpandProperty Count
 
 if ($hasBlockedLines -gt 0) {
-    # Output original content unchanged
-    $lines
+  # Output original content unchanged
+  $lines
 } else {
-    # Prepend "- " to each line
-    $lines | ForEach-Object { "- " + $_ }
+  # Prepend "- " to each line
+  $lines | ForEach-Object { "- " + $_ }
 }

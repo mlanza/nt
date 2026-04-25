@@ -1,105 +1,189 @@
 # Note
 
-**Note** is a tool for managing text content whatever the flavor — Skills, Commands, Prompts, Rules, Knowledge — in [Logseq](https://logseq.com).  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
+**Note** is a command line tool for managing text content — skills, commands, prompts, rules, knowledge, whatever the flavor — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
 
 <p align="center">
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
-Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
+Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive — all in an ubiquitous language of your making.  How better to align with and teach an agent your craft than by sharing your second 🧠 with it.
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
-Take skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
+## Conjuring and Composing Context
 
-Getting frontmatter properties:
+You gain a suite of commands for retrieving and reusing carefully-crafted context:
 
 ```zsh
-$ nt props Coding
+nt page Atomic
 ```
+
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
+
+It happens when you key wikilinks into your prompts, such that
 
 ```md
-# Coding
-tags:: AI, [[Making apps]], Skills
-alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
-prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Guidance for writing, refactoring or fixing code
+You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-Conveniently list it among all skills via:
+is expanded.  In addition to the prompt you entered you also get the Coding page, the Atomic page, the prerequisites of both, and their prerequisites, recursively.  It elevates Logseq into a first-class, local-first retrieval system.
 
-```zsh
-$ nt skills
-```
+> 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
-And later retrieve it along with its prerequisites:
+**Prerequisites** are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-```zsh
-$ nt about Coding
-```
-
-These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
 
 ## Getting Started
 
-Install the tool into your path or extend your path, whichever you like:
+Install it in a preferred location:
+
 ```zsh
-export PATH=~/Documents/nt/bin:$PATH
+git clone https://github.com/mlanza/nt.git ~/.local/share/nt
 ```
 
-Have `pwsh` and `deno` and `node` installed.  The interal scripts target these runtimes over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
+Set `nt` on path in your profile:
 
-Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
+```zsh
+export PATH="$HOME/.local/share/nt/bin:$PATH"
+```
 
-Add these environment variables to your shell:
+Set these env vars:
 
+* **LOGSEQ_REPO** - path to the Logseq repo
+* **LOGSEQ_ENDPOINT** - HTTP API endpoint (default is http://127.0.0.1:12315/api)
 * **LOGSEQ_TOKEN** - a token you configured for the HTTP API
-* **NOTE_CONFIG** - path to config file (default is `~/.config/nt/config.toml`)
+* **NOTE_CONFIG** - path to optional config (e.g., `~/.config/nt/config.toml`)
 
-Within config, at minimum, identify where your Logseq repo is:
+The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for **content filtering**.
 
 ```toml
 # config.toml
 [logseq]
 repo = 'D:\notes'
+endpoint = 'http://127.0.0.1:12315/api'
+token = 'mellon'
 ```
 
-If you change the `endpoint` to something other than the default of http://127.0.0.1:12315/api, you'll have to include that setting too.
+Ensure `pwsh` and `deno` are installed.
 
-Once done, start Logseq, and then your shell. Issue some commands.
-
-```zsh
-nt page Atomic # show some page, for example
-```
+Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
 ## Going Deeper
 
-### Generating `AGENTS.md`
+### Prompt Expansion
 
-While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup even the baseline instructions, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
+An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.  Once installed, wikilinks entered into prompts expand automatically.
 
-The following assumes the target page `prerequisites` is replete with your most crucial rules and instructions.  The `document` tool slightly flattens Logseq's outline formatting.
+#### Pi (π)
+
+Point the agent at your your `nt` installation:
 
 ```zsh
-nt about "Agent Instructions" | nt document --para | cat -s
+pi install ~/.local/share/nt/adapters/pi/nt.js
 ```
 
-### Agent Content Filtering
+### Generating `AGENTS.md`
 
-Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I may have a smattering of links to interestings sites and/or a pile of tasks in various stages pertinent to the page topic or project.  I may also have information and/or instructions.  What I'm getting at is some of the stuff on a page is useful to me alone, while other stuff is more generally useful to a third party like an agent.
+While technically possible to give the agent a robust `AGENTS.md` describing all the activities you perform together, there's no need.  If your Logseq pages are well-defined and modular, conjure the page for the activity when the need arises.
 
-This is not about sensitive content as I don't keep that in my stores.  The concern is not leaks, but wasted or confusing context.  To help the `nt page` command has options to exclude certain blocks (along with the child content).
+Instead, bootstrap only the fundamentals in `AGENTS.md`.  Mine currently looks like this:
+
+```md
+# Agent Instructions
+prerequisites:: [[Ubiquitous Language]], [[Director]]
+Your chief aim is aligning yourself with and serving the [[Director]].  It helps to understand his values and methodology.  Recognizing and looking up the [[Ubiquitous Language]] by which he communicates aids this.
+```
+
+And I generate it occasionally to real filesystem locations only to avoid having to start every chat session by repeating the basics.
+
+```zsh
+nt about "Agent Instructions" --agent | nt document --para | cat -s
+```
+
+The ubiquitous language I refer to there are wiki terms, things I've deliberately defined in Logseq pages.  The page about Ubiquitous Language is linked to a preprequisite skill telling the agent how to navigate terms with `nt`.
+
+While I code routinely, I don't mention **Coding** in `AGENTS.md`.   That's because when it's time to code, the mere mention of it — a sentence like the one in the intro — conjures context tailor-made to the activity:
+
+```md
+# Coding
+tags:: AI, Skill, [[Command Line]], [[Atomic Way]]
+prerequisites:: [[Designing for Validation]], [[Keeping a Notepad]], [[Ensuring Reversibility]], [[Delivering in Baby Steps]], [[Core Docs]]
+description:: Use when developing or debugging a program or an app.
+You are [[Keeping a Notepad]] and [[Ensuring Reversibility]] while [[Delivering in Baby Steps]].
+```
+
+Each piece of that prompt links to some recursively-expanded skill or context.  **Ensuring Reversibility** explains using `git` as a safety net for all filesystem changes.
+
+No need to track skills in the filesystem the way most agent runtimes prescribe.  Logseq subsumes skills, commands and most other jobs since everything agents do, more or less, relies on putting the right context in front of them at the right time.
+
+### Progressive Disclosure
+
+Take skills.  Want to provide a menu of capabilities?  Create a Logseq page called `Skill`. Then start defining pages, tagging them `Skill`, and adding a `description` property.
+
+After defining a bunch, they can, conveniently, be listed via:
+
+```zsh
+nt skills
+```
+
+Seeing the properties — or frontmatter — for a page gives a sense of it:
+
+```zsh
+nt props Coding
+```
+
+```md
+# Coding
+tags:: AI, Skill, [[Command Line]], [[Atomic Way]]
+prerequisites:: [[Designing for Validation]], [[Keeping a Notepad]], [[Ensuring Reversibility]], [[Delivering in Baby Steps]], [[Core Docs]]
+description:: Use when developing or debugging a program or an app.
+```
+
+### Prerequisites
+
+Some topics build on other other topics and cannot stand on their own.  These pages require that added context to make sense.  Include a `prerequisites` property on the page that links to any prerequisites.  Whenever the page is retrieved via `about` or `prompt`, they'll automatically — and recursively — be included.
+
+```zsh
+nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
+```
+
+The above identifies its terms and calls:
+
+```zsh
+nt about Coding Atomic
+```
+
+The key difference between `about` and `page` is only the former expands prerequisites.
+
+```zsh
+nt page Coding
+nt page Atomic
+```
+
+### Content Filtering
+
+The typical way to view a page is via `nt page`:
+```zsh
+nt page Atomic
+```
+
+Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I have pages with a smattering of links to interesting sites and — since some are projects — tasks in various stages.  A page may also have information and/or instructions.
+
+Some content is useful only to me.  It's not a question of sensitivity or leaks. I don't keep that kind of content in my stores.  It's about making a good hand-off to an agent.  I don't want it seeing meaningless or confusing context.
+
+To help, `nt` provides basic filtering.  A filter operates at the block level on what is effectively a single line in Logseq.  If a block is filtered, it carries with it all its children.
 
 This command filters out task blocks:
 
 ```zsh
-nt page Atomic --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+nt page Atomic --less '^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)'
 ```
 
 While, conversely, this one shows only task blocks:
 
 ```zsh
-nt page Atomic --only '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+nt page Atomic --only '^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)'
 ```
 
 You can send in multiple values:
@@ -108,26 +192,26 @@ You can send in multiple values:
 nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
 ```
 
-But typing that will get tedious fast.  Better to define a `filter` table in your config.
+But typing that will get tedious fast.  Better to define in and select from filter tables in config.  Since the default filter is `agent`, let's define it:
 
 ```toml
-[filter]
+[agent]
 props = "^[^\\s:]+::"
-tasks = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
+tasks = "^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)"
 links = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
 ```
 
-Having that, you can exclude one type of block:
+Having that, you can exclude blocks by their keys:
 ```zsh
 nt page Atomic --less tasks
 ```
 
-Or include one type of block:
+Or include blocks by their keys:
 ```zsh
 nt page Atomic --only tasks
 ```
 
-Or multiple:
+Or target multiple:
 
 ```zsh
 nt page Atomic --less tasks --less links
@@ -135,23 +219,28 @@ nt page Atomic --less tasks --less links
 
 Some of the examples in the tool `--help` anticipate these defintions.
 
-This command is for a **human** and includes only what blocks filter out:
+This displays content for the **human** and shows what'd normally be filtered out:
 ```zsh
 nt page Atomic --only
 ```
 
-This one is for an **agent** and includes everything but that noise:
+This one is for the **agent** and filters out that noise:
 ```zsh
 nt page Atomic --less
 ```
+Internally, this what `about` does to faciliate a clean agent hand-off.
 
-Alternately, if it helps you remember:
+The following option flags are synonyms — their audience-focused terms: memory aids.
 ```zsh
-nt page Atomic --human
+nt page Atomic --human # i.e., only
+nt page Atomic --agent # i.e., less
 ```
-or
+
+If you have other filtering needs, you can define another filter table, then select it with `--filter`.  It all works the same except for swapping the filter source.
+
 ```zsh
-nt page Atomic --agent
+nt page Atomic --only --filter=public
+nt page Atomic --less --filter=public
 ```
 
 ### Querying via Datalog
@@ -164,13 +253,13 @@ It's a reason to prefer Logseq to Obsidian.
 nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
-Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example if you get
+Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example, if you get
 
 ```zsh
 Error: Missing rules var '%' in :in
 ```
 
-there's likely some syntax or advances queries it can't support.
+there's likely something in the advanced query syntax it can't support.
 
 Look here for help forming valid queries:
 

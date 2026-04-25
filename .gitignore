@@ -2,3 +2,5 @@ node_modules
 .env
 .envrc
 .vscode
+synapse-link.jsonl
+.DS_Store
