@@ -1,11 +1,13 @@
 #!/usr/bin/env pwsh
 
 $prompt = @($args) + @($input) | Out-String
-$wikilinks = $prompt | nt wikilinks
+$wikilinks = $prompt | nt commented | nt wikilinks | nt prereq
 
 $prompt
-if ($wikilinks) {
-  write-host "---"
-  $wikilinks | nt prereq | nt seen | nt page --less --heading=2 | nt tidy
+if ($LASTEXITCODE -eq 0) {
+  $wikilinks | nt about
+} else {
+  $code = $LASTEXITCODE
+  Write-Host "⚠️ Wikilink expansion is not enabled."
+  exit $code
 }
-

@@ -5,25 +5,25 @@
 # Read from standard input or from provided files
 $content = @()
 if ($args.Count -eq 0) {
-    $content = @($input)
+  $content = @($input)
 } else {
-    foreach ($file in $args) {
-        if (Test-Path $file) {
-            $content += Get-Content $file -Raw
-        }
+  foreach ($file in $args) {
+    if (Test-Path $file) {
+      $content += Get-Content $file -Raw
     }
+  }
 }
 
 # Find all matches of %{name} pattern and extract the inner text
 $pattern = '%\{([^}]+)\}'
 $results = @()
 foreach ($text in $content) {
-    if ($text) {
-        $matches = [regex]::Matches($text, $pattern)
-        foreach ($match in $matches) {
-            $results += $match.Groups[1].Value
-        }
+  if ($text) {
+    $matches = [regex]::Matches($text, $pattern)
+    foreach ($match in $matches) {
+      $results += $match.Groups[1].Value
     }
+  }
 }
 
 $results

@@ -1,8 +1,9 @@
 #!/usr/bin/env deno run --allow-all
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { TextLineStream } from "https://deno.land/std/streams/text_line_stream.ts";
-import { parse } from "jsr:@std/toml";
+import * as toml from "jsr:@std/toml";
 import Task from "https://esm.sh/data.task";
+import LogseqPage from "./libs/logseq-page.js";
 
 const isWindows = Deno.build.os === "windows";
 
@@ -56,7 +57,7 @@ function tskConfig(path){
       }
 
       const text = await Deno.readTextFile(existing);
-      const config = expandConfig(parse(text));
+      const config = expandConfig(toml.parse(text));
 
       resolve(config);
     } catch (cause) {
@@ -183,21 +184,6 @@ function getLogger(debug = false) {
   return debug ? console : { log: () => null };
 }
 
-async function readStdin() {
-  const decoder = new TextDecoder();
-  let payload = "";
-
-  try {
-    for await (const chunk of Deno.stdin.readable) {
-      payload += decoder.decode(chunk);
-    }
-  } catch (error) {
-    abort(error);
-  }
-
-  return payload.trim();
-}
-
 function tskNormalizedName(name){
   return tskLogseq('logseq.Editor.getPage', [toInt(name) || name]).map(page => page?.originalName);
 }
@@ -251,10 +237,14 @@ function formatYYYYMMDD(n) {
   return s.slice(0, 4) + '_' + s.slice(4, 6) + '_' + s.slice(6, 8)
 }
 
-function getFilePath(day, name){
-  const where = day ? "journals" : "pages";
-  const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
-  return `${config.logseq.repo}/${where}/${normalized}.md`;
+async function getFilePath(day, name){
+  try {
+    return await promise(tskPath(name));
+  } catch {
+    const where = day ? "journals" : "pages";
+    const normalized = day ? formatYYYYMMDD(day) : encode(name.trim());
+    return `${config.logseq.repo}/${where}/${normalized}.md`;
+  }
 }
 
 function tskGetJournalPage(datestamp){
@@ -275,10 +265,11 @@ function tskIdentify(given){
       const journal = given.match(/(\d{4})-?(\d{2})-?(\d{2})(?!\d)/);
       const normalized = await getNormalizedName(given) || (journal ? await getJournalPage(given) : null);
       const alias = normalized ? await aka(normalized) : null;
-      const name = alias || normalized;
+      const name = alias || normalized || given;
       const day = journal ? parseInt(journal[1] + journal[2] + journal[3]) : await journalDay(name);
-      const path = name ? getFilePath(day, name) : null;
-      const identifiers = {given, day, normalized, name, path};
+      const path = name ? await getFilePath(day, name) : null;
+      const identifiers = { given, day, normalized, name, alias, path };
+      //console.log({identifiers})
       resolve(identifiers);
 
     } catch (ex) {
@@ -326,6 +317,13 @@ function tskLogseq(method, args){
 
 const callLogseq = comp(promise, tskLogseq);
 
+function tskPath(name){
+  return name ?  tskLogseq('logseq.Editor.getPage', [name]).chain(function(result){
+    const id = result?.file?.id;
+    return id ? qry("[:find (pull ?fid [:file/path :file/name]) :in $ ?fid]", id) : Task.rejected(new Error(`Cannot find file id for "${name}".`));
+  }).map((result) => result?.[0]?.[0]?.path).map(file => `${config.logseq.repo}/${file}`).map(orientSlashes) : Task.of(null);
+}
+
 function qryPrerequisites(name){
   return new Task(function(reject, resolve){
     qry(`[:find (pull ?p [:block/properties :block/original-name]) :where [?p :block/original-name "$1"]]`, name).fork(reject, function(results){
@@ -335,12 +333,13 @@ function qryPrerequisites(name){
 }
 
 function tskPrerequisites(name){
-  return new Task(async function(reject, resolve){
+  return name ? new Task(async function(reject, resolve){
     const seen = new Set();
     const result = [];
 
     async function dfs(given) {
-      const {name} = await identify(given);
+      const { name } = await identify(given);
+      if (!name) return;
 
       if (seen.has(name)) return;          // dedupe + short-circuit
 
@@ -359,7 +358,7 @@ function tskPrerequisites(name){
       reject(ex);
     }
     resolve(result);
-  });
+  }) : Task.of(null);
 }
 
 // Helper function to call wipe command logic
@@ -369,7 +368,6 @@ function tskWipe(pageName, options) {
     logger.log(`Wiping content from page '${pageName}'...`);
 
     try {
-
       if (!pageName) {
         throw new Error("Page name must be specified");
       }
@@ -387,9 +385,9 @@ function tskWipe(pageName, options) {
       logger.log(`Page exists with UUID: ${pageUuid}`);
 
       // Get all page blocks
-      const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
+      const blocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
 
-      if (!pageBlocks || pageBlocks.length === 0) {
+      if (!blocks || blocks.length === 0) {
         resolve({ deletedCount: 0, propertiesCount: 0, alreadyEmpty: true });
         return;
       }
@@ -398,7 +396,7 @@ function tskWipe(pageName, options) {
       const blocksToDelete = [];
       const propertiesBlocksFound = [];
 
-      for (const block of pageBlocks) {
+      for (const block of blocks) {
         let hasRealProperties = false;
 
         if (block.properties && typeof block.properties === 'object' && Object.keys(block.properties).length > 0) {
@@ -501,103 +499,125 @@ async function incoming(one, only) {
   }
 }
 
-// Recursive filtering function for blocks
-function selectBlock(block, keep) {
-  const {content, properties} = block;
-  const props = /^[^\s:]+:: .+/;
-
-  // Test content with and without marker to catch both cases
-  const kept = props.test(content) || keep(content);
-
-  if (!kept) {
-    return null;
-  }
-
-  let filteredChildren = [];
-  if (block.children && Array.isArray(block.children)) {
-    filteredChildren = block.children
-      .map(child => selectBlock(child, keep))
-      .filter(child => child !== null); // Remove null entries (filtered out children)
-  }
-
-  // If this block doesn't have meaningful content and all children were filtered out, filter this block too
-  const hasContent = content || null;
-  const hasProperties = properties && Object.keys(properties).length > 0;
-  const hasMeaningfulContent = hasContent || hasProperties;
-
-  if (!hasMeaningfulContent && filteredChildren.length === 0) {
-    return null; // This block has no meaningful content and no children after filtering
-  }
-
-  // Keep this block (it doesn't match any patterns)
-  return {
-    ...block,
-    children: filteredChildren
-  };
-}
-
 function normalizeSeparator(parts){
   return (parts.join("\n").trim() + "\n").split("\n");
 }
 
-// Helper function to convert nested JSON back to markdown format
-function nestedJsonToMarkdown(blocks, level = 0) {
-  const lines = [];
-  const indent = '  '.repeat(level);
-  const hanging = '  '.repeat(level + 1);
+function wikified(value) {
+  return value.includes(' ') ? `[[${value}]]` : value;
+}
 
-  blocks.forEach(function(block) {
-    const {content, children} = block;
-    if (content) {
-      const [line, ...parts] = content.split("\n");
-      if (line.includes("::")) {
-        lines.push(`${indent}${line}`);
-        for(const line of normalizeSeparator(parts)){
-          lines.push(`${indent}${line}`);
-        }
-      } else {
-        lines.push(`${indent}- ${line}`);
-        for(const line of parts){
-          if (!line.startsWith("collapsed:: ")) {
-            lines.push(`${hanging}${line}`);
+async function prop(options) {
+  const props = /^([^\s:]+):: (.+)/;
+  const consolidatedAdds = {};
+  const consolidatedRemoves = {};
+  const processedKeys = new Set();
+
+  // Gather and consolidate additions
+  if(options.add && Array.isArray(options.add)){
+    for(const add of options.add){
+      const [key, value] = add.split("=");
+      if(key && value) {
+        if(!consolidatedAdds[key]) consolidatedAdds[key] = [];
+        consolidatedAdds[key].push(value);
+      }
+    }
+  }
+
+  // Gather and consolidate removals
+  if(options.remove && Array.isArray(options.remove)){
+    for(const remove of options.remove){
+      const [key, value] = remove.split("=");
+      if(key && value) {
+        if(!consolidatedRemoves[key]) consolidatedRemoves[key] = [];
+        consolidatedRemoves[key].push(value);
+      }
+    }
+  }
+
+  const input = await new Response(Deno.stdin.readable).text();
+  const lines = input.split('\n');
+  const output = [];
+
+  // First, output heading line if there is one
+  let lineIndex = 0;
+  if (lines[0] && lines[0].startsWith('#')) {
+    output.push(lines[0]);
+    lineIndex = 1;
+  }
+
+  // Skip any empty lines after heading
+  while (lineIndex < lines.length && lines[lineIndex].trim() === '') {
+    output.push(lines[lineIndex]);
+    lineIndex++;
+  }
+
+  // Process property lines
+  while (lineIndex < lines.length) {
+    const line = lines[lineIndex];
+    const m = line.match(props);
+
+    if (m) {
+      // Process property line
+      const [, key, values] = m;
+      processedKeys.add(key);
+
+      // Apply removals
+      let currentValues = values.split(', ').filter(v => v.trim());
+      if (consolidatedRemoves[key]) {
+        currentValues = currentValues.filter(v => !consolidatedRemoves[key].includes(v));
+      }
+
+      // Apply additions (deduplicate)
+      if (consolidatedAdds[key]) {
+        for (const value of consolidatedAdds[key]) {
+          if (!currentValues.includes(value)) {
+            currentValues.push(wikified(value));
           }
         }
       }
-    }
 
-    if (children && children.length > 0) {
-      lines.push(...nestedJsonToMarkdown(children, level + 1));
-    }
-  });
-
-  return lines;
-}
-
-function keeping(patterns, filter, hit = true){
-  const miss = !hit;
-  const regexes = (patterns || []).map(what => filter[what] || what).map(pattern => new RegExp(pattern));
-  return regexes.length ? function(text){
-    for(const re of regexes) {
-      if (re.test(text)) {
-        return hit;
+      // Output modified property line if we still have values
+      if (currentValues.length > 0) {
+        const formattedValues = currentValues.map(wikified);
+        output.push(`${key}:: ${currentValues.join(', ')}`);
       }
+
+      lineIndex++;
+    } else {
+      // We've reached the end of properties
+      break;
     }
-    return miss;
-  } : null
+  }
+
+  // Output unprocessed add operations as new properties
+  for (const [key, values] of Object.entries(consolidatedAdds)) {
+    if (!processedKeys.has(key)) {
+      const formattedValues = values.map(wikified);
+      output.push(`${key}:: ${formattedValues.join(', ')}`);
+      processedKeys.add(key);
+    }
+  }
+
+  // Skip any empty lines between properties and content
+  while (lineIndex < lines.length && lines[lineIndex].trim() === '') {
+    output.push(lines[lineIndex]);
+    lineIndex++;
+  }
+
+  // Output rest of content unchanged
+  while (lineIndex < lines.length) {
+    output.push(lines[lineIndex]);
+    lineIndex++;
+  }
+
+  console.log(output.join('\n'));
 }
 
-function tskGetPage(given, options){
-  const {format, less, only} = options;
-  const agent = less?.[0] === true;
-  const human = only?.[0] === true;
-  const {filter = {}} = config;
+function tskGetPage(given, options) {
+  const {keep, fixed} = LogseqPage.selects(options, config);
   return given ? new Task(async function(reject, resolve){
     try {
-      const patterns = agent || human ? Object.values(filter) : null;
-      const agentLess = agent ? patterns : null;
-      const humanOnly = human ? patterns : null;
-      const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
-
       const {name, path} = await identify(given);
 
       if (!name) {
@@ -605,7 +625,7 @@ function tskGetPage(given, options){
         return;
       }
 
-      if (format === 'md' && keep == null) {
+      if (options.format === 'md' && keep == null) {
         const found = await exists(path);
         if (!found) {
           resolve(null);
@@ -617,14 +637,10 @@ function tskGetPage(given, options){
         return;
       }
 
-      const result = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
-      const data = keep ? result
-          .map(block => selectBlock(block, keep))
-          .filter(block => block !== null) : result;
+      const blocks = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
+      const content = options.format === "md" ? LogseqPage.stringify(blocks, keep, fixed) : blocks;
 
-      const lines = format === "md" ? nestedJsonToMarkdown(data).join("\n") : data;
-
-      resolve(lines);
+      resolve(content);
 
     } catch (ex) {
       reject(ex);
@@ -634,7 +650,7 @@ function tskGetPage(given, options){
 
 function page(options){
   return function(given){
-    return given ? tskNamed(given).
+    return given ? tskNamed(given, options).
       chain(Task.juxt(Task.of, name => tskGetPage(name, options))).
       map(fmtBody(options)) : Task.of(null);
   }
@@ -673,21 +689,21 @@ function search(term){
   });
 }
 
-function tskPath(name){
-  return tskIdentify(name).map(({path}) => orientSlashes(path));
-}
-
-function tskNamed(id){
-  return tskIdentify(id).map(({name}) => name);
+function tskNamed(id, options = {}){
+  return tskIdentify(id).map(function({given, name, alias}){
+    return !options.unaliased || !alias ? name : null;
+  });
 }
 
 function constantly(f){
-  return function(){
-    return f;
-  }
+  return () => f;
 }
 
-const path = constantly(tskPath);
+function tskPagePath(name){
+  return tskIdentify(name).map(({path}) => path);
+}
+
+const path = constantly(tskPagePath);
 
 function tags(options){
   return has(options, "tags");
@@ -729,12 +745,11 @@ function qryProps(prop, vals, mode = "any"){
 }
 
 function has(options, prop = null){
-  // Validate mutually exclusive options
   if (options.all && options.any) {
-    throw new Error('--all and --any options are mutually exclusive');
+    abort(new Guidance('--all and --any options are mutually exclusive'));
   }
 
-  const qry = function(prop, ...vals){
+  function qry(prop, ...vals){
     return qryProps(prop, vals, options.any ? 'any' : 'all');
   }
 
@@ -780,16 +795,17 @@ function qryBacklinks(name, limit = Infinity){
 }
 
 function backlinks(options){
-  const limit = options.limit ? parseInt(options.limit) : Infinity;
   return function(name){
-    return qryBacklinks(name, limit);
+    return qryBacklinks(name, options.limit);
   }
 }
 
 function query(options){
   return function(query, ...args){
     //console.log({limit, options, query, args});
-    return qry(query, ...args).map(take(options.limit));
+    return qry(query, ...args)
+      .map(take(options.limit))
+      .map(results => options.flatten ? results.flat() : results);
   }
 }
 
@@ -815,19 +831,29 @@ function qryPage(name){
   return qry(`[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]`, name);
 }
 
-function fmtProps({format}, propName = null){
+function fmtProps(options, selected = []){
   return function([name, results]){
-    const pageData = results[0]?.[0] || null;
+    const ptv = results[0]?.[0]?.["properties-text-values"];
+    const required = !options.required || options.required.reduce(function(has, key){
+      return has && !!ptv?.[key];
+    }, true);
 
-    if (format === 'json') {
-      return [name, pageData ? results : null];
-    } else if (format === 'md') {
-      const props = propName ? pageData?.properties?.[propName] || null : Object.entries(pageData?.["properties-text-values"] ?? {}).map(function([key, vals]){
-        return `${key}:: ${vals}`;
-      });
-      return [name, props.length? props : null];
+    if (options.format === 'json') {
+      return [name, ptv ? results : null];
+    } else if (options.format === 'md') {
+      try {
+        const unlabeled = options.unlabeled || [];
+        const props = Object.entries(ptv || {}).filter(function([key, vals]){
+          return selected.length === 0 || selected.includes(key);
+        }).map(function([key, vals]){
+          return unlabeled.includes(key) ? vals : `${key}:: ${vals}`;
+        });
+        return [name, required && props.length ? props : null];
+      } catch {
+        return [name, null];
+      }
     } else {
-      throw new Error(`Unknown format: ${format}`);
+      throw new Error(`Unknown format: ${options.format}`);
     }
   }
 }
@@ -838,7 +864,7 @@ function fmtBody({heading, format, vacant}){
       return [name, content];
     } else if (format === 'md') {
       const lines = [];
-      const furniture = heading != null && name && (vacant || content);
+      const furniture = heading && name && (vacant || content);
       if (furniture) {
         lines.push(`${'#'.repeat(heading)} ${name}`.trim());
       }
@@ -854,148 +880,12 @@ function fmtBody({heading, format, vacant}){
 }
 
 function props(options){
-  return function(given, propName = null){
+  return function(given, ...properties){
     return given ? tskNamed(given).
       chain(Task.juxt(Task.of, qryPage)).
-      map(fmtProps(options, propName)).
+      map(fmtProps(options, properties)).
       map(fmtBody(options)) : Task.of(null);
   }
-}
-
-function prop(options){
-  return function(pageName){
-    return addPageProperties(pageName, options).map(function(name){
-      if (format === 'json') {
-        return [name, options.add];
-      } else {
-        return [name, options.add.map(prop => {
-          const [key, value] = prop.split('=');
-          return `${key}:: ${value}`;
-        })];
-      }
-    }).map(fmtBody(options));
-  }
-}
-
-function addPageProperties(pageName, options){
-  return new Task(async function(reject, resolve){
-    try {
-      if (!options.add || options.add.length === 0) {
-        throw new Error('At least one --add option is required');
-      }
-
-      const {name} = await identify(pageName);
-      if (!name) {
-        throw new Error(`Page not found: ${pageName}`);
-      }
-
-      // Get page blocks tree to find first block (where page properties live)
-      const blocksTree = await callLogseq('logseq.Editor.getPageBlocksTree', [name]);
-      if (!blocksTree || blocksTree.length === 0) {
-        throw new Error(`No blocks found for page: ${name}`);
-      }
-
-      const firstBlock = blocksTree[0];
-      if (!firstBlock || !firstBlock.uuid) {
-        throw new Error(`Could not get first block UUID for: ${name}`);
-      }
-
-      // Read existing properties from first block
-      const existingProps = firstBlock.properties || {};
-
-      // Parse new properties and group them by key (normalize to lowercase)
-      const newPropMap = new Map();
-
-      for (const propString of options.add) {
-        const parts = propString.split('=');
-        if (parts.length !== 2) {
-          throw new Error(`Invalid property format: ${propString}. Expected "key=value"`);
-        }
-
-        const [key, value] = parts;
-        if (!key.trim() || !value.trim()) {
-          throw new Error(`Invalid property format: ${propString}. Key and value cannot be empty`);
-        }
-
-        const trimmedKey = key.trim().toLowerCase(); // Normalize to lowercase
-        const trimmedValue = value.trim();
-
-        // Add to array or create new array
-        if (!newPropMap.has(trimmedKey)) {
-          newPropMap.set(trimmedKey, [trimmedValue]);
-        } else {
-          newPropMap.get(trimmedKey).push(trimmedValue);
-        }
-      }
-
-      // Merge existing and new properties
-      const mergedProps = {};
-
-      // Start with existing properties (convert to arrays if needed)
-      for (const [key, value] of Object.entries(existingProps)) {
-        if (key !== 'id' && key !== 'uuid') {
-          mergedProps[key.toLowerCase()] = Array.isArray(value) ? value : [value];
-        }
-      }
-
-      // Add new properties (augment, don't overwrite)
-      for (const [key, newValues] of newPropMap) {
-        if (mergedProps[key]) {
-          // Merge with existing values, avoiding duplicates
-          const existingValues = mergedProps[key];
-          const allValues = [...existingValues];
-
-          for (const newValue of newValues) {
-            if (!allValues.includes(newValue)) {
-              allValues.push(newValue);
-            }
-          }
-          mergedProps[key] = allValues;
-        } else {
-          // New property
-          mergedProps[key] = newValues;
-        }
-      }
-
-      // Set merged properties on FIRST block
-      try {
-        await callLogseq('logseq.Editor.exitEditingMode');
-
-        // Update each property
-        for (const [key, values] of Object.entries(mergedProps)) {
-          await callLogseq('logseq.Editor.upsertBlockProperty', [
-            firstBlock.uuid,
-            key,
-            values.join(', ')
-          ]);
-
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-        // Try to force save
-        try {
-          await callLogseq('logseq.Editor.saveFocusedCodeEditorContent');
-        } catch (saveError) {
-          // Method may not be available, that's ok
-        }
-
-      } catch (exitError) {
-        // Fall back to basic approach
-        for (const [key, values] of Object.entries(mergedProps)) {
-          await callLogseq('logseq.Editor.upsertBlockProperty', [
-            firstBlock.uuid,
-            key,
-            values.join(', ')
-          ]);
-        }
-      }
-
-      resolve(name);
-
-    } catch (error) {
-      reject(error);
-    }
-  });
 }
 
 //TODO handle `notes props Assisting` with or without piping
@@ -1011,344 +901,6 @@ function tskGetAllPages({type = "regular", limit = Infinity} = {}){
     .map(filter)
     .map(results => results.map(page => page?.originalName))
     .map(take(limit));
-}
-
-class SerialParser {
-  constructor() {
-    this.state = {
-      rootBlocks: [],
-      blockStack: [], // Stack to track current block hierarchy by level
-      currentBlock: null, // The most recently created block
-      currentBlockLevel: -1,
-      headerContent: null,
-      headerProperties: {},
-      pageProperties: {}, // Properties before any blocks
-      collectingProperties: false,
-      pendingProperties: null, // Properties to apply to first block
-      hasStartedBlocks: false // Track if we've started processing blocks
-    };
-  }
-
-  parseLine(line) {
-    const trimmed = line.trimStart();
-
-    // Skip empty lines
-    if (!trimmed) {
-      return null;
-    }
-
-    // Handle header line - only collect it, don't return for processing
-    if (this.state.headerContent === null && trimmed.startsWith('# ')) {
-      this.state.headerContent = trimmed;
-      return null; // Don't process this line further
-    }
-
-    // Handle properties before any block - these are page properties
-    if (this.state.headerContent === null && !this.state.hasStartedBlocks && trimmed.includes('::') && !trimmed.startsWith('- ')) {
-      return { type: 'page-property', content: trimmed };
-    }
-
-    // If we're still in the header section (properties after title)
-    if (this.state.headerContent !== null && trimmed.includes('::') && !trimmed.startsWith('- ')) {
-      return { type: 'header-property', level: 0, content: trimmed };
-    }
-
-    // If we encounter a non-property line after collecting header properties, finalize the header
-    if ((this.state.headerContent !== null || this.state.collectingProperties) && !trimmed.includes('::')) {
-      const headerBlock = this.finalizeHeader();
-      if (headerBlock) {
-        this.state.rootBlocks.push(headerBlock);
-      }
-      this.state.headerContent = null;
-      this.state.collectingProperties = false;
-      this.state.headerProperties = {};
-    }
-
-    // ONLY lines starting with "- " create new blocks
-    if (trimmed.startsWith('- ')) {
-      // Mark that we've started processing blocks
-      this.state.hasStartedBlocks = true;
-
-      // Calculate indentation level properly - handle both tabs and spaces
-      const leadingWhitespace = line.substring(0, line.length - trimmed.length);
-      const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
-      const spaceCount = leadingWhitespace.length - tabCount;
-      const blockIndent = tabCount + Math.floor(spaceCount / 2);
-
-      const content = trimmed.substring(2).trim();
-      return { type: 'block', level: blockIndent, content };
-    }
-
-    // Property lines attach to current block
-    if (trimmed.includes('::')) {
-      return { type: 'property', content: trimmed };
-    }
-
-    // Everything else is hanging content for current block
-    return { type: 'content', content: trimmed };
-  }
-
-  finalizeHeader() {
-    let headerContent = this.state.headerContent || '';
-    const { properties, cleanContent } = this.extractProperties(headerContent);
-    // Merge with accumulated header properties
-    Object.assign(properties, this.state.headerProperties);
-
-    // Only create a block if we have actual header content
-    if (!headerContent.startsWith('# ')) {
-      return null;
-    }
-
-    const block = {
-      properties: this.formatProperties(properties),
-      preBlock: true
-    };
-
-    // Only include content if we have actual content after cleaning
-    if (cleanContent && cleanContent.trim()) {
-      block.content = cleanContent + '\n';
-    }
-
-    return block;
-  }
-
-  extractMarker(content) {
-    const markerRegex = /^(TODO|DOING|DONE|WAITING|CANCELED|NOW|LATER)\s+(.+)/i;
-    const match = content.match(markerRegex);
-    if (match) {
-      return { marker: match[1].toUpperCase(), content: match[2].trim() };
-    }
-    return { marker: null, content };
-  }
-
-  extractProperties(content) {
-    if (/^(.+?)::\s*(.+)$/.test(content.trim())) {
-      const propertyRegex = /^(.+?)::\s*(.+)$/gm;
-      const properties = {};
-      let cleanContent = content;
-
-      let match;
-      while ((match = propertyRegex.exec(content)) !== null) {
-        const [full, key, value] = match;
-        properties[key.trim()] = value.trim();
-        cleanContent = cleanContent.replace(full, '').trim();
-      }
-
-      return { properties, cleanContent };
-    }
-
-    return { properties: {}, cleanContent: content };
-  }
-
-  formatProperties(properties) {
-    const arrayKeys = ['tags', 'alias', 'prerequisites'];
-    const booleanKeys = ['collapsed'];
-    const formatted = {};
-
-    for (const key of Object.keys(properties)) {
-      if (arrayKeys.includes(key)) {
-        formatted[key] = properties[key]
-          .split(',')
-          .map(item => item.trim().replace(/[\[\]]/g, ''))
-          .filter(item => item.length > 0);
-      } else if (booleanKeys.includes(key)) {
-        // Convert string 'true'/'false' to boolean
-        formatted[key] = properties[key] === 'true' || properties[key] === true;
-      } else {
-        formatted[key] = properties[key];
-      }
-    }
-
-    return formatted;
-  }
-
-  createBlock(content) {
-    const { marker, cleanContent: markerContent } = this.extractMarker(content);
-
-    let finalContent = markerContent || content;
-    const allProperties = {};
-
-    // Apply any pending properties to the first block
-    if (this.state.pendingProperties) {
-      Object.assign(allProperties, this.state.pendingProperties);
-      this.state.pendingProperties = null; // Clear after applying
-    }
-
-    // Extract any inline properties from the content itself
-    const { properties: inlineProperties, cleanContent } = this.extractProperties(finalContent);
-    Object.assign(allProperties, inlineProperties);
-    finalContent = cleanContent;
-
-    // Handle collapsed:: true property
-    if (allProperties.collapsed === 'true') {
-      allProperties.collapsed = true;
-    }
-
-    // Don't extract priority markers like [#A] - leave them as inline content
-    // They are not properties, just regular content
-
-    const block = {
-      content: finalContent || ''
-    };
-
-    if (marker) {
-      block.marker = marker;
-    }
-
-    // Handle collapsed as special top-level property, not in properties object
-    if (allProperties.collapsed === true) {
-      block.collapsed = true;
-      delete allProperties.collapsed;
-    }
-
-    if (Object.keys(allProperties).length > 0) {
-      block.properties = this.formatProperties(allProperties);
-    }
-
-    return block;
-  }
-
-  addPropertyToCurrentBlock(propertyContent) {
-    const { properties } = this.extractProperties(propertyContent);
-
-    // If we don't have a current block yet, store these properties to be applied to the first block
-    if (!this.state.currentBlock) {
-      if (!this.state.pendingProperties) {
-        this.state.pendingProperties = {};
-      }
-      Object.assign(this.state.pendingProperties, properties);
-      return;
-    }
-
-    if (!this.state.currentBlock.properties) {
-      this.state.currentBlock.properties = {};
-    }
-
-    // Handle collapsed as special top-level property
-    if (properties.collapsed === 'true') {
-      this.state.currentBlock.collapsed = true;
-      delete properties.collapsed;
-    }
-
-    Object.assign(this.state.currentBlock.properties, this.formatProperties(properties));
-  }
-
-  appendContentToCurrentBlock(content) {
-    if (!this.state.currentBlock) {
-      console.error('Warning: Content found without current block:', content);
-      return;
-    }
-
-    // Append content with newline if there's already content
-    if (this.state.currentBlock.content) {
-      this.state.currentBlock.content += '\n' + content;
-    } else {
-      this.state.currentBlock.content = content;
-    }
-  }
-
-  handleBlock(parsedLine) {
-    const { level, content } = parsedLine;
-
-    // Create the new block
-    const newBlock = this.createBlock(content);
-
-    // Adjust stack to match the new block's level
-    while (this.state.blockStack.length > level) {
-      this.state.blockStack.pop();
-    }
-
-    // Add missing parent blocks if needed (shouldn't happen in well-formed input)
-    while (this.state.blockStack.length < level) {
-      if (this.state.blockStack.length === 0 && this.state.rootBlocks.length > 0) {
-        this.state.blockStack.push(this.state.rootBlocks[this.state.rootBlocks.length - 1]);
-      } else if (this.state.blockStack.length > 0) {
-        this.state.blockStack.push(this.state.blockStack[this.state.blockStack.length - 1]);
-      } else {
-        // Create placeholder block - this shouldn't happen with valid input
-        const placeholder = { content: '' };
-        this.state.rootBlocks.push(placeholder);
-        this.state.blockStack.push(placeholder);
-      }
-    }
-
-    // Determine parent and add to appropriate children array
-    if (level === 0) {
-      // Top-level block
-      this.state.rootBlocks.push(newBlock);
-    } else {
-      // Nested block - add to parent's children
-      const parent = this.state.blockStack[level - 1];
-      if (!parent.children) {
-        parent.children = [];
-      }
-      parent.children.push(newBlock);
-    }
-
-    // Update stack and current block
-    this.state.blockStack[level] = newBlock;
-    this.state.currentBlock = newBlock;
-    this.state.currentBlockLevel = level;
-  }
-
-  handleLine(parsedLine) {
-    if (!parsedLine) return;
-
-    const { type, content } = parsedLine;
-
-    if (type === 'header-property') {
-      const { properties } = this.extractProperties(content);
-      Object.assign(this.state.headerProperties, properties);
-      return;
-    }
-
-    if (type === 'page-property') {
-      const { properties } = this.extractProperties(content);
-      Object.assign(this.state.pageProperties, properties);
-      return;
-    }
-
-    if (type === 'block') {
-      this.handleBlock(parsedLine);
-    } else if (type === 'property') {
-      this.addPropertyToCurrentBlock(content);
-    } else if (type === 'content') {
-      this.appendContentToCurrentBlock(content);
-    }
-  }
-
-  parse(input) {
-    const lines = input.split('\n').filter(line => line.trim().length > 0);
-
-    for (const line of lines) {
-      try {
-        const parsedLine = this.parseLine(line);
-        this.handleLine(parsedLine);
-      } catch (error) {
-        console.error(`Error parsing line: ${line.trim()}`, error);
-        process.exitCode = 1;
-      }
-    }
-
-    // Finalize header if we never encountered a non-property line
-    if (this.state.headerContent !== null || this.state.collectingProperties) {
-      const headerBlock = this.finalizeHeader();
-      if (headerBlock) {
-        this.state.rootBlocks.push(headerBlock);
-      }
-    }
-
-    // If we have page properties, add them as an empty block with just properties
-    if (Object.keys(this.state.pageProperties).length > 0) {
-      const pagePropertyBlock = {
-        content: "",
-        properties: this.formatProperties(this.state.pageProperties)
-      };
-      this.state.rootBlocks.unshift(pagePropertyBlock);
-    }
-
-    return this.state.rootBlocks;
-  }
 }
 
 async function wipe(options, pageName){
@@ -1375,18 +927,44 @@ async function wipe(options, pageName){
   }
 }
 
+async function proposed(given) {
+  return await promise(tskNamed(given)) ?? given;
+}
+
+async function write(options, given) {
+  try {
+    const { path } = await identify(given);
+
+    const create = !(await exists(path))
+
+    if (!create && !options.overwrite) {
+      throw new Guidance(`Page '${path}' already exists`);
+    }
+
+    const file = await Deno.open(path, {
+      write: true,
+      create,
+      truncate: true
+    })
+
+    await Deno.stdin.readable.pipeTo(file.writable)
+  } catch (error) {
+    abort(error)
+  }
+}
+
 async function update(options, name){
   const prependMode = options.prepend || false;
   const overwriteMode = options.overwrite || false;
   const logger = getLogger(options.debug || false);
-  const pageName = await promise(tskNamed(name || datestamp())) ?? name;
+  const pageName = await proposed(name ?? datestamp());
 
   logger.log(`Page: ${pageName}, Prepend: ${prependMode}, Overwrite: ${overwriteMode}`);
 
   // Parse JSON payload
   let parsedPayload;
   try {
-    const payload = await readStdin();
+    const payload = await new Response(Deno.stdin.readable).text();
 
     if (!payload) {
       throw new Error("No payload received from stdin.");
@@ -1431,12 +1009,12 @@ async function update(options, name){
       logger.log("Prepending content...");
 
       // Get all page blocks to check for properties
-      const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
+      const blocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
 
       // Find the last block with properties
       let lastPropertiesBlock = null;
-      if (pageBlocks && Array.isArray(pageBlocks)) {
-        for (const block of pageBlocks) {
+      if (blocks && Array.isArray(blocks)) {
+        for (const block of blocks) {
           if (block.properties && Object.keys(block.properties).length > 0) {
             lastPropertiesBlock = block;
           }
@@ -1466,10 +1044,10 @@ async function update(options, name){
     } else {
       logger.log("Appending content...");
 
-      const pageBlocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
+      const blocks = await callLogseq('logseq.Editor.getPageBlocksTree', [pageName]);
 
-      if (pageBlocks && Array.isArray(pageBlocks) && pageBlocks.length > 0) {
-        const lastBlockUuid = pageBlocks[pageBlocks.length - 1].uuid;
+      if (blocks && Array.isArray(blocks) && blocks.length > 0) {
+        const lastBlockUuid = blocks[blocks.length - 1].uuid;
         logger.log(`Appending after block: ${lastBlockUuid}`);
 
         // Append after last block using sibling:true
@@ -1523,7 +1101,7 @@ async function update(options, name){
   }
 }
 
-async function serial(){
+async function parse(){
   const input = await new Response(Deno.stdin.readable).text();
 
   if (!input.trim()) {
@@ -1531,33 +1109,35 @@ async function serial(){
     Deno.exit(1);
   }
 
-  const parser = new SerialParser();
-  const result = parser.parse(input);
-  console.log(JSON.stringify(result, null, 2));
+  const blocks = LogseqPage.parse(input);
+  console.log(JSON.stringify(blocks, null, 2));
 }
 
 function pages(options){
   return constantly(tskGetAllPages(options));
 }
 
-const PIPED = `🚚`;
+const PIPEABLE = `📨`;
+const PIPED = `📥`;
 
 const program = new Command()
   .name('nt')
   .description(`A general-purpose tool for interacting with Logseq content.
 
- ${PIPED} = pipeline only operations
+ ${PIPEABLE} = supply primary argument directly or pipe them in
+ ${PIPED} = pipeline-only operations
+
 `.trim())
-  .version('0.7.0')
+  .version('1.0.0-beta')
   .stopEarly();
 
 program
   .command('pages')
-  .description('List pages')
+  .description(`List pages`)
   .option('-t, --type <type:string>', 'Page type (regular|journal|all)', 'regular')
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
-  .option('--limit <type:string>', 'Limit to N entries (none = no limit) (default: "none")', Infinity)
+  .option('--limit <type:integer>', 'Limit to N entries (none = no limit) (default: "none")', Infinity)
   .example("List regular pages", "nt pages")
   .example("List regular and journal pages", "nt pages -t all")
   .example("List regular pages as json", "nt pages --json")
@@ -1566,13 +1146,13 @@ program
 program
   .command('page')
   .alias('p')
-  .description("Get page")
+  .description(`Get page ${PIPEABLE}`)
   .arguments(demand("name|datestamp"))
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
   .option('--json', 'Output JSON format')
   .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('--vacant', 'Include vacant entries')
-  .option('-a, --append <content:string>', 'Append content to page')
+  .option('--filter [table:string]', 'Select filter table from config', { default: "agent" })
   .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
   .example("List wikilinks on a page", "nt page Mission | nt wikilinks")
@@ -1592,27 +1172,35 @@ program
 
 program
   .command('post')
-  .description("Append stdin content to named page, if omitted to today's journal entry")
-  .arguments("[name]")
-  .option('--prepend', 'Prepend content instead')
+  .description(`Sends content to page or, if omitted, to today's journal entry ${PIPED}`)
+  .arguments("[name] [content]")
+  .option('-a, --append', 'Append mode (the default if omitted)')
+  .option('-p, --prepend', 'Prepend mode')
   .option('--overwrite', 'Purges any existing page content (not properties)')
   .option('--debug', 'Enable debug output')
   .example("Append content to current journal page", `echo "Walked for 1h" | nt post`)
-  .example("Append item to target page", `echo "Egg sandwich" | nt post Diet`)
+  .example("Append item to target page", `nt post Diet "Egg sandwich"`)
   .example("Append list of items to target page", `nt list Milk Bread Eggs" | nt post Groceries`)
-  .example("Replace target page", `echo "Ranch Dressing\\nCream Cheese\\nBuffalo Sauce\\nChicken" | nt post Groceries --overwrite`)
-  .example("Prepend block to target page", `echo "Mom" | nt post Calls --prepend`)
-  .example(`Copy a page`, `nt p --heading=0 "Recipe Template" | nt post Lasagna`);
+  .example("Replace target page", `nt post Groceries "Ranch Dressing\\nCream Cheese\\nBuffalo Sauce\\nChicken" --overwrite`)
+  .example("Prepend block to target page", `nt post Call "Mom" --prepend`)
+  .example(`Clone a page`, `nt p --heading=0 "Recipe Template" | nt post Lasagna`);
 
 program
   .command('update')
   .hidden()
-  .description('Append stdin structured content to page')
+  .description(`Append blocks to page from stdin ${PIPED}`)
   .arguments("[name]")
-  .option('--prepend', 'Prepend content instead of appending')
+  .option('-p, --prepend', 'Prepend instead of append')
   .option('--debug', 'Enable debug output')
   .option('--overwrite', 'Purge any existing page content (not properties)')
   .action(update);
+
+program
+  .command('write')
+  .description(`Write page from stdin`)
+  .arguments("<name>")
+  .option('--overwrite', 'Overwrite existing page content')
+  .action(write);
 
 program
   .command('wipe')
@@ -1622,12 +1210,20 @@ program
   .action(wipe);
 
 program
+  .command('export')
+  .description(`Export page content to destination`)
+  .arguments("<name>")
+  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 0})
+  .option('--dest', 'The directory (with or without filename) to write the file')
+  .option('--overwrite', 'Overwrite if file already exists');
+
+program
   .command('tags')
   .alias('t')
-  .description('List pages with given tags (default: ALL tags)')
+  .description(`List pages with all the given tags ${PIPEABLE}`)
   .arguments(demand("tags..."))
-  .option('--all', 'Require ALL tags to be present (default)')
-  .option('--any', 'Require ANY tag to be present')
+  .option('--all', 'Require all tags to be present (default)')
+  .option('--any', 'Require any tag to be present')
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .example("List names of pages tagged Writing", "nt tags Writing")
@@ -1646,7 +1242,7 @@ program
 program
   .command('has')
   .alias('h')
-  .description('List pages having a given prop with value(s)')
+  .description(`List pages having a given prop with value(s) ${PIPEABLE}`)
   .arguments(demand("prop", "vals..."))
   .option('--all', 'Require ALL tags to be present (default)')
   .option('--any', 'Require ANY tag to be present')
@@ -1656,7 +1252,7 @@ program
 
 program
   .command('prereq')
-  .description('Recursively list page prerequisites')
+  .description(`Recursively list page prerequisites ${PIPEABLE}`)
   .arguments(demand("name"))
   .action(pipeable(constantly(tskPrerequisites)))
   .example("List several pages and their unique prerequisites", `nt list Coding Tasking Decomposing | nt prereq | nt seen | nt page`)
@@ -1664,7 +1260,7 @@ program
 
 program
   .command('path')
-  .description('The path to the page file')
+  .description(`The path to the page file ${PIPEABLE}`)
   .arguments(demand("name"))
   .example("Display the file system path to the page", `nt path "Article Ideas"`)
   .example(`Open Moussaka page for editing in VS Code`, `nt path Moussaka | xargs code`)
@@ -1673,10 +1269,11 @@ program
 
 program
   .command('props')
-  .description('Get page properties')
-  .arguments(demand("name", "property"))
+  .description(`Get page properties ${PIPEABLE}`)
+  .arguments("[name] [properties...]")
   .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
-  .option('--desc', "With description")
+  .option('-u, --unlabeled <string>', "Drop the property label", {collect: true})
+  .option('-r, --required <string>', "Required property", {collect: true})
   .option('--json', 'Output JSON format')
   .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('--vacant', 'Include vacant entries')
@@ -1687,20 +1284,9 @@ program
   .action(pipeable(props));
 
 program
-  .command('prop')
-  .description('Add properties to page')
-  .arguments(demand("name"))
-  .option('--add <property:string>', 'Add property in format "key=value"', { collect: true })
-  .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
-  .option('--json', 'Output JSON format')
-  .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
-  .option('--vacant', 'Include vacant entries')
-  .action(pipeable(prop));
-
-program
   .command('search')
   .alias('s')
-  .description('Search pages')
+  .description(`Search pages ${PIPEABLE}`)
   .arguments(demand("term"))
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
@@ -1709,33 +1295,38 @@ program
 program
   .command('name')
   .alias('n')
-  .description('Get page name as cased from page ID or case-insensitive name.')
+  .description(`Get page name as cased from page ID or case-insensitive name. ${PIPEABLE}`)
   .arguments(demand("id|name"))
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
-  .example("Normalize to the actual casing of the page name via stdin", `echo "writing voice" | nt n`)
-  .example("Normalize to the actual casing of the page name", `nt n "writing voice"`)
-  .action(pipeable(constantly(tskNamed)));
+  .option('--unaliased', 'Names without alias')
+  .example("Get the actual casing of a page name via stdin", `echo "writing voice" | nt n`)
+  .example("Get the actual casing of a page name", `nt n "writing voice"`)
+  .action(pipeable(function(options){
+    return function(name){
+      return tskNamed(name, options);
+    }
+  }));
 
 program
   .command('ident')
   .hidden()
-  .description('Get page identity details')
+  .description(`Get page identity details ${PIPEABLE}`)
   .arguments(demand("id|name"))
   .action(pipeable(ident));
 
 program
   .command('alias')
-  .description('Get page name from alias')
+  .description(`Get page name from alias ${PIPEABLE}`)
   .arguments(demand("alias"))
   .action(pipeable(alias));
 
 program
   .command('backlinks')
   .alias('b')
-  .description('List pages that link to a given page')
+  .description(`List pages that link to a given page ${PIPEABLE}`)
   .arguments(demand("name"))
-  .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
+  .option('--limit <type:integer>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .action(pipeable(backlinks));
@@ -1743,9 +1334,9 @@ program
 program
   .command('query')
   .alias('q')
-  .description('Run Datalog query and args')
+  .description(`Run Datalog query and args ${PIPEABLE}`)
   .arguments("<query> [args...]")
-  .option('--limit <type:string>', 'Limit to N entries (omit for no limit)', {default: Infinity})
+  .option('--limit <type:integer>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .action(pipeable(query));
@@ -1760,15 +1351,17 @@ program
 program
   .command('day')
   .alias('d')
-  .arguments("[offset...]")
-  .description('List one or more days')
+  .arguments("[offset]", {default: 0})
+  .description(`Find date from offset ${PIPEABLE}`)
   .example(`Show today's journal page`, `nt day | nt page`)
-  .example(`Show yesterday's journal page`, `nt day -1 | nt page`)
+  .example(`Show today's journal page name including dow`, `nt day | nt name`)
+  .example(`Show yesterday's journal page (negatives are not options)`, `nt day -- -1 | nt page`)
+  .example(`Show yesterday's journal page (piping avoids that dance)`, `-1 | nt day | nt page`)
   .example(`Show tomorrows's journal page`, `nt day 1 | nt page`)
-  .example(`Show yesterday's, today's, and tomorrow's journal page`, `nt day -1 0 1 | nt page`)
-  .example(`Review 90 days of journal entries in zsh`, `nt day $(seq 0 -90) | nt page`)
-  .example(`Review 90 days of journal entries in pwsh`, `nt day (0..-90) | nt page`)
-  .example(`Review talks over the past month`, `nt day $(seq 0 -30) | nt page --only tasks`)
+  .example(`Show yesterday's, today's, and tomorrow's journal page in pwsh`, `-1, 0, 1 | nt day | nt page`)
+  .example(`Review 90 days of journal entries in zsh`, `seq 0 -90 | nt day | nt page`)
+  .example(`Review 90 days of journal entries in pwsh`, `0..-90 | nt day | nt page`)
+  .example(`Review tasks from the past month`, `seq 0 -30 | nt day | nt page --only tasks`)
 
 program
   .command('skills')
@@ -1778,13 +1371,76 @@ program
   .command('about')
   .alias('a')
   .arguments(demand("name..."))
-  .description('Retrieves information about a topic including prequisites');
+  .option('--filter [table:string]', 'Select filter table from config', { default: "agent" })
+  .description('Retrieves information about a topic including prequisites')
+  .action(pipeable(function(options){
+    return function(name){
+      return tskNamed(name, options).
+        chain(Task.juxt(
+          name => tskGetPage(name, options),
+          name => tskPrerequisites(name).
+            chain(prereqs => {
+              if (!prereqs?.length) return Task.of(null);
+              return Task.traverse(prereqs, prereq => tskGetPage(prereq, options)).
+                map(content => prereqs.map((n, i) => content?.[i] ?? `# ${n}`).join('\n\n'));
+            })
+        )).
+        map(([content, prereqContent]) => {
+          const lines = [];
+          if (content) lines.push(content);
+          if (prereqContent) lines.push(prereqContent);
+          return lines.join('\n\n');
+        });
+    }
+  }));
 
 program
-  .command('serial')
-  .description('Append stdin content to page')
+  .command('prop')
+  .description('Rewrite page properties')
+  .option('-a, --add <value>', 'Property to add (format: key=value)', { collect: true })
+  .option('-r, --remove <value>', 'Property to remove (format: key=value)', { collect: true })
   .arguments(PIPED)
-  .action(serial);
+  .action(async (options) => {
+    try {
+      await prop(options);
+    } catch (error) {
+      abort(error);
+    }
+  });
+
+program
+  .command('parse')
+  .description('Convert flat markdown to structured blocks')
+  .arguments(PIPED)
+  .action(parse);
+
+program
+  .command('stringify')
+  .alias('str')
+  .description('Convert structured blocks back to markdown')
+  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
+  .option('--json', 'Output JSON format')
+  .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
+  .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
+  .arguments(PIPED)
+  .action(async (options) => {
+    const { keep, fixed } = LogseqPage.selects(options, config);
+    const input = await new Response(Deno.stdin.readable).text();
+
+    if (!input.trim()) {
+      console.error("Error: No input provided via stdin");
+      Deno.exit(1);
+    }
+
+    try {
+      const blocks = JSON.parse(input);
+      const page = LogseqPage.stringify(blocks, keep, fixed);
+      console.log(page);
+    } catch (error) {
+      console.error("Error parsing JSON input:", error);
+      Deno.exit(1);
+    }
+  });
 
 program
   .command('seen')
@@ -1826,6 +1482,7 @@ program
       })
       .command("file", new Command()
         .description("Show the path to the config file")
+        .example("Display config", `nt config file | xargs cat`)
         .action(function(){
           console.log(NOTE_CONFIG);
         }))
@@ -1833,18 +1490,6 @@ program
         .description("Show the path to the Logseq repo")
         .action(function(){
           console.log(config.logseq.repo);
-        }))
-      .command("filter", new Command()
-        .description("Lists defined filters for use with --less and --only `page` options")
-        .action(function(){
-          Object.entries(config.filter ?? {})
-            .forEach(([key, value]) => console.log(key, " => ", value));
-        }))
-      .command("query", new Command()
-        .description("Lists defined queries")
-        .action(function(){
-          Object.entries(config.query ?? {})
-            .forEach(([key, value]) => console.log(key, " => ", value));
         })));
 
 if (import.meta.main) {
@@ -1853,6 +1498,7 @@ if (import.meta.main) {
     abort();
   } else {
     const replacing = {
+      "--swap" : "--heading=0",
       "--json" : "--format=json",
       "--md" : "--format=md",
       "--agent" : "--less",

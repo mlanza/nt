@@ -1,6 +1,6 @@
 # Note
 
-**Note** is a tool for managing text content whatever the flavor — Skills, Commands, Prompts, Rules, Knowledge — in [Logseq](https://logseq.com).  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
+**Note** is a command line tool for managing text content — Skills, Commands, Prompts, Rules, Knowledge, whatever the flavor — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
 
 <p align="center">
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
@@ -9,36 +9,6 @@
 Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
-
-Take skills.  Tag a page `Skills` and describe it with a `description` property.  Include any `prerequisites` that make sense and you're ready to go.  Prerequisite topics are automatically — and recursively — included when calling the `about` subcommand.
-
-Getting frontmatter properties:
-
-```zsh
-$ nt props Coding
-```
-
-```md
-# Coding
-tags:: AI, [[Making apps]], Skills
-alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
-prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Guidance for writing, refactoring or fixing code
-```
-
-Conveniently list it among all skills via:
-
-```zsh
-$ nt skills
-```
-
-And later retrieve it along with its prerequisites:
-
-```zsh
-$ nt about Coding
-```
-
-These can be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
 ## Getting Started
 
@@ -72,6 +42,8 @@ Once done, start Logseq, and then your shell. Issue some commands.
 nt page Atomic # show some page, for example
 ```
 
+These commands can, of course, be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+
 ## Going Deeper
 
 ### Generating `AGENTS.md`
@@ -84,22 +56,61 @@ The following assumes the target page `prerequisites` is replete with your most 
 nt about "Agent Instructions" | nt document --para | cat -s
 ```
 
-### Agent Content Filtering
+### Progressive Disclosure
 
-Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I may have a smattering of links to interestings sites and/or a pile of tasks in various stages pertinent to the page topic or project.  I may also have information and/or instructions.  What I'm getting at is some of the stuff on a page is useful to me alone, while other stuff is more generally useful to a third party like an agent.
+Take skills.  Want to provide a menu of capabilities?  Create a page called `Skills` in Logseq with some general instruction for skill use for agents. Then start defining pages, tagging them `Skills`, and add a `description` property.
 
-This is not about sensitive content as I don't keep that in my stores.  The concern is not leaks, but wasted or confusing context.  To help the `nt page` command has options to exclude certain blocks (along with the child content).
+After defining a bunch, they can, conveniently, be listed via:
+
+```zsh
+$ nt skills
+```
+
+Seeing the properties — or frontmatter — for a page gives a sense of it:
+
+```zsh
+$ nt props Coding
+```
+
+```md
+# Coding
+tags:: AI, [[Making apps]], Skills
+alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
+prerequisites:: [[Clojure Way]], [[Coding Style]]
+description:: Guidance for writing, refactoring or fixing code
+```
+
+### Prerequisites
+
+Some topics build on other other topics and cannot stand on their own.  These pages require that added context to make sense.  Include a `prerequisites` property on the page that links to any prerequisites.  Whenever the page is retrieved via `about`, they'll automatically — and recursively — be included.
+
+```zsh
+$ nt about Coding
+```
+
+### Content Filtering
+
+The most typical way to view a page is handing a page name to the `nt page` command:
+```zsh
+nt page Atomic
+```
+
+Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I have pages with a smattering of links to interesting sites and — since some are projects — tasks in various stages.  A page may also have information and/or instructions.  
+
+Some content is useful only to me.  It's not a question of sensitivity or leaks. I don't keep that kind of content in my stores.  It's about making a good hand-off to an agent.  I don't want it seeing meaningless or confusing context.  
+
+To help, `nt` provides basic filtering.  A filter operates at the block level on what is effectively a single line in Logseq.  If a block is filtered, it carries with it all its children.
 
 This command filters out task blocks:
 
 ```zsh
-nt page Atomic --less '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+nt page Atomic --less '^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)'
 ```
 
 While, conversely, this one shows only task blocks:
 
 ```zsh
-nt page Atomic --only '^(TODO|DOING|DONE|WAITING|NOW|LATER)'
+nt page Atomic --only '^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)'
 ```
 
 You can send in multiple values:
@@ -108,26 +119,26 @@ You can send in multiple values:
 nt page Atomic --less '^https?://[^)]+$' --less '^[.*](https?://[^)]+)$'
 ```
 
-But typing that will get tedious fast.  Better to define a `filter` table in your config.
+But typing that will get tedious fast.  Better to define in and select from filter tables in config.  Since the default filter is `agent`, let's define it:
 
 ```toml
-[filter]
+[agent]
 props = "^[^\\s:]+::"
-tasks = "^(TODO|DOING|LATER|NOW|CANCELED|WAITING)"
+tasks = "^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)"
 links = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
 ```
 
-Having that, you can exclude one type of block:
+Having that, you can exclude blocks by their keys:
 ```zsh
 nt page Atomic --less tasks
 ```
 
-Or include one type of block:
+Or include blocks by their keys:
 ```zsh
 nt page Atomic --only tasks
 ```
 
-Or multiple:
+Or target multiple:
 
 ```zsh
 nt page Atomic --less tasks --less links
@@ -135,23 +146,33 @@ nt page Atomic --less tasks --less links
 
 Some of the examples in the tool `--help` anticipate these defintions.
 
-This command is for a **human** and includes only what blocks filter out:
+This displays content for the **human** and shows what'd normally be filtered out:
 ```zsh
 nt page Atomic --only
 ```
 
-This one is for an **agent** and includes everything but that noise:
+This one is for the **agent** and filters out that noise:
 ```zsh
 nt page Atomic --less
 ```
+Internally, this what `about` does to faciliate a clean agent hand-off.
 
-Alternately, if it helps you remember:
+The following option flags are synonyms — their audience-focused terms: memory aids.
 ```zsh
-nt page Atomic --human
+nt page Atomic --human # i.e., only
+nt page Atomic --agent # i.e., less
 ```
-or
+
+If you have other filtering needs, you can define another filter table, then select it with `--filter`.  It all works the same except for swapping the filter source.
+
 ```zsh
-nt page Atomic --agent
+nt page --filter=public Atomic --only
+nt page --filter=public Atomic --less 
+```
+
+If desired, you can abbreviate this in your shell profile:
+```zsh
+alias pg_public="nt page --filter=public"
 ```
 
 ### Querying via Datalog
@@ -164,13 +185,13 @@ It's a reason to prefer Logseq to Obsidian.
 nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
-Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example if you get
+Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example, if you get
 
 ```zsh
 Error: Missing rules var '%' in :in
 ```
 
-there's likely some syntax or advances queries it can't support.
+there's likely something in the advanced query syntax it can't support.
 
 Look here for help forming valid queries:
 
