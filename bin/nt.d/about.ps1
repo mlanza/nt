@@ -6,6 +6,6 @@ $wikilinks = $body | nt wikilinks | nt seen
 if ($wikilinks) {
   $mentioned = $wikilinks | nt n --unaliased
   if ($mentioned) {
-    $mentioned | Where-Object { $_ -notin ($topics) } | sort | nt props tags situation -r situation --heading=2 | nt sep "# See Also"
+    $mentioned | Where-Object { $_ -notin ($topics) } | sort | nt props tags description -r description --heading=2 | nt sep "# See Also"
   }
 }
