@@ -6,7 +6,7 @@
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
 </p>
 
-Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive.  How better to teach an agent your craft than by sharing your second 🧠 with it.
+Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive — all in an ubiquitous language of your making.  How better to align with and teach an agent your craft than by sharing your second 🧠 with it.
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
@@ -53,7 +53,7 @@ While technically possible to give the agent a minimal `AGENTS.md` and ask it to
 The following assumes the target page `prerequisites` is replete with your most crucial rules and instructions.  The `document` tool slightly flattens Logseq's outline formatting.
 
 ```zsh
-nt about "Agent Instructions" | nt document --para | cat -s
+nt about "Agent Instructions" --agent | nt document --para | cat -s
 ```
 
 ### Progressive Disclosure
@@ -75,9 +75,9 @@ $ nt props Coding
 ```md
 # Coding
 tags:: AI, [[Making apps]], Skills
-alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
+alias:: [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Guidance for writing, refactoring or fixing code
+description:: Use when you're writing, refactoring or fixing code
 ```
 
 ### Prerequisites
@@ -95,9 +95,9 @@ The most typical way to view a page is handing a page name to the `nt page` comm
 nt page Atomic
 ```
 
-Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I have pages with a smattering of links to interesting sites and — since some are projects — tasks in various stages.  A page may also have information and/or instructions.  
+Because I use Logseq for both [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) and [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done), my pages have mixed content.  I have pages with a smattering of links to interesting sites and — since some are projects — tasks in various stages.  A page may also have information and/or instructions.
 
-Some content is useful only to me.  It's not a question of sensitivity or leaks. I don't keep that kind of content in my stores.  It's about making a good hand-off to an agent.  I don't want it seeing meaningless or confusing context.  
+Some content is useful only to me.  It's not a question of sensitivity or leaks. I don't keep that kind of content in my stores.  It's about making a good hand-off to an agent.  I don't want it seeing meaningless or confusing context.
 
 To help, `nt` provides basic filtering.  A filter operates at the block level on what is effectively a single line in Logseq.  If a block is filtered, it carries with it all its children.
 
@@ -167,7 +167,7 @@ If you have other filtering needs, you can define another filter table, then sel
 
 ```zsh
 nt page --filter=public Atomic --only
-nt page --filter=public Atomic --less 
+nt page --filter=public Atomic --less
 ```
 
 If desired, you can abbreviate this in your shell profile:
