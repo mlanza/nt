@@ -75,9 +75,9 @@ $ nt props Coding
 ```md
 # Coding
 tags:: AI, [[Making apps]], Skills
-alias:: [[Agentic Coding]], [[Spec Coding]], [[Vibe Coding]]
+alias:: [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Guidance for writing, refactoring or fixing code
+description:: Use when you're writing, refactoring or fixing code
 ```
 
 ### Prerequisites
