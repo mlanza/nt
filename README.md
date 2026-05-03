@@ -63,13 +63,13 @@ Take skills.  Want to provide a menu of capabilities?  Create a page called `Ski
 After defining a bunch, they can, conveniently, be listed via:
 
 ```zsh
-$ nt skills
+nt skills
 ```
 
 Seeing the properties — or frontmatter — for a page gives a sense of it:
 
 ```zsh
-$ nt props Coding
+nt props Coding
 ```
 
 ```md
@@ -85,7 +85,7 @@ description:: Use when you're writing, refactoring or fixing code
 Some topics build on other other topics and cannot stand on their own.  These pages require that added context to make sense.  Include a `prerequisites` property on the page that links to any prerequisites.  Whenever the page is retrieved via `about`, they'll automatically — and recursively — be included.
 
 ```zsh
-$ nt about Coding
+nt about Coding
 ```
 
 ### Content Filtering
