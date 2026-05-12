@@ -38,12 +38,16 @@ function tskConfig(path){
     if (!token) {
       throw new Guidance("LOGSEQ_TOKEN environment var must be set.");
     }
-    const repo = logseq?.repo?.replace("~", HOME);
+    const envRepo = Deno.env.get('LOGSEQ_REPO');
+    const envEndpoint = Deno.env.get('LOGSEQ_ENDPOINT');
+    const configLogseq = logseq ?? {};
+    const repoCandidate = envRepo ?? configLogseq.repo;
+    const repo = repoCandidate?.replace("~", HOME);
     if (!repo) {
-      throw new Guidance(`Logseq repo must be set in config at ${path}.`);
+      throw new Guidance(`Logseq repo must be set in config at ${path} or via LOGSEQ_REPO.`);
     }
-    const endpoint = "http://127.0.0.1:12315/api";
-    return {endpoint, token, ...logseq, repo};
+    const endpoint = envEndpoint ?? configLogseq.endpoint ?? "http://127.0.0.1:12315/api";
+    return {...configLogseq, endpoint, token, repo};
   }
   function expandConfig(config){
     const logseq = expandLogseq(config?.logseq ?? {});
@@ -1471,6 +1475,13 @@ program
   .command('wikify')
   .description('Convert markdown headers to wiki format')
   .arguments(PIPED);
+
+program
+  .command('clean')
+  .description('Clean invisible and zero-width control characters from stdin (pipeline-only)')
+  .arguments(PIPED);
+
+
 
 program
   .command(

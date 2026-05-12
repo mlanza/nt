@@ -3,3 +3,4 @@ node_modules
 .envrc
 .vscode
 synapse-link.jsonl
+.DS_Store

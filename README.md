@@ -36,6 +36,7 @@ repo = 'D:\notes'
 
 If you change the `endpoint` to something other than the default of http://127.0.0.1:12315/api, you'll have to include that setting too.
 
+> `LOGSEQ_REPO` and `LOGSEQ_ENDPOINT` environment variables are supported as well. When set, they take precedence over the values defined in your config file (repo is required from either the env or config, while endpoint still falls back to the default).
 Once done, start Logseq, and then your shell. Issue some commands.
 
 ```zsh
