@@ -15,6 +15,9 @@ const orientSlashes = isWindows ? function (path) {
 
 const HOME = Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE");
 const NOTE_CONFIG = orientSlashes(Deno.env.get("NOTE_CONFIG") ?? `${HOME}/.config/nt/config.toml`);
+const LOGSEQ_REPO = Deno.env.get('LOGSEQ_REPO');
+const LOGSEQ_ENDPOINT = Deno.env.get('LOGSEQ_ENDPOINT');
+const LOGSEQ_TOKEN = Deno.env.get('LOGSEQ_TOKEN');
 
 class Guidance extends Error {
   constructor(message) {
@@ -34,23 +37,21 @@ function explain(message, cause){
 
 function tskConfig(path){
   function expandLogseq(logseq){
-    const token = Deno.env.get('LOGSEQ_TOKEN') || null;
+    const token = LOGSEQ_TOKEN || null;
     if (!token) {
       throw new Guidance("LOGSEQ_TOKEN environment var must be set.");
     }
-    const envRepo = Deno.env.get('LOGSEQ_REPO');
-    const envEndpoint = Deno.env.get('LOGSEQ_ENDPOINT');
     const configLogseq = logseq ?? {};
-    const repoCandidate = envRepo ?? configLogseq.repo;
-    const repo = repoCandidate?.replace("~", HOME);
+    const repo = (LOGSEQ_REPO ?? configLogseq.repo)?.replace("~", HOME);
     if (!repo) {
       throw new Guidance(`Logseq repo must be set in config at ${path} or via LOGSEQ_REPO.`);
     }
-    const endpoint = envEndpoint ?? configLogseq.endpoint ?? "http://127.0.0.1:12315/api";
+    const endpoint = LOGSEQ_ENDPOINT ?? configLogseq.endpoint ?? "http://127.0.0.1:12315/api";
     return {...configLogseq, endpoint, token, repo};
   }
   function expandConfig(config){
     const logseq = expandLogseq(config?.logseq ?? {});
+    console.log({config, logseq})
     return { ...config, logseq };
   }
   return new Task(async function(reject, resolve){
