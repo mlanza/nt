@@ -38,8 +38,8 @@ token = 'mellon'
 Or omit this section and specify them as environment vars:
 
 * **LOGSEQ_REPO** - path to the Logseq repo
-* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
 * **LOGSEQ_ENDPOINT** - HTTP API endpoint (default is http://127.0.0.1:12315/api)
+* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
 
 Once done, start Logseq, and then your shell. Issue some commands.
 
