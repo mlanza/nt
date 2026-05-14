@@ -54,7 +54,6 @@ function tskConfig(path){
   }
   function expandConfig(config){
     const logseq = expandLogseq(config?.logseq ?? {});
-    console.log({config, logseq})
     return { ...config, logseq };
   }
   return new Task(async function(reject, resolve){
