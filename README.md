@@ -21,11 +21,11 @@ Have `pwsh` and `deno` and `node` installed.  The interal scripts target these r
 
 Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
-Create a config file in the default location `~/.config/nt/config.toml`.  If you prefer to keep it elsewhere set this environment var:
+Create a config file in the default location `~/.config/nt/config.toml`.  If you prefer to keep it elsewhere specify where in the environment var:
 
-* **NOTE_CONFIG** - path to config file ()
+* **NOTE_CONFIG** - path to config file
 
-In it you must specify your `repo`, `endpoint`, and `token`:
+In it, specify your `repo`, `endpoint`, and `token`:
 
 ```toml
 # config.toml
