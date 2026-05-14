@@ -37,16 +37,19 @@ function explain(message, cause){
 
 function tskConfig(path){
   function expandLogseq(logseq){
-    const token = LOGSEQ_TOKEN || null;
-    if (!token) {
-      throw new Guidance("LOGSEQ_TOKEN environment var must be set.");
-    }
     const configLogseq = logseq ?? {};
+    const token = LOGSEQ_TOKEN ?? configLogseq.token ?? null;
+    if (!token) {
+      throw new Guidance("The Logseq `token` must be set.");
+    }
     const repo = (LOGSEQ_REPO ?? configLogseq.repo)?.replace("~", HOME);
     if (!repo) {
-      throw new Guidance(`Logseq repo must be set in config at ${path} or via LOGSEQ_REPO.`);
+      throw new Guidance("The Logseq `repo` must be set.");
     }
     const endpoint = LOGSEQ_ENDPOINT ?? configLogseq.endpoint ?? "http://127.0.0.1:12315/api";
+    if (!endpoint) {
+      throw new Guidance("The Logseq `endpoint` must be set.");
+    }
     return {...configLogseq, endpoint, token, repo};
   }
   function expandConfig(config){

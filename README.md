@@ -21,29 +21,33 @@ Have `pwsh` and `deno` and `node` installed.  The interal scripts target these r
 
 Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
-Add these environment variables to your shell:
+At minimum add this environment var to your shell:
 
-* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
 * **NOTE_CONFIG** - path to config file (default is `~/.config/nt/config.toml`)
 
-Within config, at minimum, identify where your Logseq repo is:
+Additionally, you must specify your `repo`, `endpoint`, and `token`.  This can appear directly in the config:
 
 ```toml
 # config.toml
 [logseq]
 repo = 'D:\notes'
+endpoint = 'http://127.0.0.1:12315/api'
+token = 'mellon'
 ```
 
-If you change the `endpoint` to something other than the default of http://127.0.0.1:12315/api, you'll have to include that setting too.
+Or omit this section and specify them as environment vars:
 
-> `LOGSEQ_REPO` and `LOGSEQ_ENDPOINT` environment variables are supported as well. When set, they take precedence over the values defined in your config file (repo is required from either the env or config, while endpoint still falls back to the default).
+* **LOGSEQ_REPO** - path to the Logseq repo
+* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
+* **LOGSEQ_ENDPOINT** - HTTP API endpoint (default is http://127.0.0.1:12315/api)
+
 Once done, start Logseq, and then your shell. Issue some commands.
 
 ```zsh
 nt page Atomic # show some page, for example
 ```
 
-These commands can, of course, be issued directly in [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+These commands can, of course, be issued directly in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
 ## Going Deeper
 
