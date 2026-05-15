@@ -16,13 +16,13 @@ function log(directory, text, error = null) {
   };
 
   appendFileSync(
-    directory + "/synapse-link.jsonl",
+    directory + "/note.jsonl",
     JSON.stringify(logEntry) + "\n",
     "utf8"
   );
 }
 
-export const SynapseLinkPlugin = async ({ client, directory }) => {
+export const NotePlugin = async ({ client, directory }) => {
   return {
     "chat.message": async (input, output) => {
       const userTextParts = output.parts.filter((part) =>

@@ -49,7 +49,31 @@ nt page Atomic # show some page, for example
 
 These commands can, of course, be issued directly in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
 
+### Agent Integration
+
+Plug it into your favorite agent.
+
+### Pi (π)
+
+From wherever `nt` exists:
+
+```zsh
+pi install ~/Documents/nt/adapters/pi/nt.js
+```
+
 ## Going Deeper
+
+### Automatic Prompt Expansion
+
+Key wikilinks into your prompts, such that
+
+```md
+You are [[Coding]] a Sokoban game using [[Atomic]].
+```
+
+is expanded and enriched with your Logseq content.  This can be skills, instructions — anything at all.  This happens recursively by expanding any `prerequisites` it encounters.  It also filters selective blocks that might otherwise confuse the agent.
+
+Since this only happens with wikilinks, omit them to interact with your agent as usual.
 
 ### Generating `AGENTS.md`
 
