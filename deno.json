@@ -1,6 +1,5 @@
 {
   "tasks": {
-    "bundle": "rollup --config"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
