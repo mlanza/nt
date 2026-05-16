@@ -12,20 +12,26 @@ The tool was designed to minimize ceremony, to compose, and to mind the Unix phi
 
 ## Getting Started
 
-Install the tool into your path or extend your path, whichever you like:
+Install it in a preferred location:
+
 ```zsh
-export PATH=~/Documents/nt/bin:$PATH
+git clone https://github.com/mlanza/nt.git ~/.local/share/nt
 ```
 
-Have `pwsh` and `deno` and `node` installed.  The interal scripts target these runtimes over `zsh` and `bash` to accommodate everyone, whether on Mac, Linux or Windows.
+Set `nt` on path in your profile:
 
-Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
+```zsh
+export PATH="$HOME/.local/share/nt/bin:$PATH"
+```
 
-Create a config file in the default location `~/.config/nt/config.toml`.  If you prefer to keep it elsewhere specify where in the environment var:
+Set these env vars:
 
-* **NOTE_CONFIG** - path to config file
+* **LOGSEQ_REPO** - path to the Logseq repo
+* **LOGSEQ_ENDPOINT** - HTTP API endpoint (default is http://127.0.0.1:12315/api)
+* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
+* **NOTE_CONFIG** - path to optional config (e.g., `~/.config/nt/config.toml`)
 
-In it, specify your `repo`, `endpoint`, and `token`:
+The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for **content filtering**.
 
 ```toml
 # config.toml
@@ -35,45 +41,47 @@ endpoint = 'http://127.0.0.1:12315/api'
 token = 'mellon'
 ```
 
-Or omit it and specify them as environment vars:
+Ensure `pwsh` and `deno` are installed.
 
-* **LOGSEQ_REPO** - path to the Logseq repo
-* **LOGSEQ_ENDPOINT** - HTTP API endpoint (default is http://127.0.0.1:12315/api)
-* **LOGSEQ_TOKEN** - a token you configured for the HTTP API
+Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
-Once done, start Logseq, and then your shell. Issue some commands.
+Once done, issue commands from the shell or from an agent runtime like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
 
 ```zsh
 nt page Atomic # show some page, for example
 ```
 
-These commands can, of course, be issued directly in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, Claude, etc.  — by you or by any agent with with [computer use](https://www.anthropic.com/news/3-5-models-and-computer-use).
+The big lever `nt` offers is both simple and powerful: your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — can be conjured into chat sessions as needed.
 
-### Agent Integration
+Instead of telling an agent to traverse your entire knowledge base, you decide exactly what context gets retrieved and shared. `nt` turns your Logseq repo into a local-first retrieval system.
 
-Plug it into your favorite agent.
+Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-### Pi (π)
-
-From wherever `nt` exists:
-
-```zsh
-pi install ~/Documents/nt/adapters/pi/nt.js
-```
+That's the real magic of RAG (retrieval augmented generation) here: transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent might be using.  You're designing the structures yourself, controlling how they combine, and deciding exactly what enters the conversation.
 
 ## Going Deeper
 
-### Automatic Prompt Expansion
+### Agent Integration
 
-Key wikilinks into your prompts, such that
+An agent, naturally, has access to `nt` as a command line tool.  You plug it into an agent for the prompt expansion feature.
+
+This way you key wikilinks into your prompts, such that
 
 ```md
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded and enriched with your Logseq content.  This can be skills, instructions — anything at all.  This happens recursively by expanding any `prerequisites` it encounters.  It also filters selective blocks that might otherwise confuse the agent.
+is expanded and enriched with your Logseq content.  Basically, you get the Coding page, the Atomic page, and the prerequsites of both and their prerequisites recursively.  These pages can include skills, instructions, anything at all.
 
-Since this only happens with wikilinks, omit them to interact with your agent as usual.
+Since the expansion is related to wikilinks, omit them to interact with your agent as usual.
+
+#### Pi (π)
+
+From wherever `nt` was installed:
+
+```zsh
+pi install ~/.local/share/nt/adapters/pi/nt.js
+```
 
 ### Generating `AGENTS.md`
 
