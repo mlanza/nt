@@ -57,7 +57,7 @@ Instead of telling an agent to traverse your entire knowledge base, you decide e
 
 Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-That's the real magic of RAG (retrieval augmented generation) here: transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent might be using.  You're designing the structures yourself, controlling how they combine, and deciding exactly what enters the conversation.
+That's the real magic of the RAG (retrieval augmented generation) in use here: transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent might be using.  You're designing the structures yourself, controlling how they combine, and deciding exactly what enters the conversation.
 
 ## Going Deeper
 
