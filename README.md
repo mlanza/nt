@@ -45,35 +45,35 @@ Ensure `pwsh` and `deno` are installed.
 
 Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
 
-Once done, issue commands from the shell or from an agent runtime like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
+Once done, you can issue commands from the shell or from an agent runtime like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
 
 ```zsh
 nt page Atomic # show some page, for example
 ```
 
-The big lever `nt` offers is both simple and powerful: your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — can be conjured into chat sessions as needed.
+That's from the suite of command line tools.  The big lever is something more.  Simple.  Powerful.
 
-Instead of telling an agent to traverse your entire knowledge base, you decide exactly what context gets retrieved and shared. `nt` turns your Logseq repo into a local-first retrieval system.
+It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
+
+You're not telling an agent to traverse your entire knowledge base, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. This turns your Logseq repo into a local-first retrieval system.
 
 Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-That's the real magic of the RAG (retrieval augmented generation) in use here: transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent might be using.  You're designing the structures yourself, controlling how they combine, and deciding exactly what enters the conversation.
+That's the flavor of RAG (retrieval augmented generation) you want here: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
 
-## Going Deeper
-
-### Agent Integration
-
-An agent, naturally, has access to `nt` as a command line tool.  You plug it into an agent for the prompt expansion feature.
-
-This way you key wikilinks into your prompts, such that
+This happens by way of keying wikilinks into your prompts, such that
 
 ```md
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded and enriched with your Logseq content.  Basically, you get the Coding page, the Atomic page, and the prerequsites of both and their prerequisites recursively.  These pages can include skills, instructions, anything at all.
+is expanded.  This gives you the prompt itself, plus the Coding page, the Atomic page, the prerequsites of both, and all their prerequisites, recursively.  These pages can include skills, instructions, anything at all.  It's entirely up to you!
 
-Since the expansion is related to wikilinks, omit them to interact with your agent as usual.
+## Going Deeper
+
+### Prompt Expansion Feature
+
+An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.
 
 #### Pi (π)
 
