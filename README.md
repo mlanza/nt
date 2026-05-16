@@ -10,6 +10,28 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
+It provides a suite of command line tools for shells and agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
+
+```zsh
+nt page Atomic # show some page, for example
+```
+
+The big lever is something more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
+
+You're not telling an agent to traverse your entire knowledge base, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. This turns your Logseq repo into a local-first retrieval system.
+
+Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
+
+That's the flavor of RAG (retrieval augmented generation) you want here: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
+
+This happens by way of keying wikilinks into your prompts, such that
+
+```md
+You are [[Coding]] a Sokoban game using [[Atomic]].
+```
+
+is expanded.  This gives you the prompt itself, plus the Coding page, the Atomic page, the prerequsites of both, and all their prerequisites, recursively.  These pages can include skills, instructions, anything at all.  It's entirely up to you!
+
 ## Getting Started
 
 Install it in a preferred location:
@@ -44,30 +66,6 @@ token = 'mellon'
 Ensure `pwsh` and `deno` are installed.
 
 Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then enable the local HTTP API via the button in the upper right. You must [set up a token](https://wiki.jamesravey.me/books/software-misc/page/logseq-http-api).  This setup and tooling transforms Logseq into a lightweight MCP server.
-
-Once done, you can issue commands from the shell or from an agent runtime like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
-
-```zsh
-nt page Atomic # show some page, for example
-```
-
-That's from the suite of command line tools.  The big lever is something more.  Simple.  Powerful.
-
-It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
-
-You're not telling an agent to traverse your entire knowledge base, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. This turns your Logseq repo into a local-first retrieval system.
-
-Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
-
-That's the flavor of RAG (retrieval augmented generation) you want here: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
-
-This happens by way of keying wikilinks into your prompts, such that
-
-```md
-You are [[Coding]] a Sokoban game using [[Atomic]].
-```
-
-is expanded.  This gives you the prompt itself, plus the Coding page, the Atomic page, the prerequsites of both, and all their prerequisites, recursively.  These pages can include skills, instructions, anything at all.  It's entirely up to you!
 
 ## Going Deeper
 
