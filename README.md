@@ -10,7 +10,9 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
-It provides a suite of command line tools for shells and agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
+## Value Proposition
+
+`nt` provides a suite of command line tools for shells and agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
 
 ```zsh
 nt page Atomic # show some page, for example
