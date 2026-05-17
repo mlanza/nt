@@ -28,9 +28,9 @@ It's effect is realized when you key wikilinks into your prompts, such that
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the **prerequsites** of both, and their prerequisites, recursively.
+is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the prerequsites of both, and their prerequisites, recursively.
 
-Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
+**Prerequisites** are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
 Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you can control how context combines and decide exactly what enters the conversation.
 
