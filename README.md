@@ -77,7 +77,7 @@ An agent, naturally, has access to `nt` as a command line tool.  The prompt expa
 
 #### Pi (π)
 
-From wherever `nt` was installed:
+Point the agent at your your `nt` installation:
 
 ```zsh
 pi install ~/.local/share/nt/adapters/pi/nt.js
