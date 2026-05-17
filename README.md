@@ -12,23 +12,21 @@ The tool was designed to minimize ceremony, to compose, and to mind the Unix phi
 
 ## Conjuring and Composing Context
 
-The suite of commands for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code are largely about retrieving and reusing carefully-crafted context:
+You gain a suite of commands for retrieving and reusing carefully-crafted context:
 
 ```zsh
 nt page Atomic
 ```
 
-It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context with you, *wherever you are*.  What's more: you can readily conjure it into chat sessions.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into chat sessions.
 
-This is less about training an agent to traverse context than you actively deciding when and what to retrieve and share. It's Logseq as a first-class, local-first retrieval system.
-
-It's effect is realized when you key wikilinks into your prompts, such that
+It happens when you key wikilinks into your prompts, such that
 
 ```md
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the prerequisites of both, and their prerequisites, recursively.
+is expanded.  In addition to the prompt you entered you also get the Coding page, the Atomic page, the prerequisites of both, and their prerequisites, recursively.  It elevates Logseq into a first-class, local-first retrieval system.
 
 > 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
