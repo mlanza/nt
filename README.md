@@ -71,7 +71,7 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 ## Going Deeper
 
-### Prompt Expansion Feature
+### Prompt Expansion
 
 An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.  Once installed, wikilinks entered into prompts expand automatically.
 
