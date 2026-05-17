@@ -12,19 +12,19 @@ The tool was designed to minimize ceremony, to compose, and to mind the Unix phi
 
 ## Conjuring and Composing Context
 
-`nt` provides a suite of commands for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code.  They reach into Logseq and retrieve context:
+The suite of commands for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code are largely about retrieving and reusing carefully-crafted context:
 
 ```zsh
 nt page Atomic
 ```
 
-It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular and portable, separate from the agent runtime.  What's more: it can be conjured into chat sessions on demand.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  What's more: you can readily conjure it into chat sessions.
 
-You're not asking an agent to traverse it, though that's possible. Rather, you're actively deciding what context gets retrieved and shared. It's Logseq as a first-class, local-first retrieval system.
+This is less about training an agent to traverse context thant it is you actively deciding when and what to retrieve and share. It's Logseq as a first-class, local-first retrieval system.
 
 Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-Unlike other RAG (retrieval augmented generation) systems, things remain fully transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how context combines, and deciding exactly what enters the conversation.
+Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how context combines, and deciding exactly what enters the conversation.
 
 It's keying wikilinks into your prompts, such that
 
