@@ -1,6 +1,6 @@
 # Note
 
-**Note** is a command line tool for managing text content — Skills, Commands, Prompts, Rules, Knowledge, whatever the flavor — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
+**Note** is a command line tool for managing text content — skills, commands, prompts, rules, knowledge, whatever the flavor — in a local [Logseq](https://logseq.com) repo.  Unlike MCP Servers, CLIs are ephemeral, composeable and available to humans 🧔🏼 and agents 🤖 alike .
 
 <p align="center">
   <img src="./images/logo.png" style="width: 300px; max-width: 100%;" />
@@ -12,27 +12,27 @@ The tool was designed to minimize ceremony, to compose, and to mind the Unix phi
 
 ## Conjuring and Composing Context
 
-`nt` provides a suite of command line tools for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
+`nt` provides a suite of command line tools for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code.  They reach into Logseq and retrieve context:
 
 ```zsh
-nt page Atomic # show me some page
+nt page Atomic
 ```
 
-However, its big lever is far more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
+That's one lever. The big lever is far more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined — conjured into chat sessions on demand.
 
-You're not having an agent to traverse it, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. It transforms Logseq into a local-first retrieval system.
+You're not asking an agent to traverse it, though that's possible. Rather, it's you deciding exactly what context gets retrieved and shared. It's Logseq as a local-first retrieval system.
 
-Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
+Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-That's the flavor of RAG (retrieval augmented generation) you're afforded: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
+This affords a flavor of RAG (retrieval augmented generation) that is fully transparent.  You're not guessing what system prompt or retrieval process an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
 
-This happens by way of keying wikilinks into your prompts, such that
+It's keying wikilinks into your prompts, such that
 
 ```md
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded.  This gives you the prompt itself, plus the Coding page, the Atomic page, the prerequsites of both, and all their prerequisites, recursively.  These pages can include skills, instructions, anything at all.  It's entirely up to you!
+is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the prerequsites of both, and their prerequisites, recursively.  These pages include skills, instructions, whatever you've designed for!
 
 ## Getting Started
 
