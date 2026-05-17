@@ -95,7 +95,7 @@ nt about "Agent Instructions" --agent | nt document --para | cat -s
 
 ### Progressive Disclosure
 
-Take skills.  Want to provide a menu of capabilities?  Create a page called `Skills` in Logseq with some general instruction for skill use for agents. Then start defining pages, tagging them `Skills`, and add a `description` property.
+Take skills.  Want to provide a menu of capabilities?  Create a Logseq page called `Skill`. Then start defining pages, tagging them `Skill`, and adding a `description` property.
 
 After defining a bunch, they can, conveniently, be listed via:
 
@@ -111,7 +111,7 @@ nt props Coding
 
 ```md
 # Coding
-tags:: AI, [[Making apps]], Skills
+tags:: AI, [[Making apps]], Skill
 alias:: [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
 description:: Use when you're writing, refactoring or fixing code
