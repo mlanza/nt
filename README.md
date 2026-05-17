@@ -10,21 +10,21 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
-## Value Proposition
+## Conjuring and Composing Context
 
-`nt` provides a suite of command line tools for shells and agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
+`nt` provides a suite of command line tools for the shell and, by extension, agent runtimes like [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, and Claude Code:
 
 ```zsh
-nt page Atomic # show some page, for example
+nt page Atomic # show me some page
 ```
 
-The big lever is something more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
+However, its big lever is far more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined in your second brain — conjured into chat sessions on demand.
 
-You're not telling an agent to traverse your entire knowledge base, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. This turns your Logseq repo into a local-first retrieval system.
+You're not having an agent to traverse it, though that's possible. Rather, you're deciding exactly what context gets retrieved and shared. It transforms Logseq into a local-first retrieval system.
 
 Prerequisites create a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-That's the flavor of RAG (retrieval augmented generation) you want here: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
+That's the flavor of RAG (retrieval augmented generation) you're afforded: full transparency.  You're not guessing what hidden system prompt or retrieval pipeline an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
 
 This happens by way of keying wikilinks into your prompts, such that
 
