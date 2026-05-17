@@ -20,7 +20,7 @@ nt page Atomic
 
 It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  What's more: you can readily conjure it into chat sessions.
 
-This is less about training an agent to traverse context thant it is you actively deciding when and what to retrieve and share. It's Logseq as a first-class, local-first retrieval system.
+This is less about training an agent to traverse context than you actively deciding when and what to retrieve and share. It's Logseq as a first-class, local-first retrieval system.
 
 Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
