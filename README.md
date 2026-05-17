@@ -24,7 +24,7 @@ This is less about training an agent to traverse context than you actively decid
 
 Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how context combines, and deciding exactly what enters the conversation.
+Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing the structures yourself.  In every chat, you're controlling how context combines, and deciding exactly what enters the conversation.
 
 It's keying wikilinks into your prompts, such that
 
