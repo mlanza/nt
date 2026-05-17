@@ -24,8 +24,20 @@ $wikilinks = @($cleanPrompt | nt wikilinks) |
   ForEach-Object { $_.Trim() } |
   Where-Object { $_ } |
   Select-Object -Unique
+$pattern = '(?s)(\[{3,})(.+?)(\]{3,})'
+$finalPrompt = [regex]::Replace($cleanPrompt, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{
+  param($match)
+  $open = $match.Groups[1].Value
+  $close = $match.Groups[3].Value
+  $inner = $match.Groups[2].Value
+  $count = [math]::Min($open.Length, $close.Length)
+  $target = [math]::Max(2, $count - 1)
+  $prefix = '[' * $target
+  $suffix = ']' * $target
+  return "$prefix$inner$suffix"
+})
 if ($wikilinks.Count -eq 0) {
-  Write-Output $cleanPrompt
+  Write-Output $finalPrompt
   return
 }
 $aboutArgs = @('about') + $wikilinks + @('--agent')
@@ -35,4 +47,4 @@ if ($LASTEXITCODE -ne 0 -or -not $contextText) {
   $warnings = ($wikilinks | ForEach-Object { "⚠️ [[$_]]" }) -join ', '
   $contextText = "[Wikilinks not found: $warnings]"
 }
-Write-Output "$cleanPrompt`n`n---`n$contextText"
+Write-Output "$finalPrompt`n`n---`n$contextText"
