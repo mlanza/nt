@@ -28,7 +28,7 @@ It's effect is realized when you key wikilinks into your prompts, such that
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the prerequsites of both, and their prerequisites, recursively.
+is expanded.  In addition to the prompt you get the Coding page, the Atomic page, the prerequisites of both, and their prerequisites, recursively.
 
 > 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
