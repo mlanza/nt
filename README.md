@@ -18,11 +18,11 @@ The tool was designed to minimize ceremony, to compose, and to mind the Unix phi
 nt page Atomic
 ```
 
-That's one lever. The big lever is far more.  It's your ubiquitous language — the concepts, rules, workflows, and skills you've refined — conjured into chat sessions on demand.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular and portable, fully available to any agent.  And what's more it can be conjured into chat sessions on demand.
 
-You're not asking an agent to traverse it, though that's possible. Rather, it's you deciding exactly what context gets retrieved and shared. It's Logseq as a local-first retrieval system.
+You're not asking an agent to traverse it, though that's possible. Rather, you're actively deciding what context gets retrieved and shared. It's Logseq as a first-class, local-first retrieval system.
 
-Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the context needed to make them meaningful.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
+Prerequisites are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessasy context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
 This affords a flavor of RAG (retrieval augmented generation) that is fully transparent.  You're not guessing what system prompt or retrieval process an agent is using.  You've designing the structures yourself.  In every chat, you're controlling how they combine, and deciding exactly what enters the conversation.
 
@@ -73,7 +73,7 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 ### Prompt Expansion Feature
 
-An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.
+An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.  Once installed, wikilinks enters into prompts expand automatically.
 
 #### Pi (π)
 
