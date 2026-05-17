@@ -18,7 +18,7 @@ The suite of commands for the shell and, by extension, agent runtimes like [pi](
 nt page Atomic
 ```
 
-It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  What's more: you can readily conjure it into chat sessions.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context with you, *wherever you are*.  What's more: you can readily conjure it into chat sessions.
 
 This is less about training an agent to traverse context than you actively deciding when and what to retrieve and share. It's Logseq as a first-class, local-first retrieval system.
 
