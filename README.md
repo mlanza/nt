@@ -114,7 +114,6 @@ nt props Coding
 ```md
 # Coding
 tags:: AI, [[Making apps]], Skill
-alias:: [[Spec Coding]], [[Vibe Coding]]
 prerequisites:: [[Clojure Way]], [[Coding Style]]
 description:: Use when you're writing, refactoring or fixing code
 ```
