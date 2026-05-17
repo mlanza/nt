@@ -1402,6 +1402,12 @@ program
   }));
 
 program
+  .command('prompt')
+  .description(`Expands wikilinks in a prompt, ignoring fenced code blocks ${PIPEABLE}`)
+  .example('Expand passed in prompt', 'nt prompt "Your text with [[Link]] and a code block"')
+  .example('Expand piped in prompt', 'echo "Your text with [[Link]] and a code block" | nt prompt')
+
+program
   .command('prop')
   .description('Rewrite page properties')
   .option('-a, --add <value>', 'Property to add (format: key=value)', { collect: true })

@@ -3,7 +3,9 @@ param(
   [Alias('t')]
   [string]$type = 'bracket',
   [Alias('priority')]
-  [switch]$include_priority
+  [switch]$include_priority,
+  [Alias('fenced','include-fenced')]
+  [switch]$include_fenced
 )
 
 # Split comma-separated types into array
@@ -29,17 +31,23 @@ foreach ($t in $typeArray) {
   }
 }
 
+$inputLines = @($input)
+$content = $inputLines -join "`n"
+
+$content = [regex]::Replace($content, '(?s)\[\[\[.*?\]\]\]', '')
+
+if (-not $include_fenced) {
+  $content = [regex]::Replace($content, '(?s)```.*?```', '')
+}
+
 $results = @()
-$input | ForEach-Object {
-  $line = $_
-  foreach ($pattern in $selectedPatterns) {
-    $matches = [regex]::Matches($line, $pattern)
-    foreach ($match in $matches) {
-      if ($match.Groups.Count -gt 1) {
-        for ($i = 1; $i -lt $match.Groups.Count; $i++) {
-          if ($match.Groups[$i].Success) {
-            $results += $match.Groups[$i].Value
-          }
+foreach ($pattern in $selectedPatterns) {
+  $matches = [regex]::Matches($content, $pattern)
+  foreach ($match in $matches) {
+    if ($match.Groups.Count -gt 1) {
+      for ($i = 1; $i -lt $match.Groups.Count; $i++) {
+        if ($match.Groups[$i].Success) {
+          $results += $match.Groups[$i].Value
         }
       }
     }
