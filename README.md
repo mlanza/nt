@@ -85,9 +85,9 @@ pi install ~/.local/share/nt/adapters/pi/nt.js
 
 ### Generating `AGENTS.md`
 
-While technically possible to give the agent a robust `AGENTS.md` describing all the activities you perform together, there's no need to do that.  If your Logseq pages are well-defined and modular, you just conjure the page for the appropriate activity when the need arises.
+While technically possible to give the agent a robust `AGENTS.md` describing all the activities you perform together, there's no need.  If your Logseq pages are well-defined and modular, conjure the page for the activity when the need arises.
 
-Therefore, bootstrap only the fundamentals in `AGENTS.md`.  Mine currently looks like this:
+Instead, bootstrap only the fundamentals in `AGENTS.md`.  Mine currently looks like this:
 
 ```md
 # Agent Instructions
@@ -101,7 +101,7 @@ And I generate it occasionally to real filesystem locations only to avoid having
 nt about "Agent Instructions" --agent | nt document --para | cat -s
 ```
 
-The ubiquitous language I refer to there are wiki terms, things well defined in Logseq pages.  The page about Ubiquitous Language is linked to a preprequisite skill telling the agent how too navigate terms with `nt`.
+The ubiquitous language I refer to there are wiki terms, things I've deliberately defined in Logseq pages.  The page about Ubiquitous Language is linked to a preprequisite skill telling the agent how to navigate terms with `nt`.
 
 While I code routinely, I don't mention **Coding** in `AGENTS.md`.   That's because when it's time to code, the mere mention of it — a sentence like the one in the intro — conjures context tailor-made to the activity:
 
@@ -148,13 +148,13 @@ Some topics build on other other topics and cannot stand on their own.  These pa
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-The above effectively identifies terms and calls:
+The above identifies its terms and calls:
 
 ```zsh
 nt about Coding Atomic
 ```
 
-The key difference between `about` and `page` is the one expands prerequisites recursively while the other doesn't.
+The key difference between `about` and `page` is only the former expands prerequisites.
 
 ```zsh
 nt page Coding
@@ -163,7 +163,7 @@ nt page Atomic
 
 ### Content Filtering
 
-The most typical way to view a page is handing a page name to the `nt page` command:
+The typical way to view a page is via `nt page`:
 ```zsh
 nt page Atomic
 ```
