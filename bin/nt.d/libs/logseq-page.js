@@ -480,15 +480,12 @@ class LogseqPage {
 
   static selects(options, config) {
     const filter = config[options.filter];
-    if (!filter) {
-      throw new Error(`Filter '${options.filter}' not found in config`);
-    }
     const { less, only } = options;
     const props = /^[^\s:]+:: .+/;
     const agent = less?.[0] === true;
     const human = only?.[0] === true;
     const fixed = less?.includes("props") ? () => false : props.test.bind(props);
-    const patterns = agent || human ? Object.values(filter) : null;
+    const patterns = agent || human ? filter ? Object.values(filter) : [] : null;
     const agentLess = agent ? patterns : null;
     const humanOnly = human ? patterns : null;
     const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);

@@ -58,15 +58,14 @@ function tskConfig(path){
   }
   return new Task(async function(reject, resolve){
     try {
-      const existing = await exists(path);
-      if (!existing) {
-        throw new Guidance(`Note config not present at ${path}.`);
+      const file = await exists(path);
+      if (file) {
+        const text = await Deno.readTextFile(file);
+        const config = expandConfig(toml.parse(text));
+        resolve(config);
+      } else { //config not required
+        resolve(expandConfig(null));
       }
-
-      const text = await Deno.readTextFile(existing);
-      const config = expandConfig(toml.parse(text));
-
-      resolve(config);
     } catch (cause) {
       reject(explain(`Problem reading config at ${path}.`, cause));
     }
