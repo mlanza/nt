@@ -85,13 +85,37 @@ pi install ~/.local/share/nt/adapters/pi/nt.js
 
 ### Generating `AGENTS.md`
 
-While technically possible to give the agent a minimal `AGENTS.md` and ask it to lookup even the baseline instructions, that's just slow.  Although the content will be redundant (in Logseq and in your filesystem), it's more expedient to bootstrap your agent from a file written to your project or to the designated place used by your preferred agentic runtime.
+While technically possible to give the agent a robust `AGENTS.md` describing all the activities you perform together, there's no need to do that.  If your Logseq pages are well-defined and modular, you just conjure the page for the appropriate activity when the need arises.
 
-The following assumes the target page `prerequisites` is replete with your most crucial rules and instructions.  The `document` command slightly flattens Logseq's outline formatting.
+Therefore, bootstrap only the fundamentals in `AGENTS.md`.  Mine currently looks like this:
+
+```md
+# Agent Instructions
+prerequisites:: [[Ubiquitous Language]], [[Director]]
+Your chief aim is aligning yourself with and serving the [[Director]].  It helps to understand his values and methodology.  Recognizing and looking up the [[Ubiquitous Language]] by which he communicates aids this.
+```
+
+And I generate it occasionally to real filesystem locations only to avoid having to start every chat session by repeating the basics.
 
 ```zsh
 nt about "Agent Instructions" --agent | nt document --para | cat -s
 ```
+
+The ubiquitous language I refer to there are wiki terms, things well defined in Logseq pages.  The page about Ubiquitous Language is linked to a preprequisite skill telling the agent how too navigate terms with `nt`.
+
+While I code routinely, I don't mention **Coding** in `AGENTS.md`.   That's because when it's time to code, the mere mention of it — a sentence like the one in the intro — conjures context tailor-made to the activity:
+
+```md
+# Coding
+tags:: AI, Skill, [[Command Line]], [[Atomic Way]]
+prerequisites:: [[Designing for Validation]], [[Keeping a Notepad]], [[Ensuring Reversibility]], [[Delivering in Baby Steps]], [[Core Docs]]
+description:: Use when developing or debugging a program or an app.
+You are [[Keeping a Notepad]] and [[Ensuring Reversibility]] while [[Delivering in Baby Steps]].
+```
+
+Each piece of that prompt links to some recursively-expanded skill or context.  **Ensuring Reversibility** explains using `git` as a safety net for all filesystem changes.
+
+No need to track skills in the filesystem the way most agent runtimes prescribe.  Logseq subsumes skills, commands and most other jobs since everything agents do, more or less, relies on putting the right context in front of them at the right time.
 
 ### Progressive Disclosure
 
@@ -111,17 +135,30 @@ nt props Coding
 
 ```md
 # Coding
-tags:: AI, [[Making apps]], Skill
-prerequisites:: [[Clojure Way]], [[Coding Style]]
-description:: Use when you're writing, refactoring or fixing code
+tags:: AI, Skill, [[Command Line]], [[Atomic Way]]
+prerequisites:: [[Designing for Validation]], [[Keeping a Notepad]], [[Ensuring Reversibility]], [[Delivering in Baby Steps]], [[Core Docs]]
+description:: Use when developing or debugging a program or an app.
 ```
 
 ### Prerequisites
 
-Some topics build on other other topics and cannot stand on their own.  These pages require that added context to make sense.  Include a `prerequisites` property on the page that links to any prerequisites.  Whenever the page is retrieved via `about`, they'll automatically — and recursively — be included.
+Some topics build on other other topics and cannot stand on their own.  These pages require that added context to make sense.  Include a `prerequisites` property on the page that links to any prerequisites.  Whenever the page is retrieved via `about` or `prompt`, they'll automatically — and recursively — be included.
 
 ```zsh
-nt about Coding
+nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
+```
+
+The above effectively identifies terms and calls:
+
+```zsh
+nt about Coding Atomic
+```
+
+The key difference between `about` and `page` is the one expands prerequisites recursively while the other doesn't.
+
+```zsh
+nt page Coding
+nt page Atomic
 ```
 
 ### Content Filtering
