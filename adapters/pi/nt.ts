@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import * as path from "path";
 
 export default function note(pi: ExtensionAPI) {
   pi.on("input", async (event) => {
@@ -7,7 +8,21 @@ export default function note(pi: ExtensionAPI) {
     if (event.source === "extension") return { action: "continue" };
 
     try {
-      const result = await pi.exec("nt", ["prompt", text], { timeout: 10000 });
+      // On Windows shebangs aren’t respected, so explicitly invoke the Deno script; elsewhere use the nt shim
+      const isWin = process.platform === "win32";
+      const cmd = isWin ? "deno" : "nt";
+      const args = isWin
+        ? [
+            "run",
+            "--allow-run",
+            "--allow-read",
+            "--allow-env",
+            path.join(process.cwd(), "bin", "nt"),
+            "prompt",
+            text,
+          ]
+        : ["prompt", text];
+      const result = await pi.exec(cmd, args, { timeout: 10000 });
       if (result.code !== 0) {
         console.error(`[nt] prompt failed: ${result.stderr}`);
         return { action: "continue" };

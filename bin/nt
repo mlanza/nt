@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-run --allow-read --allow-env
+#!/usr/bin/env -S deno run --allow-run --allow-read --allow-env
 import "https://deno.land/x/dotenv/load.ts";
 
 const [sub, ...rest] = Deno.args;
