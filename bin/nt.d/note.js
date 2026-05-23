@@ -1485,6 +1485,11 @@ program
   .arguments(PIPED);
 
 program
+  .command('headings')
+  .description('Filter lines matching Markdown headings (h1–h6) (pipeline-only)')
+  .arguments(PIPED);
+
+program
   .command('clean')
   .description('Clean invisible and zero-width control characters from stdin (pipeline-only)')
   .arguments(PIPED);
