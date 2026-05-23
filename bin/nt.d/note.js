@@ -1496,8 +1496,6 @@ program
   .description('Clean invisible and zero-width control characters from stdin')
   .arguments(PIPED);
 
-
-
 program
   .command(
     "config",
