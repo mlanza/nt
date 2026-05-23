@@ -1,5 +1,9 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import * as path from "path";
+import { fileURLToPath } from "url";
+
+const adapterDir = path.dirname(fileURLToPath(import.meta.url));
+const ntScript = path.join(adapterDir, "..", "..", "bin", "nt");
 
 export default function note(pi: ExtensionAPI) {
   pi.on("input", async (event) => {
@@ -17,7 +21,7 @@ export default function note(pi: ExtensionAPI) {
             "--allow-run",
             "--allow-read",
             "--allow-env",
-            path.join(process.cwd(), "bin", "nt"),
+            ntScript,
             "prompt",
             text,
           ]

@@ -10,6 +10,62 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
+<details>
+  <summary><code>nt --help</code></summary>
+
+```console
+Usage:   nt
+Version: 1.0.0-beta
+
+Description:
+
+  A general-purpose tool for interacting with Logseq content.
+
+   📨 = supply primary argument directly or pipe them in
+   📥 = pipeline-only operations
+
+Options:
+
+  -h, --help     - Show this help.
+  -V, --version  - Show the version number for this program.
+
+Commands:
+
+  pages                                   - List pages
+  page, p         [name|datestamp]        - Get page 📨
+  post            [name] [content]        - Sends content to page or, if omitted, to today's journal entry 📥
+  write           <name>                  - Write page from stdin
+  wipe            [name]                  - Wipe content, but not properties, from a page
+  export          <name>                  - Export page content to destination
+  tags, t         [tags...]               - List pages with all the given tags 📨
+  has, h          [prop] [vals...]        - List pages having a given prop with value(s) 📨
+  prereq          [name]                  - Recursively list page prerequisites 📨
+  path            [name]                  - The path to the page file 📨
+  props           [name] [properties...]  - Get page properties 📨
+  search, s       [term]                  - Search pages 📨
+  name, n         [id|name]               - Get page name as cased from page ID or case-insensitive name. 📨
+  alias           [alias]                 - Get page name from alias 📨
+  backlinks, b    [name]                  - List pages that link to a given page 📨
+  query, q        <query> [args...]       - Run Datalog query supplying args 📨
+  list, l         [item...]               - List items
+  day, d          [offset]                - Find date from offset 📨
+  skills                                  - List skills and their descriptions
+  about, a        [name...]               - Retrieves information about a topic including prequisites
+  prompt                                  - Expands wikilinks in a prompt, ignoring fenced code blocks 📨
+  prop            📥                      - Rewrite page properties
+  parse           📥                      - Convert flat markdown to structured blocks
+  stringify, str  📥                      - Convert structured blocks back to markdown
+  seen            📥                      - Filters to seen lines
+  exists          📥                      - Filters paths for existing files
+  links           📥                      - Extracts links from content
+  wikilinks       📥                      - Extracts wikilinks from content
+  sections        📥                      - Filter content by Markdown section names
+  clean           📥                      - Clean invisible and zero-width control characters
+  config                                  - Show configuration
+```
+
+</details>
+
 ## Conjuring and Composing Context
 
 You gain a suite of commands for retrieving and reusing carefully-crafted context:
@@ -18,7 +74,7 @@ You gain a suite of commands for retrieving and reusing carefully-crafted contex
 nt page Atomic
 ```
 
-It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [Pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
 
 It happens when you key wikilinks into your prompts, such that
 
@@ -32,7 +88,7 @@ is expanded.  In addition to the prompt you entered you also get the Coding page
 
 **Prerequisites** are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
+Unlike some [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
 
 ## Getting Started
 
@@ -55,12 +111,12 @@ Set these env vars:
 * **LOGSEQ_TOKEN** - a token you configured for the HTTP API
 * **NOTE_CONFIG** - path to optional config (e.g., `~/.config/nt/config.toml`)
 
-The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for **content filtering**.
+The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for [content filtering](#content-filtering).
 
 ```toml
 # config.toml
 [logseq]
-repo = 'D:\notes'
+repo = '~/Documents/notes' # on Windows: 'D:\notes'
 endpoint = 'http://127.0.0.1:12315/api'
 token = 'mellon'
 ```
@@ -73,7 +129,9 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 ### Prompt Expansion
 
-An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.  Once installed, wikilinks entered into prompts expand automatically.
+An agent, naturally, has access to nt as a command line tool. The prompt expansion feature must be installed separately. Once installed, wikilinks entered into prompts expand automatically.
+
+This feature is my daily driver — the lever that feels magical when used. Like casting a spell. That’s why I describe it as “conjuring.”
 
 #### Pi (π)
 
@@ -148,18 +206,19 @@ Some topics build on other other topics and cannot stand on their own.  These pa
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-The above identifies its terms and calls:
+The above identifies the terms and where it might call
 
 ```zsh
-nt about Coding Atomic
+nt list Coding Atomic | nt page
 ```
 
-The key difference between `about` and `page` is only the former expands prerequisites.
+that doesn't go far enough.  That would expose just the 2 pages themselves.  Rather it calls
 
 ```zsh
-nt page Coding
-nt page Atomic
+nt list Coding Atomic | nt about
 ```
+
+which goes farther.  It recursively expands page prerequisites.
 
 ### Content Filtering
 
@@ -228,7 +287,7 @@ This one is for the **agent** and filters out that noise:
 ```zsh
 nt page Atomic --less
 ```
-Internally, this what `about` does to faciliate a clean agent hand-off.
+Internally, this is what `about` does to faciliate a clean agent hand-off.
 
 The following option flags are synonyms — their audience-focused terms: memory aids.
 ```zsh
@@ -253,6 +312,40 @@ It's a reason to prefer Logseq to Obsidian.
 nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
+Store named queries in the config
+
+```toml
+[query]
+page = '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]'
+```
+
+to enable shorthand calls:
+
+```zsh
+nt q page Atomic
+```
+
+Add as many as you like:
+
+```toml
+between = """
+[:find (pull ?b [*])
+  :in $ ?start ?end
+  :where
+  [?b :block/content ?blockcontent]
+  [?b :block/page ?page]
+  [?page :block/name ?name]
+  [?b :block/scheduled ?scheduled]
+  [(>= ?scheduled ?start)]
+  [(<= ?scheduled ?end)]]
+"""
+```
+```zsh
+nt q between 20260501 20260601
+```
+
+These calls return JSON.
+
 Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example, if you get
 
 ```zsh
@@ -261,9 +354,7 @@ Error: Missing rules var '%' in :in
 
 there's likely something in the advanced query syntax it can't support.
 
-Look here for help forming valid queries:
-
-* https://adxsoft.github.io/logseqadvancedquerybuilder/
+Look [here](https://adxsoft.github.io/logseqadvancedquerybuilder/) for help forming valid queries.
 
 ## License
 [MIT](./LICENSE.md)
