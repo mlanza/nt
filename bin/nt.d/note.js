@@ -1485,13 +1485,15 @@ program
   .arguments(PIPED);
 
 program
-  .command('headings')
-  .description('Filter lines matching Markdown headings (h1–h6) (pipeline-only)')
-  .arguments(PIPED);
+  .command('sections')
+  .description('Filter content by Markdown section names')
+  .option('--only [sections:string]', 'Keep only the named sections', {collect: true})
+  .arguments(PIPED)
+  .example("Show only the Style section", "nt page Soul | nt sections --only Style");
 
 program
   .command('clean')
-  .description('Clean invisible and zero-width control characters from stdin (pipeline-only)')
+  .description('Clean invisible and zero-width control characters from stdin')
   .arguments(PIPED);
 
 
