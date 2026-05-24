@@ -148,17 +148,19 @@ Some topics build on other other topics and cannot stand on their own.  These pa
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-The above identifies its terms and effectively calls:
+The above identifies the terms and where it might call
+
+```zsh
+nt list Coding Atomic | nt page
+```
+
+that doesn't go far enough as that would just expose the 2 pages themselves.  Rather it calls
 
 ```zsh
 nt list Coding Atomic | nt about
 ```
 
-The key difference between `about` and `page` is only the former expands prerequisites.
-
-```zsh
-nt list Coding Atomic | nt page
-```
+which goes the extra mile and recursively expands all the prerequisites.
 
 ### Content Filtering
 
