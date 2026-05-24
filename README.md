@@ -154,13 +154,13 @@ The above identifies the terms and where it might call
 nt list Coding Atomic | nt page
 ```
 
-that doesn't go far enough as that would just expose the 2 pages themselves.  Rather it calls
+that doesn't go far enough.  That would expose just the 2 pages themselves.  Rather it calls
 
 ```zsh
 nt list Coding Atomic | nt about
 ```
 
-which goes the extra mile and recursively expands all the prerequisites.
+which goes farther.  It recursively expands page prerequisites.
 
 ### Content Filtering
 
