@@ -148,17 +148,16 @@ Some topics build on other other topics and cannot stand on their own.  These pa
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-The above identifies its terms and calls:
+The above identifies its terms and effectively calls:
 
 ```zsh
-nt about Coding Atomic
+nt list Coding Atomic | nt about
 ```
 
 The key difference between `about` and `page` is only the former expands prerequisites.
 
 ```zsh
-nt page Coding
-nt page Atomic
+nt list Coding Atomic | nt page
 ```
 
 ### Content Filtering
