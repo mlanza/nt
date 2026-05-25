@@ -275,8 +275,8 @@ between = """
 This permits shorthand queries:
 
 ```zsh
-nt q between 20260501 20260601
 nt q page Atomic
+nt q between 20260501 20260601
 ```
 
 Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example, if you get
