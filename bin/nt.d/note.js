@@ -1340,7 +1340,7 @@ program
 program
   .command('query')
   .alias('q')
-  .description(`Run Datalog query and args ${PIPEABLE}`)
+  .description(`Run Datalog query supplying args ${PIPEABLE}`)
   .arguments("<query> [args...]")
   .option('--limit <type:integer>', 'Limit to N entries (omit for no limit)', {default: Infinity})
   .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
@@ -1480,11 +1480,6 @@ program
   .example("List wikilinks on a page", `nt page Boardgames | nt wikilinks`);
 
 program
-  .command('wikify')
-  .description('Convert markdown headers to wiki format')
-  .arguments(PIPED);
-
-program
   .command('sections')
   .description('Filter content by Markdown section names')
   .option('--only [sections:string]', 'Keep only the named sections', {collect: true})
@@ -1493,7 +1488,7 @@ program
 
 program
   .command('clean')
-  .description('Clean invisible and zero-width control characters from stdin')
+  .description('Clean invisible and zero-width control characters')
   .arguments(PIPED);
 
 program
