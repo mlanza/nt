@@ -32,7 +32,7 @@ is expanded.  In addition to the prompt you entered you also get the Coding page
 
 **Prerequisites** are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-Unlike some RAG (retrieval augmented generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
+Unlike some [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
 
 ## Getting Started
 
@@ -55,7 +55,7 @@ Set these env vars:
 * **LOGSEQ_TOKEN** - a token you configured for the HTTP API
 * **NOTE_CONFIG** - path to optional config (e.g., `~/.config/nt/config.toml`)
 
-The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for **content filtering**.
+The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for [content filtering](#content-filtering).
 
 ```toml
 # config.toml
