@@ -84,7 +84,7 @@ Slip wikilinks into prompts and, once prompt expansion is installed, the Pi adap
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That transparency turns Logseq into a first-class, local-first retrieval system you can audit and control.  The `nt prompt` command provides in the shell what the adapter provides in Pi.
+The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That transparency turns Logseq into a first-class, local-first retrieval system you can audit and control.
 
 > 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
@@ -205,6 +205,8 @@ The `description` cues an agent into the contexts in which a skill becomes usefu
 ### Prerequisites
 
 Prerequisites are how you engineer context once and rely on it everywhere. Every page that needs supporting concepts links to them with a `prerequisites` property, so when `nt about` or prompt expansion runs, the required layers arrive automatically. No guessing what background the agent needs; you define it once and prompt expansion conjures it for every session.
+
+The `nt prompt` command provides in the shell what the adapter provides in Pi:
 
 ```zsh
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
