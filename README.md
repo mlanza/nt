@@ -75,7 +75,7 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 While my daily driver is [prompt expansion](#prompt-expansion), the CLI is general purpose and agent ready.  There are a slew of practical, composable commands:
 
-```zsh
+```console
 Usage:   nt
 Version: 1.0.0-beta
 
