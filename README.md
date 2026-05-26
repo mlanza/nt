@@ -71,6 +71,61 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 ## Going Deeper
 
+### CLI First
+
+While my daily driver is [prompt expansion](#prompt-expansion), the CLI is general purpose and agent ready.  There are a slew of practical, composable commands:
+
+```zsh
+Usage:   nt
+Version: 1.0.0-beta
+
+Description:
+
+  A general-purpose tool for interacting with Logseq content.
+
+   📨 = supply primary argument directly or pipe them in
+   📥 = pipeline-only operations
+
+Options:
+
+  -h, --help     - Show this help.
+  -V, --version  - Show the version number for this program.
+
+Commands:
+
+  pages                                   - List pages
+  page, p         [name|datestamp]        - Get page 📨
+  post            [name] [content]        - Sends content to page or, if omitted, to today's journal entry 📥
+  write           <name>                  - Write page from stdin
+  wipe            [name]                  - Wipe content, but not properties, from a page
+  export          <name>                  - Export page content to destination
+  tags, t         [tags...]               - List pages with all the given tags 📨
+  has, h          [prop] [vals...]        - List pages having a given prop with value(s) 📨
+  prereq          [name]                  - Recursively list page prerequisites 📨
+  path            [name]                  - The path to the page file 📨
+  props           [name] [properties...]  - Get page properties 📨
+  search, s       [term]                  - Search pages 📨
+  name, n         [id|name]               - Get page name as cased from page ID or case-insensitive name. 📨
+  alias           [alias]                 - Get page name from alias 📨
+  backlinks, b    [name]                  - List pages that link to a given page 📨
+  query, q        <query> [args...]       - Run Datalog query supplying args 📨
+  list, l         [item...]               - List items
+  day, d          [offset]                - Find date from offset 📨
+  skills                                  - List skills and their descriptions
+  about, a        [name...]               - Retrieves information about a topic including prequisites
+  prompt                                  - Expands wikilinks in a prompt, ignoring fenced code blocks 📨
+  prop            📥                      - Rewrite page properties
+  parse           📥                      - Convert flat markdown to structured blocks
+  stringify, str  📥                      - Convert structured blocks back to markdown
+  seen            📥                      - Filters to seen lines
+  exists          📥                      - Filters paths for existing files
+  links           📥                      - Extracts links from content
+  wikilinks       📥                      - Extracts wikilinks from content
+  sections        📥                      - Filter content by Markdown section names
+  clean           📥                      - Clean invisible and zero-width control characters
+  config                                  - Show configuration
+```
+
 ### Prompt Expansion
 
 An agent, naturally, has access to `nt` as a command line tool.  The prompt expansion feature must be installed separately.  Once installed, wikilinks entered into prompts expand automatically.
