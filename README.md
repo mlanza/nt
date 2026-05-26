@@ -92,7 +92,7 @@ The adapter pulls in the Coding page, the Atomic page, and the prerequisites of 
 
 Unlike some [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
 
-That's **conjuring**: you engineer the blocks, define their prerequisites, and then you type a handful of terms and the prompt fills out the fully formed instructions you meant to give.  It felt powerful, like an incantation.  That’s why I used that word.
+You engineer the blocks, define their prerequisites, and then you type a handful of terms and the prompt fills out the fully formed instructions you meant to give.  It feels powerful, like uttering an incantation.  That’s why I used the word **conjuring**.
 
 ## Getting Started
 
