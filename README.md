@@ -179,13 +179,13 @@ No need to track skills in the filesystem the way most agent runtimes prescribe.
 
 Take skills.  Want to provide a menu of capabilities?  Create a Logseq page called `Skill`. Then start defining pages, tagging them `Skill`, and adding a `description` property.
 
-After defining a bunch, they can, conveniently, be listed via:
+After defining a bunch, they can, conveniently, be listed via by you or the agent:
 
 ```zsh
 nt skills
 ```
 
-Seeing the properties — or frontmatter — for a page gives a sense of it:
+Seeing the properties — or frontmatter — for a page gives a sense of what a skill is about:
 
 ```zsh
 nt props Coding
@@ -197,6 +197,8 @@ tags:: AI, Skill, [[Command Line]], [[Atomic Way]]
 prerequisites:: [[Designing for Validation]], [[Keeping a Notepad]], [[Ensuring Reversibility]], [[Delivering in Baby Steps]], [[Core Docs]]
 description:: Use when developing or debugging a program or an app.
 ```
+
+The `description` cues an agent into the contexts in which a skill becomes useful.  By handing an agent a skill for accessing Logseq content via `nt`, it decides when to read up and employ needed skills.
 
 ### Prerequisites
 
