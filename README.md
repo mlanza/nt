@@ -254,11 +254,22 @@ It's a reason to prefer Logseq to Obsidian.
 nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
 ```
 
-Queries can be named and stored in the config:
+Store named queries in the config
 
 ```toml
 [query]
 page = '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]'
+```
+
+to enable shorthand calls:
+
+```zsh
+nt q page Atomic
+```
+
+Add as many as you like:
+
+```toml
 between = """
 [:find (pull ?b [*])
   :in $ ?start ?end
@@ -271,13 +282,11 @@ between = """
   [(<= ?scheduled ?end)]]
 """
 ```
-
-This permits shorthand queries:
-
 ```zsh
-nt q page Atomic
 nt q between 20260501 20260601
 ```
+
+These calls return JSON.
 
 Any quirks around whether a query runs come from the HTTP API’s implementation, not from `nt` itself. If you’re testing what the API does or doesn’t support, call it directly with `curl`.  For example, if you get
 
@@ -287,9 +296,7 @@ Error: Missing rules var '%' in :in
 
 there's likely something in the advanced query syntax it can't support.
 
-Look here for help forming valid queries:
-
-* https://adxsoft.github.io/logseqadvancedquerybuilder/
+Look [here](https://adxsoft.github.io/logseqadvancedquerybuilder/) for help forming valid queries.
 
 ## License
 [MIT](./LICENSE.md)
