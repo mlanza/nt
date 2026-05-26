@@ -18,7 +18,7 @@ You gain a suite of commands for retrieving and reusing carefully-crafted contex
 nt page Atomic
 ```
 
-It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
+It makes your ubiquitous language — the concepts, rules, workflows, and skills you're perpetually refining — modular, portable, and agent agnostic.  Your context goes with you *wherever you are*, whether in [Pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
 
 It happens when you key wikilinks into your prompts, such that
 
