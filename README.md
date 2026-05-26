@@ -11,7 +11,7 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
 <details>
-  <summary>Click for CLI commands</summary>
+  <summary><code>nt --help</code></summary>
 
 ```console
 Usage:   nt
