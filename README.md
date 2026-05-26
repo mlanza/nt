@@ -8,7 +8,7 @@
 
 Your local-first commonplace book 📖 is memory scaffolding, a near perfect spot for accessing and keeping the information and instructions an agent needs to thrive — all in an ubiquitous language of your making.  How better to align with and teach an agent your craft than by sharing your second 🧠 with it.
 
-nt keeps that knowledge modular and portable. Each Logseq page becomes a reusable chunk of instruction, a term you can drop into a prompt, and a reminder of how you prefer to work. The CLI stays local, transparent, ready to hand that craft to humans or agents without surprises.
+nt keeps that knowledge modular and portable. Each Logseq page becomes a reusable chunk of instruction, a term you can drop into a prompt, and a reminder of how you prefer to work. The tool mediates between you and your agent, transmits that craft without surprises.
 
 I built it to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands frequently take the primary operand directly or receive it via stdin.
 
@@ -76,7 +76,7 @@ You gain a suite of commands for retrieving and reusing carefully-crafted contex
 nt page Atomic
 ```
 
-Those commands make your ubiquitous language — the concepts, rules, workflows, and skills you're always refining — portable.  Your context travels with you *wherever you are*, whether in [Pi](https://pi.dev), [OpenCode](https://opencode.ai), Gemini, or Claude Code.  Conjure it into conversations.
+Those commands make your ubiquitous language — the concepts, rules, workflows, and skills you're always refining — portable.  Your context travels with you *wherever you are*, whether in Pi, OpenCode, Gemini, or Claude Code.  Conjure it into conversations.
 
 Slip wikilinks into prompts and, once prompt expansion is installed, the Pi adapter expands them automatically.  Try this:
 
@@ -84,7 +84,7 @@ Slip wikilinks into prompts and, once prompt expansion is installed, the Pi adap
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That transparency turns Logseq into a first-class, local-first retrieval system you can audit and control.  The `nt prompt` command models the same interaction if you prefer to keep it local and explicit.
+The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That transparency turns Logseq into a first-class, local-first retrieval system you can audit and control.  The `nt prompt` command provides in the shell what the adapter provides in Pi.
 
 > 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
@@ -210,7 +210,7 @@ Prerequisites are how you engineer context once and rely on it everywhere. Every
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-That command knows the terms and who they depend on. If it merely listed the pages:
+That command knows recognizes terms. If it merely listed the pages:
 
 ```zsh
 nt list Coding Atomic | nt page
@@ -222,7 +222,7 @@ you only get the two headings. But `nt about` goes farther:
 nt list Coding Atomic | nt about
 ```
 
-It recursively expands each page's prerequisites, delivering engineered context.
+It recursively expands each page's prerequisites.  That’s the linchpin to delivering engineered context.
 
 ### Content Filtering
 
@@ -231,7 +231,7 @@ The default way to read a page is `nt page`:
 nt page Atomic
 ```
 
-My Logseq repo mixes [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) notes with [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) tasks, links, and project instructions. Not every block should reach an agent. It's not about secrecy; it's about giving the agent only the context that matters.
+My Logseq repo mixes [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) notes with [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) tasks, links, and project instructions. Not every block should reach an agent. It's not about secrecy; it's about not confusing it with context it was never meant to see.
 
 `nt` filters at the block level. A filtered block brings its children along. If a block is on your no-go list, so is everything it nests.
 
@@ -254,7 +254,7 @@ tasks = "^(TODO|DOING|DONE|LATER|NOW|CANCELED|WAITING)"
 links = "^\\s*(?:https?:\\/\\/\\S+|\\[[^\\]\\r\\n]+\\]\\(\\s*https?:\\/\\/[^\\s)]+(?:\\s+\"[^\"\\r\\n]*\")?\\s*\\))\\s*$"
 ```
 
-Then I can throw my keys at the CLI:
+Then I can throw my keys at it:
 ```zsh
 nt page Atomic --less tasks
 ```
@@ -263,7 +263,7 @@ or
 nt page Atomic --only tasks
 ```
 
-Want to combine them?
+Or combine them:
 ```zsh
 nt page Atomic --less tasks --less links
 ```
@@ -295,7 +295,7 @@ nt page Atomic --less --filter=public
 
 ### Querying via Datalog
 
-Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine. `nt q` puts Datalog inside reach so you can build whatever queries or custom commands you like. That’s one reason I keep tweaking Logseq instead of switching to something else.
+Logseq's superpower is its [DataScript](https://github.com/tonsky/datascript) spine. `nt query` (`nt q`) puts Datalog inside reach so you can build whatever queries or custom commands you like. The ability to define and use custom queries is one reason I still prefer Logseq over similar apps.
 
 ```zsh
 nt q '[:find (pull ?p [*]) :where [?p :block/original-name "$1"]]' Atomic
