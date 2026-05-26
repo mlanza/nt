@@ -57,7 +57,7 @@ Set these env vars:
 
 The config file, in addition to providing an alternate means to setting `repo`, `endpoint`, and `token`, is useful for [content filtering](#content-filtering).
 
-```tomlß
+```toml
 # config.toml
 [logseq]
 repo = '~/Documents/notes' # on Windows: 'D:\notes'
