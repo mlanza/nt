@@ -10,6 +10,9 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 The tool was designed to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands can frequently receive the primary operand directly or via stdin.
 
+<details>
+  <summary>Click for CLI commands</summary>
+
 ```console
 Usage:   nt
 Version: 1.0.0-beta
@@ -60,6 +63,8 @@ Commands:
   clean           📥                      - Clean invisible and zero-width control characters
   config                                  - Show configuration
 ```
+
+</details>
 
 ## Conjuring and Composing Context
 
