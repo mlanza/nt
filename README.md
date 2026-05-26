@@ -229,7 +229,7 @@ This one is for the **agent** and filters out that noise:
 ```zsh
 nt page Atomic --less
 ```
-Internally, this what `about` does to faciliate a clean agent hand-off.
+Internally, this is what `about` does to faciliate a clean agent hand-off.
 
 The following option flags are synonyms — their audience-focused terms: memory aids.
 ```zsh
