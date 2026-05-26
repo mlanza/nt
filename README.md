@@ -156,7 +156,7 @@ Your chief aim is aligning yourself with and serving the [[Director]].  It helps
 And I generate it occasionally to real filesystem locations only to avoid having to start every chat session by repeating the basics.
 
 ```zsh
-nt about "Agent Instructions" --agent | nt document --para | cat -s
+nt about "Agent Instructions" | nt document --para | cat -s
 ```
 
 The ubiquitous language I refer to there are wiki terms, things I've deliberately defined in Logseq pages.  The page about Ubiquitous Language is linked to a preprequisite skill telling the agent how to navigate terms with `nt`.
