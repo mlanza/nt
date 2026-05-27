@@ -10,7 +10,7 @@ Your local-first commonplace book 📖 is memory scaffolding, a near perfect spo
 
 nt keeps that knowledge modular and portable. Each Logseq page becomes a reusable chunk of instruction, a term you can drop into a prompt, and a reminder of how you prefer to work. The tool mediates between you and your agent, transmits that craft without surprises.
 
-I built it to minimize ceremony, to compose, and to mind the Unix philosophy.  That's why subcommands frequently take the primary operand directly or receive it via stdin.
+I built it to minimize ceremony, to compose, and to mind the Unix philosophy.  That’s why subcommands frequently take the primary operand directly or receive it via stdin.
 
 <details>
   <summary><code>nt --help</code></summary>
@@ -76,7 +76,7 @@ You gain a suite of commands for retrieving and reusing carefully-crafted contex
 nt page Atomic
 ```
 
-Those commands make your ubiquitous language — the concepts, rules, workflows, and skills you're always refining — portable.  Your context travels with you *wherever you are*, whether in Pi, OpenCode, Gemini, or Claude Code.  Conjure it into conversations.
+Those commands make your ubiquitous language — the concepts, rules, workflows, and skills you’re always refining — portable.  Your context travels with you *wherever you are*, whether in Pi, OpenCode, Gemini, or Claude Code.  Conjure it into conversations.
 
 Slip wikilinks into prompts and, once prompt expansion is installed, the Pi adapter expands them automatically.  Try this:
 
@@ -84,15 +84,15 @@ Slip wikilinks into prompts and, once prompt expansion is installed, the Pi adap
 You are [[Coding]] a Sokoban game using [[Atomic]].
 ```
 
-The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That transparency turns Logseq into a first-class, local-first retrieval system you can audit and control.
+The adapter pulls in the Coding page, the Atomic page, and the prerequisites of both — recursively.  That turns Logseq into a first-class, local-first retrieval system you can control.
 
 > 💡 As a rule of thumb, I name skills using gerunds — sometimes a single word like Coding or Debugging, other times a more specific gerund phrase like Writing Documentation or Planning Releases. I treat skills as recurring activities or modes of work: practices worth refining and reusing.
 
 **Prerequisites** are the backbone, a lightweight form of inheritance.  Concepts build on other concepts, recursively pulling in the necessary context.  Prompting, in turn, becomes an act of composition: combining modular pieces of language, craft, and instruction deliberately.
 
-Unlike some [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) systems, things intentionally remain transparent and predictable.  You're not guessing what system prompt or retrieval process an agent is using.  You're designing pages and their connections so that in every chat you control how context combines and decide exactly what enters the conversation.
+Unlike some [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) systems, things are kept transparent and predictable.  You’re not guessing what system prompt or retrieval process an agent is using.  You’re designing pages and their connections so that in every chat context combines in predictable ways.  You decide exactly what enters the conversation.
 
-You engineer the blocks, define their prerequisites, and then you type a handful of terms and the prompt fills out the fully formed instructions you meant to give.  It feels powerful, like uttering an incantation.  That’s why I use the word **conjure**.
+You engineer the blocks, define their prerequisites, so that when you type a prompt it expands into the instructions you meant to give.  This feels powerful, like uttering an incantation.  Thus the word: **conjure**.
 
 ## Getting Started
 
@@ -131,11 +131,11 @@ Run Logseq in Developer Mode.  Flip it on under `Settings > Advanced`.  Then ena
 
 ## Going Deeper
 
-Think of Logseq as the local-first hub where you compose engineered chunks — pages, prerequisites, filters, skill descriptors. `nt` provides the plumbing that lets you drop the right term into a prompt and expect the exact context you engineered to arrive. Prompt expansion is the lever that delivers that into every request.
+Think of Logseq as the local-first hub where you compose engineered chunks — pages, prerequisites, filters, skill descriptors. `nt` provides the plumbing that lets you drop the right term into a prompt and expect the context you engineered to arrive. Prompt expansion is the lever that delivers that.
 
 ### Prompt Expansion
 
-Prompt expansion is the engine that keeps `nt` conjuring. Install the feature, and every wikilink you drop into a prompt expands into the pages you engineered, their prerequisites, and the prerequisites of those prerequisites. The result stays predictable, transparent, and entirely driven by what you store in Logseq.
+Install the feature, and every wikilink you drop into a prompt expands into the pages you engineered, their prerequisites, and the prerequisites of those prerequisites. The result are predictable.
 
 #### Pi (π)
 
@@ -147,7 +147,7 @@ pi install ~/.local/share/nt/adapters/pi/nt.js
 
 ### Generating `AGENTS.md`
 
-You don't have to write an epic `AGENTS.md`. If your Logseq pages are modular, conjure the page when the activity comes up. I keep my `AGENTS.md` to the essentials:
+You don’t have to write an epic `AGENTS.md`. If your Logseq pages are modular, conjure context when an activity comes up. I keep my `AGENTS.md` to the essentials:
 
 ```md
 # Agent Instructions
@@ -155,15 +155,15 @@ prerequisites:: [[Ubiquitous Language]], [[Director]]
 Your chief aim is aligning yourself with and serving the [[Director]].  It helps to understand his values and methodology.  Recognizing and looking up the [[Ubiquitous Language]] by which he communicates aids this.
 ```
 
-I refresh it now and then so I never have to repeat the basics at the start of a chat:
+I refresh it now and then so I don’t have to repeat the basics:
 
 ```zsh
 nt about "Agent Instructions" | nt document --para | cat -s
 ```
 
-The ubiquitous language I mention there lives on other Logseq pages. The page about Ubiquitous Language, for instance, links to a prerequisite skill that tells the agent how to navigate terms with `nt`.
+The ubiquitous language I mention are the terms and phrases in my catalog of Logseq pages. The page about **Ubiquitous Language**, for instance, links to a prerequisite skill that tells the agent how to navigate terms using `nt`.
 
-While I code routinely, I don't mention **Coding** inside `AGENTS.md`.  When it's time to code, the mere mention of the word — like the one in the intro — conjures context tailor-made to the activity:
+While I code routinely, I don’t mention **Coding** inside `AGENTS.md`.  When it’s time to code, the mere mention of the word — like the one in the intro — conjures context tailor-made to the activity:
 
 ```md
 # Coding
@@ -175,7 +175,7 @@ You are [[Keeping a Notepad]] and [[Ensuring Reversibility]] while [[Delivering 
 
 Each piece of that prompt links to some recursively-expanded skill or context.  **Ensuring Reversibility** explains using `git` as a safety net for all filesystem changes.
 
-No need to track skills in the filesystem the way most agent runtimes prescribe.  Logseq subsumes skills, commands and most other jobs since everything agents do, more or less, relies on putting the right context in front of them at the right time.
+Forget tracking skills in the filesystem the way most agent runtimes prescribe.  Logseq subsumes skills, commands and most other jobs since everything agents do, more or less, relies on putting the right context in front of them at the right time.
 
 ### Progressive Disclosure
 
@@ -212,19 +212,19 @@ The `nt prompt` command provides in the shell what the adapter provides in Pi:
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-That command knows recognizes terms. If it merely listed the pages:
+The command recognizes terms. If it merely listed pages it’d call:
 
 ```zsh
 nt list Coding Atomic | nt page
 ```
 
-you only get the two headings. But `nt about` goes farther:
+You’d only get the two pages. But `nt about` goes farther:
 
 ```zsh
 nt list Coding Atomic | nt about
 ```
 
-It recursively expands each page's prerequisites.  That’s the linchpin to delivering engineered context.
+It recursively expands each page’s prerequisites.  That’s the linchpin to delivering engineered context.
 
 ### Content Filtering
 
@@ -233,7 +233,7 @@ The default way to read a page is `nt page`:
 nt page Atomic
 ```
 
-My Logseq repo mixes [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) notes with [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) tasks, links, and project instructions. Not every block should reach an agent. It's not about secrecy; it's about not confusing it with context it was never meant to see.
+My Logseq repo mixes [PKM](https://en.wikipedia.org/wiki/Personal_knowledge_management) notes with [GTD](https://en.wikipedia.org/wiki/Getting_Things_Done) tasks, links, and project instructions. Not every block should reach an agent. It’s not about secrecy; it’s about not confusing it with context it was never meant to see.
 
 `nt` filters at the block level. A filtered block brings its children along. If a block is on your no-go list, so is everything it nests.
 
@@ -342,7 +342,7 @@ Any hiccups probably come from the HTTP API implementation, not `nt`. When you n
 Error: Missing rules var '%' in :in
 ```
 
-it usually means the syntax you're using is too advanced for this endpoint.
+it usually means the syntax you’re using is too advanced for this endpoint.
 
 Need help writing queries? Start with this builder: [https://adxsoft.github.io/logseqadvancedquerybuilder/](https://adxsoft.github.io/logseqadvancedquerybuilder/)
 
