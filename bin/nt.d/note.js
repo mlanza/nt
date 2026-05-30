@@ -1403,8 +1403,10 @@ program
 program
   .command('prompt')
   .description(`Expands wikilinks in a prompt, ignoring fenced code blocks ${PIPEABLE}`)
-  .example('Expand passed in prompt', 'nt prompt "Your text with [[Link]] and a code block"')
-  .example('Expand piped in prompt', 'echo "Your text with [[Link]] and a code block" | nt prompt')
+  .example('Expand prompt', 'nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."')
+  .example('Expand piped-in prompt', 'echo "You are [[Coding]] a Sokoban game using [[Atomic]]." | nt prompt')
+  .example('Pass transcript to expanded prompt and pass to agent', 'cat video-transcript.md | nt prompt "You are [[Extracting Wisdom]] from this transcript." | pi --print')
+  .example('Pass transcript to action request and pass to agent', 'cat video-transcript.md | nt prompt --action "Extracting Wisdom" | pi --print')
 
 program
   .command('prop')
