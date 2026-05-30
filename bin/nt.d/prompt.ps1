@@ -11,15 +11,22 @@
 [CmdletBinding()]
 param(
   [Parameter(Position=0)]
-  [string]$Prompt
+  [string]$prompt
 )
-if (-not $Prompt) {
-  $Prompt = [Console]::In.ReadToEnd()
+# Initialize prompt and payload from stdin if piped
+$rawInput = ''
+if ([Console]::IsInputRedirected) {
+  $rawInput = [Console]::In.ReadToEnd()
 }
-if (-not $Prompt.Trim()) {
+if (-not $prompt -and $rawInput) {
+  $prompt = $rawInput
+} elseif ($prompt -and $rawInput) {
+  $payload = $rawInput
+}
+if (-not $prompt.Trim()) {
   return
 }
-$cleanPrompt = $Prompt.TrimEnd("`r", "`n")
+$cleanPrompt = $prompt.TrimEnd("`r", "`n")
 $wikilinks = @($cleanPrompt | nt wikilinks) |
   ForEach-Object { $_.Trim() } |
   Where-Object { $_ } |
@@ -36,10 +43,6 @@ $finalPrompt = [regex]::Replace($cleanPrompt, $pattern, [System.Text.RegularExpr
   $suffix = ']' * $target
   return "$prefix$inner$suffix"
 })
-if ($wikilinks.Count -eq 0) {
-  Write-Output $finalPrompt
-  return
-}
 $aboutArgs = @('about') + $wikilinks + @('--agent')
 $contextOutput = & nt @aboutArgs
 $contextText = ($contextOutput -join "`n").Trim()
@@ -47,4 +50,27 @@ if ($LASTEXITCODE -ne 0 -or -not $contextText) {
   $warnings = ($wikilinks | ForEach-Object { "⚠️ [[$_]]" }) -join ', '
   $contextText = "[Wikilinks not found: $warnings]"
 }
+
+# Handle payload if present
+if ($payload) {
+  if ($wikilinks.Count -gt 0) {
+    $promptBlock = "$finalPrompt`n`n---`n$contextText"
+  } else {
+    $promptBlock = $finalPrompt
+  }
+  Write-Output $promptBlock
+  $payloadTrimmed = $payload.TrimEnd("`r", "`n")
+  # blank line before separator
+  Write-Output ""
+  $sepOutput = $payloadTrimmed | nt sep
+  $sepOutput = $sepOutput -replace '(?m)^---$', "---`n# Input"
+  Write-Output $sepOutput
+  return
+}
+
+if ($wikilinks.Count -eq 0) {
+  Write-Output $finalPrompt
+  return
+}
+
 Write-Output "$finalPrompt`n`n---`n$contextText"
