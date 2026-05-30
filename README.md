@@ -212,10 +212,10 @@ The `nt prompt` command provides in the shell what the adapter provides in Pi:
 nt prompt "You are [[Coding]] a Sokoban game using [[Atomic]]."
 ```
 
-You can also supply one or more `--action` flags, and `nt` crafts a prompt like `You are [[Extracting Wisdom]] and [[Taking Notes]].`
+You can also supply one or more `--skill` flags, and `nt` crafts a prompt like `You are [[Extracting Wisdom]] and [[Taking Notes]].`
 
 ```zsh
-nt prompt --action "Extracting Wisdom" --action "Taking Notes"
+nt prompt --skill "Extracting Wisdom" --skill "Taking Notes"
 ```
 
 The command recognizes terms. If it merely listed pages it’d call:

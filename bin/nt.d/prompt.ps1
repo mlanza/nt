@@ -17,12 +17,12 @@ if ([Console]::IsInputRedirected) {
   $rawInput = [Console]::In.ReadToEnd()
 }
 $payload = $null
-$actionValues = @()
+$skillValues = @()
 $index = 0
 while ($index -lt $args.Count) {
   $arg = $args[$index]
-  if ($arg -match '(?i)^(--?action)(?:=(.+))?$') {
-    $value = $matches[2]
+  if ($arg -match '(?i)^(?:-{1,2}(?:skill|action))(?:=(.+))?$') {
+    $value = $matches[1]
     if (-not $value) {
       $index++
       if ($index -ge $args.Count) {
@@ -31,16 +31,16 @@ while ($index -lt $args.Count) {
       $value = $args[$index]
     }
     if ($value) {
-      $actionValues += $value
+      $skillValues += $value
     }
   }
   $index++
 }
-if ($actionValues.Count -gt 0) {
-  $actionValues = $actionValues |
+if ($skillValues.Count -gt 0) {
+  $skillValues = $skillValues |
     Where-Object { $_ } |
     ForEach-Object { $_.Trim() }
-  $formattedActions = $actionValues | ForEach-Object {
+  $formattedActions = $skillValues | ForEach-Object {
     if ($_ -match '^\[\[.+\]\]$') {
       $_
     } else {
