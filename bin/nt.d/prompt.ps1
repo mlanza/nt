@@ -8,9 +8,7 @@
   context pulled from `nt about --agent`. The section is only added when
   wikilinks are present.
 #>
-[CmdletBinding()]
 param(
-  [Parameter(Position=0)]
   [string]$prompt
 )
 # Initialize prompt and payload from stdin if piped
@@ -18,15 +16,51 @@ $rawInput = ''
 if ([Console]::IsInputRedirected) {
   $rawInput = [Console]::In.ReadToEnd()
 }
+$payload = $null
+$actionValues = @()
+$index = 0
+while ($index -lt $args.Count) {
+  $arg = $args[$index]
+  if ($arg -match '(?i)^(--?action)(?:=(.+))?$') {
+    $value = $matches[2]
+    if (-not $value) {
+      $index++
+      if ($index -ge $args.Count) {
+        break
+      }
+      $value = $args[$index]
+    }
+    if ($value) {
+      $actionValues += $value
+    }
+  }
+  $index++
+}
+if ($actionValues.Count -gt 0) {
+  $actionValues = $actionValues |
+    Where-Object { $_ } |
+    ForEach-Object { $_.Trim() }
+  $formattedActions = $actionValues | ForEach-Object {
+    if ($_ -match '^\[\[.+\]\]$') {
+      $_
+    } else {
+      "[[${_}]]"
+    }
+  }
+  $prompt = "You are $([string]::Join(' and ', $formattedActions))."
+}
 if (-not $prompt -and $rawInput) {
   $prompt = $rawInput
 } elseif ($prompt -and $rawInput) {
   $payload = $rawInput
 }
-if (-not $prompt.Trim()) {
+if (-not $prompt) {
   return
 }
 $cleanPrompt = $prompt.TrimEnd("`r", "`n")
+if (-not $cleanPrompt.Trim()) {
+  return
+}
 $wikilinks = @($cleanPrompt | nt wikilinks) |
   ForEach-Object { $_.Trim() } |
   Where-Object { $_ } |
