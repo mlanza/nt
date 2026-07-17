@@ -102,6 +102,12 @@ class Parser {
       this.state.headerProperties = {};
     }
 
+    // Headings (h2-h6) create new top-level blocks
+    if (/^#{2,6}\s/.test(trimmed)) {
+      this.state.hasStartedBlocks = true;
+      return { type: 'block', level: 0, content: trimmed };
+    }
+
     // ONLY lines starting with "- " create new blocks
     if (trimmed.startsWith('- ')) {
       // Mark that we've started processing blocks
@@ -451,7 +457,8 @@ class Stringifier {
             lines.push("");
           }
         } else {
-          lines.push(`${indent}- ${line}`);
+          const isHeading = /^#{1,6}\s/.test(line);
+          lines.push(`${indent}${isHeading ? '' : '- '}${line}`);
           for(const line of parts){
             if (!line.startsWith("collapsed:: ")) {
               lines.push(`${hanging}${line}`);
