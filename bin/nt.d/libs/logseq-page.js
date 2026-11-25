@@ -102,6 +102,12 @@ class Parser {
       this.state.headerProperties = {};
     }
 
+    // Headings (h2-h6) create new top-level blocks
+    if (/^#{2,6}\s/.test(trimmed)) {
+      this.state.hasStartedBlocks = true;
+      return { type: 'block', level: 0, content: trimmed };
+    }
+
     // ONLY lines starting with "- " create new blocks
     if (trimmed.startsWith('- ')) {
       // Mark that we've started processing blocks
@@ -404,11 +410,10 @@ class Stringifier {
     const indent = '  '.repeat(level);
     const hanging = '  '.repeat(level + 1);
 
+    let lastBlock = null;
+
     blocks.forEach(function(block) {
       const { content, children, properties, preBlock } = block;
-
-      //console.log({content, children, properties, preBlock});
-
 
       // Handle properties blocks (preBlock with properties or blocks with only properties)
       // Only add blank line for header properties (preBlock), not database properties
@@ -438,6 +443,7 @@ class Stringifier {
 
         // Add blank line after properties
         lines.push('');
+        lastBlock = 'props';
       } else if (content) {
         let props = false;
         const [line, ...parts] = content.split("\n");
@@ -450,13 +456,22 @@ class Stringifier {
           if (props) {
             lines.push("");
           }
+          lastBlock = 'inline-props';
         } else {
-          lines.push(`${indent}- ${line}`);
+          const isHeading = /^#{1,6}\s/.test(line);
+          if (isHeading && lastBlock && lastBlock !== 'props') {
+            lines.push('');
+          }
+          if (!isHeading && lastBlock === 'heading') {
+            lines.push('');
+          }
+          lines.push(`${indent}${isHeading ? '' : '- '}${line}`);
           for(const line of parts){
             if (!line.startsWith("collapsed:: ")) {
               lines.push(`${hanging}${line}`);
             }
           }
+          lastBlock = isHeading ? 'heading' : 'bullet';
         }
       }
 
