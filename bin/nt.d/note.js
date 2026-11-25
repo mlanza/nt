@@ -621,7 +621,7 @@ async function prop(options) {
 }
 
 function tskGetPage(given, options) {
-  const {keep, fixed} = LogseqPage.selects(options, config);
+  const {keep, fixed, withProps} = LogseqPage.selects(options, config);
   return given ? new Task(async function(reject, resolve){
     try {
       const {name, path} = await identify(given);
@@ -644,7 +644,7 @@ function tskGetPage(given, options) {
       }
 
       const blocks = (await callLogseq('logseq.Editor.getPageBlocksTree', [name])) || [];
-      const content = options.format === "md" ? LogseqPage.stringify(blocks, keep, fixed) : blocks;
+      const content = options.format === "md" ? LogseqPage.stringify(blocks, keep, fixed, withProps) : blocks;
 
       resolve(content);
 
@@ -1154,10 +1154,11 @@ program
   .alias('p')
   .description(`Get page ${PIPEABLE}`)
   .arguments(demand("name|datestamp"))
-  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
+  .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .option('--heading <level:number>', 'Heading level (0-5, where 0=no heading)', {default: 1})
   .option('--vacant', 'Include vacant entries')
+  .option('--with-props', 'Include individual properties in content filtering')
   .option('--filter [table:string]', 'Select filter table from config', { default: "agent" })
   .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
@@ -1277,7 +1278,7 @@ program
   .command('props')
   .description(`Get page properties ${PIPEABLE}`)
   .arguments("[name] [properties...]")
-  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
+  .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('-u, --unlabeled <string>', "Drop the property label", {collect: true})
   .option('-r, --required <string>', "Required property", {collect: true})
   .option('--json', 'Output JSON format')
@@ -1432,13 +1433,13 @@ program
   .command('stringify')
   .alias('str')
   .description('Convert structured blocks back to markdown')
-  .option('-f, --format <type:string>', 'Output format (md|json) (default: "md")', {default: 'md'})
+  .option('-f, --format <type:string>', 'Output format (md|json)', {default: 'md'})
   .option('--json', 'Output JSON format')
   .option('-l, --less [patterns:string]', 'Less content matching regex patterns', { collect: true })
   .option('-o, --only [patterns:string]', 'Only content matching regex patterns', { collect: true })
   .arguments(PIPED)
   .action(async (options) => {
-    const { keep, fixed } = LogseqPage.selects(options, config);
+    const { keep, fixed, withProps } = LogseqPage.selects(options, config);
     const input = await new Response(Deno.stdin.readable).text();
 
     if (!input.trim()) {
@@ -1448,7 +1449,7 @@ program
 
     try {
       const blocks = JSON.parse(input);
-      const page = LogseqPage.stringify(blocks, keep, fixed);
+      const page = LogseqPage.stringify(blocks, keep, fixed, withProps);
       console.log(page);
     } catch (error) {
       console.error("Error parsing JSON input:", error);
@@ -1480,6 +1481,17 @@ program
   .option('-t, --type <type:string>', 'Type of link (bracket|tag|all)', {default: 'bracket'})
   .arguments(PIPED)
   .example("List wikilinks on a page", `nt page Boardgames | nt wikilinks`);
+
+program
+  .command('fprops')
+  .description('Filter property lines from piped content')
+  .arguments('<properties...:string>')
+  .option('--not', 'Exclude named properties instead of selecting them')
+  .option('--list', 'List property values individually, without names or wikilink wrappers')
+  .example('Select property lines', 'nt page Developer | nt fprops skills prerequisites')
+  .example('Exclude property lines', 'nt page Developer | nt fprops skills prerequisites --not')
+  .example('List property values', 'nt page Developer | nt fprops skills --list')
+  .example('List remaining property values', 'nt page Developer | nt fprops skills prerequisites --not --list');
 
 program
   .command('sections')

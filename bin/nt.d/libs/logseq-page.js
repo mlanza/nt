@@ -17,12 +17,18 @@ function keeping(patterns, filter, hit = true){
 }
 
 // Recursive filtering function for blocks
-function selectBlock(block, keep, fixed) {
-  const { content, properties } = block;
+function selectBlock(block, keep, fixed, withProps = false) {
+  const content = withProps
+    ? block.content.split('\n').filter(line => !/^[^\s:]+::/.test(line) || keep(line)).join('\n')
+    : block.content;
+  const properties = withProps && block.properties
+    ? Object.fromEntries(Object.entries(block.properties).filter(([key, value]) => keep(`${key}:: ${Array.isArray(value) ? value.join(', ') : value}`)))
+    : block.properties;
 
   const line = content.split("\n")?.[0]; //matching happens against first line only
   // Test content with and without marker to catch both cases
-  const kept = fixed(line) || keep(line) || block.preBlock;
+  const kept = fixed(line) || keep(line) || block.preBlock ||
+    (withProps && properties && Object.keys(properties).length > 0);
 
   if (!kept) {
     return null;
@@ -31,7 +37,7 @@ function selectBlock(block, keep, fixed) {
   let filteredChildren = [];
   if (block.children && Array.isArray(block.children)) {
     filteredChildren = block.children
-      .map(child => selectBlock(child, keep, fixed))
+      .map(child => selectBlock(child, keep, fixed, withProps))
       .filter(child => child !== null); // Remove null entries (filtered out children)
   }
 
@@ -47,6 +53,8 @@ function selectBlock(block, keep, fixed) {
   // Keep this block (it doesn't match any patterns)
   return {
     ...block,
+    content,
+    properties,
     children: filteredChildren
   };
 }
@@ -504,13 +512,13 @@ class LogseqPage {
     const agentLess = agent ? patterns : null;
     const humanOnly = human ? patterns : null;
     const keep = keeping(agentLess || less, filter, false) || keeping(humanOnly || only, filter, true);
-    return { keep, fixed };
+    return { keep, fixed, withProps: options.withProps === true };
   }
 
-  static stringify(blocks, keep = null, fixed = null) {
+  static stringify(blocks, keep = null, fixed = null, withProps = false) {
     // Apply filtering if keep is provided
     const selectedBlocks = keep ? blocks
-      .map(block => selectBlock(block, keep, fixed || (() => false)))
+      .map(block => selectBlock(block, keep, fixed || (() => false), withProps))
       .filter(block => block !== null) : blocks;
 
     return Stringifier.stringify(selectedBlocks);

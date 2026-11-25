@@ -6,7 +6,11 @@ try {
   $topics = @($input) + @($args)
   $body = $topics | nt seen | nt prereq | nt seen | nt page --less | nt tidy
   $body
-  $wikilinks = $body | nt wikilinks | nt seen
+  $skills = $body | nt fprops skills --list | nt seen
+  if ($skills) {
+    $skills | sort | nt props tags description -r description --heading=2 | nt sep "# Skills" | nt sep ""
+  }
+  $wikilinks = $body | nt fprops skills prerequisites --not | nt wikilinks | nt seen
   if ($wikilinks) {
     $mentioned = $wikilinks | nt n --unaliased
     if ($mentioned) {
