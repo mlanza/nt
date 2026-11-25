@@ -202,6 +202,14 @@ description:: Use when developing or debugging a program or an app.
 
 The `description` cues an agent into the contexts in which a skill becomes useful.  By handing an agent a skill for accessing Logseq content via `nt`, it decides when to read up and employ needed skills.
 
+### Role pages, or “hats”
+
+A single catalog of skills eventually becomes too large a menu.  I use role pages tagged `hat` to describe the “hats” an agent wears — `Developer`, `Writer`, or `App Architect`.
+
+A hat page describes the role, and it also carries a `skills::` list.  That list names the skills the agent should draw on while doing that job.  More generally, `nt about` gives an expansive view of any page; when a page has `skills`, those skills are surfaced in a list alongside the page and its prerequisites.
+
+That keeps the skill catalog broad, while the role pages stay focused and usable.
+
 ### Prerequisites
 
 Prerequisites are how you engineer context once and rely on it everywhere. Every page that needs supporting concepts links to them with a `prerequisites` property, so when `nt about` or prompt expansion runs, the required layers arrive automatically. No guessing what background the agent needs; you define it once and prompt expansion conjures it for every session.
